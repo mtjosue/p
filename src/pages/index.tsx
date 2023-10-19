@@ -5,8 +5,10 @@ import Link from "next/link";
 import { api } from "~/utils/api";
 
 export default function Home() {
-  const hello = api.post.hello.useQuery({ text: "from tRPC" });
-
+  const hello = api.post.getAll.useQuery();
+  // const hello = api.post.hello.useQuery({ text: "from tRPC" });
+  console.log("hello", hello.data);
+  // const hello2 = api.user.create
   const user = useUser();
 
   return (
