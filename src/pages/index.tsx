@@ -1,39 +1,49 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import Head from "next/head";
-import Link from "next/link";
 import { useEffect } from "react";
 import { useUserStore } from "~/stores/useLocalUser";
+// import Link from "next/link";
+// import { useUserStore } from "~/stores/useLocalUser";
 
 import { api } from "~/utils/api";
 
 export default function Home() {
-  const hello = api.post.getAll.useQuery();
-  // const hello = api.post.hello.useQuery({ text: "from tRPC" });
-  console.log("hello", hello.data);
+  const user = useUser();
+
   const createNewUser = api.user.create.useMutation();
 
-  const user = useUser();
+  const searchLocalUser = api.user.userCheck.useQuery({
+    userId: user.user?.id ?? "",
+  });
 
   const firstName = useUserStore().firstName;
   const setFirstName = useUserStore().actions.setFirstName;
 
-  useEffect(() => {
-    if (user) {
-      // console.log("user", user);
-    }
-  }, [user]);
+  console.log("searchLocalUser.", searchLocalUser.data);
 
-  // useEffect(() => {
-  //   if (
-  //     user.isSignedIn &&
-  //     user.user.firstName &&
-  //     user.user.firstName !== firstName
-  //   ) {
-  //     setFirstName(user.user.firstName);
-  //     createNewUser.mutate({ name: user.user.firstName });
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [createNewUser, user.isSignedIn]);
+  useEffect(() => {
+    if (user.isSignedIn) {
+      if (searchLocalUser.data && firstName !== searchLocalUser.data.name) {
+        setFirstName(searchLocalUser.data.name);
+      }
+      if (user.user.firstName && user.user.firstName !== firstName) {
+        console.log("HELLO FROM ABOUT TO CREATE AN USER ACCOUNT");
+        createNewUser.mutate({
+          name: user.user.firstName,
+          userId: user.user.id,
+        });
+        setFirstName(user.user.firstName);
+      }
+    }
+  }, [
+    createNewUser,
+    firstName,
+    searchLocalUser.data,
+    setFirstName,
+    user.isSignedIn,
+    user.user?.firstName,
+    user.user?.id,
+  ]);
 
   return (
     <>
@@ -45,7 +55,6 @@ export default function Home() {
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
         <div className="text-white">
           <h1>Hello Welcome</h1>
-          {/* <SignInButton /> */}
           {!user.isSignedIn && <SignInButton />}
           {!!user.isSignedIn && <SignOutButton />}
         </div>
