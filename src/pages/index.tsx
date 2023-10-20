@@ -1,6 +1,8 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import Head from "next/head";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useUserStore } from "~/stores/useLocalUser";
 
 import { api } from "~/utils/api";
 
@@ -8,8 +10,30 @@ export default function Home() {
   const hello = api.post.getAll.useQuery();
   // const hello = api.post.hello.useQuery({ text: "from tRPC" });
   console.log("hello", hello.data);
-  // const hello2 = api.user.create
+  const createNewUser = api.user.create.useMutation();
+
   const user = useUser();
+
+  const firstName = useUserStore().firstName;
+  const setFirstName = useUserStore().actions.setFirstName;
+
+  useEffect(() => {
+    if (user) {
+      // console.log("user", user);
+    }
+  }, [user]);
+
+  // useEffect(() => {
+  //   if (
+  //     user.isSignedIn &&
+  //     user.user.firstName &&
+  //     user.user.firstName !== firstName
+  //   ) {
+  //     setFirstName(user.user.firstName);
+  //     createNewUser.mutate({ name: user.user.firstName });
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [createNewUser, user.isSignedIn]);
 
   return (
     <>
