@@ -1,5 +1,6 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { useUserStore } from "~/stores/useLocalUser";
 // import Link from "next/link";
@@ -45,6 +46,12 @@ export default function Home() {
     user.user?.id,
   ]);
 
+  const router = useRouter();
+
+  const onBtnClick = async () => {
+    await router.push("/waiting");
+  };
+
   return (
     <>
       <Head>
@@ -58,6 +65,9 @@ export default function Home() {
           {!user.isSignedIn && <SignInButton />}
           {!!user.isSignedIn && <SignOutButton />}
         </div>
+        <button onClick={onBtnClick} className="bg-sky-400 px-3 py-2">
+          Ready
+        </button>
       </main>
     </>
   );

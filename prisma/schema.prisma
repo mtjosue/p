@@ -25,6 +25,7 @@ model User {
     name String
     userId String @unique
     createdAt DateTime @default(now())
+    status String @default("waiting")
 
     @@index([id])
 }
