@@ -29,4 +29,62 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
+  statusUpdate: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        status: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.user.update({
+        where: { userId: input.userId },
+        data: {
+          status: input.status,
+        },
+      });
+    }),
+  searchMatch: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const firstMatch = await ctx.db.user.findFirst({
+        where: {
+          status: "looking",
+          NOT: {
+            userId: input.userId,
+          },
+        },
+      });
+
+      console.log("firstMatch", firstMatch);
+      if (!firstMatch) return null;
+
+      const match = await ctx.db.match.create({
+        data: {
+          // id: input.userId + firstMatch.userId,
+          sourceUserId: input.userId,
+          sinkUserId: firstMatch.userId,
+        },
+      });
+      return match;
+    }),
+  getMatch: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const match = await ctx.db.match.findFirst({
+        where: {
+          sinkUserId: input.userId,
+        },
+      });
+
+      return match;
+    }),
 });

@@ -1,7 +1,7 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUserStore } from "~/stores/useLocalUser";
 // import Link from "next/link";
 // import { useUserStore } from "~/stores/useLocalUser";
@@ -10,45 +10,73 @@ import { api } from "~/utils/api";
 
 export default function Home() {
   const user = useUser();
+  const router = useRouter();
 
+  const createError = api.user.create.useMutation().isError;
   const createNewUser = api.user.create.useMutation();
-
-  const searchLocalUser = api.user.userCheck.useQuery({
+  const searchUser = api.user.userCheck.useQuery({
     userId: user.user?.id ?? "",
+  });
+  const userStatusUpdate = api.user.statusUpdate.useMutation();
+
+  const [curStat, setCurStat] = useState(() => {
+    return searchUser.data?.status;
   });
 
   const firstName = useUserStore().firstName;
   const setFirstName = useUserStore().actions.setFirstName;
+  const setUserId = useUserStore().actions.setUserId;
 
-  console.log("searchLocalUser.", searchLocalUser.data);
+  console.log("searchLocalUser.", searchUser.data);
+
+  useEffect(() => {
+    if (!searchUser.data) return;
+    if (curStat !== "waiting") {
+      userStatusUpdate.mutate({
+        userId: searchUser.data.userId,
+        status: "waiting",
+      });
+    }
+  }, [searchUser.data, curStat]);
 
   useEffect(() => {
     if (user.isSignedIn) {
-      if (searchLocalUser.data && firstName !== searchLocalUser.data.name) {
-        setFirstName(searchLocalUser.data.name);
+      if (searchUser.data && firstName !== searchUser.data.name) {
+        setFirstName(searchUser.data.name);
+        setUserId(user.user.id);
       }
       if (user.user.firstName && user.user.firstName !== firstName) {
         console.log("HELLO FROM ABOUT TO CREATE AN USER ACCOUNT");
-        createNewUser.mutate({
-          name: user.user.firstName,
-          userId: user.user.id,
-        });
         setFirstName(user.user.firstName);
+        setUserId(user.user.id);
+        if (!createError) {
+          createNewUser.mutate({
+            name: user.user.firstName,
+            userId: user.user.id,
+          });
+        }
       }
     }
   }, [
     createNewUser,
     firstName,
-    searchLocalUser.data,
+    searchUser.data,
     setFirstName,
+    setUserId,
     user.isSignedIn,
     user.user?.firstName,
     user.user?.id,
+    userStatusUpdate,
+    createError,
   ]);
 
-  const router = useRouter();
-
   const onBtnClick = async () => {
+    if (user.user?.id) {
+      userStatusUpdate.mutate({
+        userId: user.user.id,
+        status: "looking",
+      });
+    }
     await router.push("/waiting");
   };
 
@@ -65,9 +93,14 @@ export default function Home() {
           {!user.isSignedIn && <SignInButton />}
           {!!user.isSignedIn && <SignOutButton />}
         </div>
-        <button onClick={onBtnClick} className="bg-sky-400 px-3 py-2">
-          Ready
-        </button>
+        {user.isSignedIn && (
+          <button
+            onClick={onBtnClick}
+            className="mt-10 rounded-sm bg-sky-400 px-3 py-2"
+          >
+            Ready
+          </button>
+        )}
       </main>
     </>
   );

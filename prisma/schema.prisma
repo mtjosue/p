@@ -12,28 +12,59 @@ generator client {
 }
 
 model Post {
-    id        Int      @id @default(autoincrement())
-    authorId String
-    content String @db.VarChar(255)
-    createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  authorId  String
+  content   String   @db.VarChar(255)
+  createdAt DateTime @default(now())
 
-    @@index([authorId])
+  @@index([authorId])
 }
 
-model User {
-    id        Int      @id @default(autoincrement())
-    name String
-    userId String @unique
-    createdAt DateTime @default(now())
-    status String @default("waiting")
+// model User {
+//   id            Int      @id @default(autoincrement())
+//   name          String
+//   userId        String   @unique
+//   createdAt     DateTime @default(now())
+//   status        String   @default("waiting")
+//   sourceMatches Match[]  @relation("SourceMatches")
+//   sinkMatches   Match[]  @relation("SinkMatches")
 
-    @@index([id])
+//   @@index([id])
+// }
+
+// model Match {
+//   id           Int    @id @default(autoincrement())
+//   sourceUserId Int
+//   sinkUserId   Int
+//   sourceUser   User   @relation("SourceMatches", fields: [sourceUserId], references: [id], onDelete: Cascade)
+//   sinkUser     User   @relation("SinkMatches", fields: [sinkUserId], references: [id], onDelete: Cascade)
+//   status       String @default("running")
+
+//   @@index([sinkUserId])
+//   @@index([sourceUserId])
+// }
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  userId        String   @unique
+  createdAt     DateTime @default(now())
+  status        String   @default("waiting")
+  sourceMatches Match[]  @relation("SourceMatches")
+  sinkMatches   Match[]  @relation("SinkMatches")
+
+  @@index([id])
 }
 
 model Match {
-   id String  @id @default(cuid())
-   localUserId String
-   foreignUserId String
+  id           String @id @default(cuid())
+  sourceUserId String
+  sinkUserId   String
+  sourceUser   User   @relation("SourceMatches", fields: [sourceUserId], references: [userId], onDelete: Cascade)
+  sinkUser     User   @relation("SinkMatches", fields: [sinkUserId], references: [userId], onDelete: Cascade)
+  status       String @default("running")
+
+  @@index([sinkUserId])
+  @@index([sourceUserId])
 }
 
 // model Match {
