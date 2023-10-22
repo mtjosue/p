@@ -87,4 +87,22 @@ export const userRouter = createTRPCRouter({
 
       return match;
     }),
+  getMatchForPage: publicProcedure
+    .input(
+      z.object({
+        matchId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const match = await ctx.db.match.findUnique({
+        where: {
+          id: input.matchId,
+        },
+        include: {
+          sinkUser: true,
+          sourceUser: true,
+        },
+      });
+      return match;
+    }),
 });
