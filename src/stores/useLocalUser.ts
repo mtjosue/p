@@ -10,6 +10,7 @@ import { create } from "zustand";
 // };
 
 type UserStore = {
+  token: string;
   firstLoad: boolean;
   firstName: string;
   userId: string;
@@ -17,6 +18,7 @@ type UserStore = {
     setFirstName: (str: string) => void;
     setUserId: (str: string) => void;
     setFirstLoad: (bol: boolean) => void;
+    setToken: (token: string) => void;
   };
 };
 
@@ -30,6 +32,7 @@ type UserStore = {
 // }));
 
 export const useUserStore = create<UserStore>((set) => ({
+  token: "",
   firstLoad: false,
   firstName: "",
   userId: "",
@@ -37,6 +40,7 @@ export const useUserStore = create<UserStore>((set) => ({
     setFirstName: (firstName) => set(() => ({ firstName })),
     setUserId: (userId) => set(() => ({ userId })),
     setFirstLoad: (firstLoad) => set(() => ({ firstLoad })),
+    setToken: (token) => set(() => ({ token })),
   },
 }));
 

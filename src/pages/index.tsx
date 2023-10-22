@@ -37,6 +37,7 @@ export default function Home() {
         status: "waiting",
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchUser.data, curStat]);
 
   useEffect(() => {
@@ -79,6 +80,8 @@ export default function Home() {
     }
     await router.push("/waiting");
   };
+  const appID = process.env.AGORA_APP_ID;
+  console.log("appID : ", appID);
 
   return (
     <>
