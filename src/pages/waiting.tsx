@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { useUserStore } from "~/stores/useLocalUser";
@@ -18,12 +19,12 @@ const WaitingPage = () => {
 
   useEffect(() => {
     if (searchMatch.data) {
-      // setToken(searchMatch.data.token);
+      setToken(searchMatch.data.id);
       router.push(`/chatting/${searchMatch.data.id}`).catch(() => {
         console.log("error");
       });
     }
-  }, [router, searchMatch.data, userId]);
+  }, [router, searchMatch.data, setToken, userId]);
 
   useEffect(() => {
     if (getMatch.data) {
@@ -53,6 +54,7 @@ const WaitingPage = () => {
     >
       <div className="text-white">
         <h2>Waiting for Users to Connect With...</h2>
+        <Link href={"/"}>RETURN HOME</Link>
       </div>
     </main>
   );

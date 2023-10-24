@@ -8,16 +8,6 @@ import { procedureTypes } from "@trpc/server";
 const appId = env.NEXT_PUBLIC_AGORA_APP_ID;
 const appCertificate = env.NEXT_PUBLIC_AGORA_APP_CERT;
 
-// const tokenB = RtcTokenBuilder.buildTokenWithAccount(
-//   appID,
-//   appCertificate,
-//   channelName,
-//   account,
-//   role,
-//   privilegeExpiredTs,
-// );
-// console.log("Token With UserAccount: " + tokenB);
-
 export const userRouter = createTRPCRouter({
   userCheck: publicProcedure
     .input(

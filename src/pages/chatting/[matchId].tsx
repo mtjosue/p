@@ -1,30 +1,127 @@
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  type MutableRefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useUserStore } from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
+import {
+  type ICameraVideoTrack,
+  type IAgoraRTCClient,
+  type IAgoraRTCRemoteUser,
+  type IRemoteVideoTrack,
+} from "agora-rtc-sdk-ng";
+import { env } from "~/env.mjs";
+import Link from "next/link";
 
-// type Props = {};
-// props: Props
+const VideoPlayer = ({
+  videoTrack,
+}: {
+  videoTrack: IRemoteVideoTrack | ICameraVideoTrack;
+}) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const playerRef = ref.current;
+    if (!videoTrack) return;
+    if (!playerRef) return;
+
+    videoTrack.play(playerRef);
+
+    return () => {
+      videoTrack.stop();
+    };
+  }, [videoTrack]);
+
+  return (
+    <div>
+      <div ref={ref} className="h-[200px] w-[200px]"></div>
+    </div>
+  );
+};
 
 const MatchingPage = () => {
+  const token = useUserStore().token;
+  const firstName = useUserStore().firstName;
+  const setToken = useUserStore().actions.setToken;
   const userId = useUserStore().userId;
-  console.log("userId", userId);
-
   const router = useRouter();
   const matchId = router.query.matchId as string;
+
   const matchQuery = api.user.getMatchForPage.useQuery({ matchId: matchId });
-  const tokenQuery = api.user.generateToken.useQuery({
-    userId: userId,
-    matchId: matchId,
-  });
-  const [value, setValue] = useState("");
+  const tokenQuery = api.user.generateToken.useQuery(
+    {
+      userId: userId,
+      matchId: matchQuery.data?.id ?? "",
+    },
+    {
+      refetchOnWindowFocus: false,
+      cacheTime: 0,
+      staleTime: 0,
+    },
+  );
+
+  const [users, setUsers] = useState<IAgoraRTCRemoteUser[] | never[]>([]);
+  const [otherUser, setOtherUser] = useState<IAgoraRTCRemoteUser>();
+  const [videoTrack, setVideoTrack] = useState<ICameraVideoTrack>();
 
   useEffect(() => {
     if (!tokenQuery.data) return;
-    if (tokenQuery.data) {
-      setValue(tokenQuery.data);
+    setToken(tokenQuery.data);
+  }, [setToken, tokenQuery.data]);
+
+  useEffect(() => {
+    if (token) {
+      const connect = async () => {
+        const { default: AgoraRTC } = await import("agora-rtc-sdk-ng");
+        // if (!localClient) {
+        const client = AgoraRTC.createClient({
+          mode: "rtc",
+          codec: "vp8",
+        });
+        // setLocalClient(client);
+        // }
+
+        // console.log("localClient", localClient);
+
+        // if (localClient && matchId) {
+        await client.join(env.NEXT_PUBLIC_AGORA_APP_ID, matchId, token, userId);
+        // }
+
+        client?.on("user-published", (user, mediaType) => {
+          client
+            .subscribe(user, mediaType)
+            .then(() => {
+              if (mediaType === "video") {
+                // setUsers((prev) => [...prev, user]);
+                setOtherUser(user);
+              }
+              if (mediaType === "audio") {
+                // setUsers((prev) => [...prev, user]);
+                otherUser?.audioTrack?.play();
+              }
+            })
+            .catch((e) => {
+              console.log("error : ", e);
+            });
+        });
+
+        const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+        setVideoTrack(tracks[1]);
+        await client.publish(tracks);
+
+        return { tracks, client };
+
+        // await localClient?.publish(tracks);
+      };
+      connect().catch(() => {
+        console.log("ERROR in connect in [matchId].tsx");
+      });
     }
-  }, [tokenQuery.data]);
+  }, [matchId, otherUser?.audioTrack, token, userId]);
 
   const companionName = useMemo(() => {
     if (userId === matchQuery.data?.sinkUser.userId) {
@@ -40,12 +137,45 @@ const MatchingPage = () => {
     userId,
   ]);
 
+  console.log(users);
+
+  console.log("otherUser?.videoTrack", otherUser?.videoTrack);
+
+  const otherUserMemo = useMemo(() => {
+    if (otherUser) {
+      return otherUser;
+    }
+  }, [otherUser]);
+
+  console.log("otherUserMemo", otherUserMemo);
+
   return (
     <>
       <h1>Matching Page</h1>
-      <body className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-        <span className="min-w-40 text-2xl">{companionName}</span>
-        <span>My Personal Token Generated : {value}</span>
+      <h2>
+        <Link href={"/"}>RETURN HOME</Link>
+      </h2>
+      <body className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
+        {/* <span className="min-w-40 text-2xl">{companionName}</span> */}
+        {/* <span>My Personal Token Generated : {token.slice(0, 10)}</span> */}
+
+        <div className="grid h-full w-full grid-cols-2 bg-sky-800">
+          {videoTrack && (
+            <div>
+              <span>{firstName}</span>
+              <VideoPlayer videoTrack={videoTrack} />
+            </div>
+          )}
+          {otherUserMemo && (
+            <div>
+              <span>{companionName}</span>
+
+              {otherUserMemo.videoTrack && (
+                <VideoPlayer videoTrack={otherUserMemo.videoTrack} />
+              )}
+            </div>
+          )}
+        </div>
       </body>
     </>
   );
