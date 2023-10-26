@@ -2,6 +2,7 @@ import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import Modal from "~/components/modal";
 import { useUserStore } from "~/stores/useLocalUser";
 // import Link from "next/link";
 // import { useUserStore } from "~/stores/useLocalUser";
@@ -11,65 +12,65 @@ import { api } from "~/utils/api";
 export default function Home() {
   const user = useUser();
   const router = useRouter();
-
-  const createError = api.user.create.useMutation().isError;
-  const createNewUser = api.user.create.useMutation();
-  const searchUser = api.user.userCheck.useQuery({
-    userId: user.user?.id ?? "",
-  });
-  const userStatusUpdate = api.user.statusUpdate.useMutation();
-
-  const [curStat, setCurStat] = useState(() => {
-    return searchUser.data?.status;
-  });
-
   const firstName = useUserStore().firstName;
   const setFirstName = useUserStore().actions.setFirstName;
   const setUserId = useUserStore().actions.setUserId;
+  const [termsAgreed, setTermsAgreed] = useState(false);
 
-  console.log("searchLocalUser.", searchUser.data);
+  const userStatusUpdate = api.user.statusUpdate.useMutation();
+  const searchUser = api.user.userCheck.useQuery(
+    {
+      userId: user.user?.id ?? "",
+    },
+    {
+      refetchOnWindowFocus: false,
+      cacheTime: 0,
+      staleTime: 0,
+    },
+  );
+  // console.log("searchUser.data : HERE :", searchUser.data);
+
+  useEffect(() => {
+    if (!user.isSignedIn) return;
+    if (
+      !searchUser.isFetching &&
+      !searchUser.isLoading &&
+      !searchUser.error &&
+      !searchUser.isRefetching &&
+      !searchUser.data
+    ) {
+      if (!termsAgreed) {
+        setTermsAgreed(true);
+      }
+    }
+  }, [
+    searchUser.data,
+    searchUser.error,
+    searchUser.isFetching,
+    searchUser.isLoading,
+    searchUser.isRefetching,
+    termsAgreed,
+    user.isSignedIn,
+  ]);
 
   useEffect(() => {
     if (!searchUser.data) return;
-    if (curStat !== "waiting") {
+
+    if (searchUser.data.status !== "waiting") {
       userStatusUpdate.mutate({
         userId: searchUser.data.userId,
         status: "waiting",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchUser.data, curStat]);
-
-  useEffect(() => {
-    if (user.isSignedIn) {
-      if (searchUser.data && firstName !== searchUser.data.name) {
-        setFirstName(searchUser.data.name);
-        setUserId(user.user.id);
-      }
-      if (user.user.firstName && user.user.firstName !== firstName) {
-        console.log("HELLO FROM ABOUT TO CREATE AN USER ACCOUNT");
-        setFirstName(user.user.firstName);
-        setUserId(user.user.id);
-        if (!createError) {
-          createNewUser.mutate({
-            name: user.user.firstName,
-            userId: user.user.id,
-          });
-        }
-      }
+    if (searchUser.data && firstName !== searchUser.data.name) {
+      setFirstName(searchUser.data.name);
     }
-  }, [
-    createNewUser,
-    firstName,
-    searchUser.data,
-    setFirstName,
-    setUserId,
-    user.isSignedIn,
-    user.user?.firstName,
-    user.user?.id,
-    userStatusUpdate,
-    createError,
-  ]);
+    if (user.user?.id) {
+      setUserId(user.user.id);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstName, searchUser.data, user.user?.id]);
 
   const onBtnClick = async () => {
     if (user.user?.id) {
@@ -80,8 +81,9 @@ export default function Home() {
     }
     await router.push("/waiting");
   };
-  const appID = process.env.AGORA_APP_ID;
-  console.log("appID : ", appID);
+
+  // const appID = process.env.AGORA_APP_ID;
+  // console.log("appID : ", appID);
 
   return (
     <>
@@ -96,6 +98,7 @@ export default function Home() {
           {!user.isSignedIn && <SignInButton />}
           {!!user.isSignedIn && <SignOutButton />}
         </div>
+        {user.isSignedIn && termsAgreed && <Modal />}
         {user.isSignedIn && (
           <button
             onClick={onBtnClick}

@@ -13,6 +13,7 @@ import {
   type IAgoraRTCClient,
   type IAgoraRTCRemoteUser,
   type IRemoteVideoTrack,
+  type IMicrophoneAudioTrack,
 } from "agora-rtc-sdk-ng";
 import { env } from "~/env.mjs";
 import Link from "next/link";
@@ -33,6 +34,8 @@ const VideoPlayer = ({
 
     return () => {
       videoTrack.stop();
+      videoTrack.unpipe();
+      videoTrack.removeAllListeners();
     };
   }, [videoTrack]);
 
@@ -44,6 +47,12 @@ const VideoPlayer = ({
 };
 
 const MatchingPage = () => {
+  const connectionPromiseRef = useRef<
+    Promise<{
+      tracks: [IMicrophoneAudioTrack, ICameraVideoTrack];
+      client: IAgoraRTCClient;
+    }>
+  >(Promise.resolve());
   const token = useUserStore().token;
   const firstName = useUserStore().firstName;
   const setToken = useUserStore().actions.setToken;
@@ -51,7 +60,14 @@ const MatchingPage = () => {
   const router = useRouter();
   const matchId = router.query.matchId as string;
 
-  const matchQuery = api.user.getMatchForPage.useQuery({ matchId: matchId });
+  const matchQuery = api.user.getMatchForPage.useQuery(
+    { matchId: matchId },
+    {
+      refetchOnWindowFocus: false,
+      cacheTime: 0,
+      staleTime: 0,
+    },
+  );
   const tokenQuery = api.user.generateToken.useQuery(
     {
       userId: userId,
@@ -64,7 +80,9 @@ const MatchingPage = () => {
     },
   );
 
-  const [users, setUsers] = useState<IAgoraRTCRemoteUser[] | never[]>([]);
+  // const [users, setUsers] = useState<IAgoraRTCRemoteUser[] | never[]>([]);
+  // console.log("users: ", users);
+
   const [otherUser, setOtherUser] = useState<IAgoraRTCRemoteUser>();
   const [videoTrack, setVideoTrack] = useState<ICameraVideoTrack>();
 
@@ -74,54 +92,68 @@ const MatchingPage = () => {
   }, [setToken, tokenQuery.data]);
 
   useEffect(() => {
-    if (token) {
-      const connect = async () => {
-        const { default: AgoraRTC } = await import("agora-rtc-sdk-ng");
-        // if (!localClient) {
-        const client = AgoraRTC.createClient({
-          mode: "rtc",
-          codec: "vp8",
-        });
-        // setLocalClient(client);
-        // }
+    if (!token) return;
 
-        // console.log("localClient", localClient);
+    const connect = async () => {
+      const { default: AgoraRTC } = await import("agora-rtc-sdk-ng");
 
-        // if (localClient && matchId) {
-        await client.join(env.NEXT_PUBLIC_AGORA_APP_ID, matchId, token, userId);
-        // }
-
-        client?.on("user-published", (user, mediaType) => {
-          client
-            .subscribe(user, mediaType)
-            .then(() => {
-              if (mediaType === "video") {
-                // setUsers((prev) => [...prev, user]);
-                setOtherUser(user);
-              }
-              if (mediaType === "audio") {
-                // setUsers((prev) => [...prev, user]);
-                otherUser?.audioTrack?.play();
-              }
-            })
-            .catch((e) => {
-              console.log("error : ", e);
-            });
-        });
-
-        const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-        setVideoTrack(tracks[1]);
-        await client.publish(tracks);
-
-        return { tracks, client };
-
-        // await localClient?.publish(tracks);
-      };
-      connect().catch(() => {
-        console.log("ERROR in connect in [matchId].tsx");
+      const client = AgoraRTC.createClient({
+        mode: "rtc",
+        codec: "vp8",
       });
-    }
-  }, [matchId, otherUser?.audioTrack, token, userId]);
+
+      await client.join(env.NEXT_PUBLIC_AGORA_APP_ID, matchId, token, userId);
+
+      client?.on("user-published", (user, mediaType) => {
+        client
+          .subscribe(user, mediaType)
+          .then(() => {
+            if (mediaType === "video") {
+              setOtherUser(user);
+            }
+            if (mediaType === "audio") {
+              otherUser?.audioTrack?.play();
+            }
+          })
+          .catch((e) => {
+            console.log("error : ", e);
+          });
+      });
+
+      const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+      setVideoTrack(tracks[1]);
+      await client.publish(tracks[1]);
+      // connectionPromiseRef.current =
+      //   connectionPromiseRef.current.then(connect);
+
+      connectionPromiseRef.current = Promise.resolve({ tracks, client });
+
+      return { tracks, client };
+    };
+    connect().catch(() => {
+      console.log("ERROR in connect in [matchId].tsx");
+    });
+    // connectionPromiseRef.current = connectionPromiseRef.current.then(connect);
+
+    return () => {
+      const disconnect = async () => {
+        const client = await connectionPromiseRef.current;
+        if (client) {
+          client.client.removeAllListeners();
+
+          await client.client.unpublish(client.tracks[1]);
+          await client.client.leave();
+        }
+        if (videoTrack) {
+          videoTrack.stop();
+          videoTrack.close();
+        }
+      };
+      connectionPromiseRef.current.then(disconnect).catch((e) => {
+        console.log("ERROR FROM SWAY : ", e);
+      });
+    };
+  }, [matchId, otherUser?.audioTrack, token, userId, videoTrack]);
 
   const companionName = useMemo(() => {
     if (userId === matchQuery.data?.sinkUser.userId) {
@@ -137,9 +169,7 @@ const MatchingPage = () => {
     userId,
   ]);
 
-  console.log(users);
-
-  console.log("otherUser?.videoTrack", otherUser?.videoTrack);
+  // console.log("otherUser?.videoTrack", otherUser?.videoTrack);
 
   const otherUserMemo = useMemo(() => {
     if (otherUser) {
@@ -147,7 +177,7 @@ const MatchingPage = () => {
     }
   }, [otherUser]);
 
-  console.log("otherUserMemo", otherUserMemo);
+  // console.log("otherUserMemo", otherUserMemo);
 
   return (
     <>
@@ -156,8 +186,8 @@ const MatchingPage = () => {
         <Link href={"/"}>RETURN HOME</Link>
       </h2>
       <body className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        {/* <span className="min-w-40 text-2xl">{companionName}</span> */}
-        {/* <span>My Personal Token Generated : {token.slice(0, 10)}</span> */}
+        <span className="min-w-40 text-2xl">{companionName}</span>
+        <span>My Personal Token Generated : {token.slice(0, 10)}</span>
 
         <div className="grid h-full w-full grid-cols-2 bg-sky-800">
           {videoTrack && (

@@ -46,6 +46,7 @@ model Post {
 model User {
   id            String   @id @default(cuid())
   name          String
+  termsAgreed   Boolean  @default(false)
   userId        String   @unique
   createdAt     DateTime @default(now())
   status        String   @default("waiting")

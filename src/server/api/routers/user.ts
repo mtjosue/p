@@ -22,7 +22,13 @@ export const userRouter = createTRPCRouter({
       return userFound;
     }),
   create: publicProcedure
-    .input(z.object({ name: z.string().min(1), userId: z.string() }))
+    .input(
+      z.object({
+        name: z.string().min(1),
+        userId: z.string(),
+        termsAgreed: z.boolean(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // simulate a slow db call
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -31,6 +37,7 @@ export const userRouter = createTRPCRouter({
         data: {
           name: input.name,
           userId: input.userId,
+          termsAgreed: true,
         },
       });
     }),
@@ -121,7 +128,8 @@ export const userRouter = createTRPCRouter({
       const channelName = input.matchId;
       const account = input.userId;
       const role = RtcRole.PUBLISHER;
-      const expirationTimeInSeconds = 3600;
+      // const expirationTimeInSeconds = 3600;
+      const expirationTimeInSeconds = 4600;
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
       const token = RtcTokenBuilder.buildTokenWithUserAccount(

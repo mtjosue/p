@@ -15,7 +15,7 @@ const WaitingPage = () => {
   const getMatch = api.user.getMatch.useQuery({ userId: userId });
 
   const router = useRouter();
-  console.log("data.1", searchMatch.data);
+  // console.log("data.1", searchMatch.data);
 
   useEffect(() => {
     if (searchMatch.data) {
@@ -48,7 +48,7 @@ const WaitingPage = () => {
   return (
     <main
       onBlur={() => {
-        console.log("HIYOOOOOOOOOOOOOOOOO");
+        // console.log("HIYOOOOOOOOOOOOOOOOO");
       }}
       className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]"
     >
