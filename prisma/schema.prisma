@@ -52,17 +52,19 @@ model User {
   status        String   @default("waiting")
   sourceMatches Match[]  @relation("SourceMatches")
   sinkMatches   Match[]  @relation("SinkMatches")
+  // balance       Int      @default(1000)
 
   @@index([id])
 }
 
 model Match {
-  id           String @id @default(cuid())
+  id           String   @id @default(cuid())
   sourceUserId String
   sinkUserId   String
-  sourceUser   User   @relation("SourceMatches", fields: [sourceUserId], references: [userId], onDelete: Cascade)
-  sinkUser     User   @relation("SinkMatches", fields: [sinkUserId], references: [userId], onDelete: Cascade)
-  status       String @default("running")
+  sourceUser   User     @relation("SourceMatches", fields: [sourceUserId], references: [userId], onDelete: Cascade)
+  sinkUser     User     @relation("SinkMatches", fields: [sinkUserId], references: [userId], onDelete: Cascade)
+  status       String   @default("running")
+  createdAt    DateTime @default(now())
 
   @@index([sinkUserId])
   @@index([sourceUserId])

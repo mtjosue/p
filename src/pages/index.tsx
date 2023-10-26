@@ -4,9 +4,6 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Modal from "~/components/modal";
 import { useUserStore } from "~/stores/useLocalUser";
-// import Link from "next/link";
-// import { useUserStore } from "~/stores/useLocalUser";
-
 import { api } from "~/utils/api";
 
 export default function Home() {
@@ -16,6 +13,12 @@ export default function Home() {
   const setFirstName = useUserStore().actions.setFirstName;
   const setUserId = useUserStore().actions.setUserId;
   const [termsAgreed, setTermsAgreed] = useState(false);
+
+  useEffect(() => {
+    if (user.user?.id) {
+      setUserId(user.user.id);
+    }
+  }, [setUserId, user.user?.id]);
 
   const userStatusUpdate = api.user.statusUpdate.useMutation();
   const searchUser = api.user.userCheck.useQuery(
@@ -28,7 +31,6 @@ export default function Home() {
       staleTime: 0,
     },
   );
-  // console.log("searchUser.data : HERE :", searchUser.data);
 
   useEffect(() => {
     if (!user.isSignedIn) return;
@@ -65,12 +67,9 @@ export default function Home() {
     if (searchUser.data && firstName !== searchUser.data.name) {
       setFirstName(searchUser.data.name);
     }
-    if (user.user?.id) {
-      setUserId(user.user.id);
-    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firstName, searchUser.data, user.user?.id]);
+  }, [firstName, searchUser.data]);
 
   const onBtnClick = async () => {
     if (user.user?.id) {
@@ -81,9 +80,6 @@ export default function Home() {
     }
     await router.push("/waiting");
   };
-
-  // const appID = process.env.AGORA_APP_ID;
-  // console.log("appID : ", appID);
 
   return (
     <>

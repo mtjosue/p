@@ -63,16 +63,20 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      if (!input.userId) {
+        console.log("NO USERID INPUT!");
+        return null;
+      }
+
       const firstMatch = await ctx.db.user.findFirst({
         where: {
           status: "looking",
           NOT: {
-            userId: input.userId,
+            userId: input.userId || "",
           },
         },
       });
 
-      console.log("firstMatch", firstMatch);
       if (!firstMatch) return null;
 
       const match = await ctx.db.match.create({
@@ -94,6 +98,7 @@ export const userRouter = createTRPCRouter({
       const match = await ctx.db.match.findFirst({
         where: {
           sinkUserId: input.userId,
+          status: { not: "ended" },
         },
       });
 
@@ -144,5 +149,19 @@ export const userRouter = createTRPCRouter({
 
       console.log("Token With UserAccount: " + token);
       return token;
+    }),
+  endMatch: publicProcedure
+    .input(
+      z.object({
+        matchid: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.match.update({
+        where: { id: input.matchid },
+        data: {
+          status: "ended",
+        },
+      });
     }),
 });

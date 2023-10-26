@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { api } from "~/utils/api";
 import { useUser } from "@clerk/nextjs";
@@ -10,11 +10,15 @@ export default function Modal() {
   const createNewUser = api.user.create.useMutation();
 
   const onAcceptTerms = () => {
-    createNewUser.mutate({
-      name: user.user?.firstName ?? "",
-      userId: user.user?.id ?? "",
-      termsAgreed: true,
-    });
+    if (user.user) {
+      if (user.user.id) {
+        createNewUser.mutate({
+          name: user.user?.firstName ?? "",
+          userId: user.user.id,
+          termsAgreed: true,
+        });
+      }
+    }
   };
 
   return (

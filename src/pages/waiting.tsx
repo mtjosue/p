@@ -1,28 +1,59 @@
+import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { useUserStore } from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
-// type Props = {};
-// props: Props
-
 const WaitingPage = () => {
-  const token = useUserStore().token;
-  const setToken = useUserStore().actions.setToken;
-  const userId = useUserStore().userId;
-  const searchMatch = api.user.searchMatch.useQuery({ userId: userId });
-  const getMatch = api.user.getMatch.useQuery({ userId: userId });
-
   const router = useRouter();
-  // console.log("data.1", searchMatch.data);
+  const setToken = useUserStore().actions.setToken;
+  const setUserId = useUserStore().actions.setUserId;
+  const setFirstName = useUserStore().actions.setFirstName;
+  const userId = useUserStore().userId;
+  const user = useUser();
+  console.log("userId!@#$%^&*()_+_)(*&^%$#@!", userId);
+
+  useEffect(() => {
+    if (!userId) {
+      if (user.user) {
+        if (user.user.id) {
+          setUserId(user.user.id);
+          setFirstName(user.user?.firstName ?? "");
+        }
+      }
+    }
+  }, [setFirstName, setUserId, user.user, userId]);
+
+  const searchMatch = api.user.searchMatch.useQuery(
+    { userId: userId },
+    {
+      refetchOnWindowFocus: false,
+      cacheTime: 0,
+      staleTime: 0,
+    },
+  );
+  const getMatch = api.user.getMatch.useQuery(
+    { userId: userId },
+    {
+      refetchOnWindowFocus: false,
+      cacheTime: 0,
+      staleTime: 0,
+    },
+  );
 
   useEffect(() => {
     if (searchMatch.data) {
       setToken(searchMatch.data.id);
-      router.push(`/chatting/${searchMatch.data.id}`).catch(() => {
-        console.log("error");
-      });
+      if (userId) {
+        router.push(`/chatting/${searchMatch.data.id}`).catch(() => {
+          console.log("error");
+        });
+      } else {
+        router.push("/").catch(() => {
+          console.log("error");
+        });
+      }
     }
   }, [router, searchMatch.data, setToken, userId]);
 
@@ -39,7 +70,7 @@ const WaitingPage = () => {
       getMatch.refetch().catch(() => {
         console.log("ERROR");
       });
-    }, 7000);
+    }, 3000);
     return () => {
       clearInterval(interval);
     };
