@@ -11,6 +11,7 @@ import {
 } from "agora-rtc-sdk-ng";
 import { env } from "~/env.mjs";
 import Link from "next/link";
+import Countdown from "react-countdown";
 
 const VideoPlayer = ({
   videoTrack,
@@ -41,6 +42,7 @@ const VideoPlayer = ({
 };
 
 const MatchingPage = () => {
+  const [timeLeft] = useState(Date.now() + 1000 * 60 * 1);
   const userId = useUserStore().userId;
   const router = useRouter();
   const token = useUserStore().token;
@@ -211,6 +213,9 @@ const MatchingPage = () => {
       <h2>
         <Link href={"/"}>RETURN HOME</Link>
       </h2>
+      <h3>
+        <Countdown date={timeLeft} />
+      </h3>
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
         <span className="min-w-40 text-2xl">{companionName}</span>
         <span>My Personal Token Generated : {token.slice(0, 10)}</span>
