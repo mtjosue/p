@@ -1,9 +1,7 @@
-import { equal } from "assert";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { RtcRole, RtcTokenBuilder } from "agora-token";
+// import { RtcRole, RtcTokenBuilder } from "agora-token";
 import { env } from "~/env.mjs";
-import { procedureTypes } from "@trpc/server";
 
 const appId = env.NEXT_PUBLIC_AGORA_APP_ID;
 const appCertificate = env.NEXT_PUBLIC_AGORA_APP_CERT;
@@ -122,34 +120,34 @@ export const userRouter = createTRPCRouter({
       });
       return match;
     }),
-  generateToken: publicProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-        matchId: z.string(),
-      }),
-    )
-    .query(({ input }) => {
-      const channelName = input.matchId;
-      const account = input.userId;
-      const role = RtcRole.PUBLISHER;
-      // const expirationTimeInSeconds = 3600;
-      const expirationTimeInSeconds = 4600;
-      const currentTimestamp = Math.floor(Date.now() / 1000);
-      const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
-      const token = RtcTokenBuilder.buildTokenWithUserAccount(
-        appId,
-        appCertificate,
-        channelName,
-        account,
-        role,
-        expirationTimeInSeconds,
-        privilegeExpiredTs,
-      );
+  // generateToken: publicProcedure
+  //   .input(
+  //     z.object({
+  //       userId: z.string(),
+  //       matchId: z.string(),
+  //     }),
+  //   )
+  //   .query(({ input }) => {
+  //     const channelName = input.matchId;
+  //     const account = input.userId;
+  //     const role = RtcRole.PUBLISHER;
+  //     // const expirationTimeInSeconds = 3600;
+  //     const expirationTimeInSeconds = 4600;
+  //     const currentTimestamp = Math.floor(Date.now() / 1000);
+  //     const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
+  //     const token = RtcTokenBuilder.buildTokenWithUserAccount(
+  //       appId,
+  //       appCertificate,
+  //       channelName,
+  //       account,
+  //       role,
+  //       expirationTimeInSeconds,
+  //       privilegeExpiredTs,
+  //     );
 
-      console.log("Token With UserAccount: " + token);
-      return token;
-    }),
+  //     console.log("Token With UserAccount: " + token);
+  //     return token;
+  //   }),
   endMatch: publicProcedure
     .input(
       z.object({
