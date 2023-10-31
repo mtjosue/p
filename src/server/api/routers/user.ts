@@ -3,8 +3,8 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 // import { RtcRole, RtcTokenBuilder } from "agora-token";
 import { env } from "~/env.mjs";
 
-const appId = env.NEXT_PUBLIC_AGORA_APP_ID;
-const appCertificate = env.NEXT_PUBLIC_AGORA_APP_CERT;
+// const appId = env.NEXT_PUBLIC_AGORA_APP_ID;
+// const appCertificate = env.NEXT_PUBLIC_AGORA_APP_CERT;
 
 export const userRouter = createTRPCRouter({
   userCheck: publicProcedure
