@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 // import { RtcRole, RtcTokenBuilder } from "agora-token";
-import { env } from "~/env.mjs";
+// import { env } from "~/env.mjs";
 
 // const appId = env.NEXT_PUBLIC_AGORA_APP_ID;
 // const appCertificate = env.NEXT_PUBLIC_AGORA_APP_CERT;
@@ -113,41 +113,17 @@ export const userRouter = createTRPCRouter({
         where: {
           id: input.matchId,
         },
-        include: {
-          sinkUser: true,
-          sourceUser: true,
+
+        select: {
+          tempPeerId: true,
+          sinkUserId: true,
+          sourceUserId: true,
+          // sourceUser: true,
+          // sinkUserId: true,
         },
       });
       return match;
     }),
-  // generateToken: publicProcedure
-  //   .input(
-  //     z.object({
-  //       userId: z.string(),
-  //       matchId: z.string(),
-  //     }),
-  //   )
-  //   .query(({ input }) => {
-  //     const channelName = input.matchId;
-  //     const account = input.userId;
-  //     const role = RtcRole.PUBLISHER;
-  //     // const expirationTimeInSeconds = 3600;
-  //     const expirationTimeInSeconds = 4600;
-  //     const currentTimestamp = Math.floor(Date.now() / 1000);
-  //     const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
-  //     const token = RtcTokenBuilder.buildTokenWithUserAccount(
-  //       appId,
-  //       appCertificate,
-  //       channelName,
-  //       account,
-  //       role,
-  //       expirationTimeInSeconds,
-  //       privilegeExpiredTs,
-  //     );
-
-  //     console.log("Token With UserAccount: " + token);
-  //     return token;
-  //   }),
   endMatch: publicProcedure
     .input(
       z.object({
@@ -161,5 +137,60 @@ export const userRouter = createTRPCRouter({
           status: "ended",
         },
       });
+    }),
+  // appendPeerId: publicProcedure
+  //   .input(
+  //     z.object({
+  //       matchId: z.string(),
+  //       peerId: z.string(),
+  //     }),
+  //   )
+  //   .mutation(async ({ ctx, input }) => {
+  //     return ctx.db.match.update({
+  //       where: {
+  //         id: input.matchId,
+  //       },
+  //       data: {
+  //         tempPeerId: input.peerId,
+  //       },
+  //     });
+  //   }),
+  searchMatchOrCreate: publicProcedure
+    .input(
+      z.object({
+        tempId: z.string(),
+        userId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!input.userId) {
+        console.log("NO USERID INPUT!");
+        return null;
+      }
+      if (!input.tempId) {
+        console.log("NO PEERID INPUT!");
+        return null;
+      }
+
+      const firstMatch = await ctx.db.user.findFirst({
+        where: {
+          status: "looking",
+          NOT: {
+            userId: input.userId || "",
+          },
+        },
+      });
+
+      if (!firstMatch) return null;
+
+      const match = await ctx.db.match.create({
+        data: {
+          sourceUserId: input.userId,
+          sinkUserId: firstMatch.userId,
+          tempPeerId: input.tempId,
+        },
+      });
+
+      return match;
     }),
 });

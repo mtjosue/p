@@ -65,6 +65,7 @@ model Match {
   sinkUser     User     @relation("SinkMatches", fields: [sinkUserId], references: [userId], onDelete: Cascade)
   status       String   @default("running")
   createdAt    DateTime @default(now())
+  tempPeerId   String   @default("")
 
   @@index([sinkUserId])
   @@index([sourceUserId])
