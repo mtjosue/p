@@ -19,7 +19,7 @@ const WaitingPage = () => {
     }
   }, [peer]);
 
-  console.log("peer in body of WaitingPage : ", peer);
+  // console.log("peer in body of WaitingPage : ", peer);
 
   const searchOrCreateMatch = api.user.searchMatchOrCreate.useMutation();
 
@@ -31,7 +31,7 @@ const WaitingPage = () => {
           if (!unmount) {
             const newPeer = new Peer();
             newPeer.on("open", (id) => {
-              console.log("My peer ID is : ", id);
+              // console.log("My peer ID is : ", id);
               setPeer(newPeer);
             });
           }
@@ -47,8 +47,8 @@ const WaitingPage = () => {
   }, [peer, setPeer]);
 
   useEffect(() => {
-    console.log("peerId : ", peerId);
-    console.log("created : ", created);
+    // console.log("peerId : ", peerId);
+    // console.log("created : ", created);
 
     if (!peerId || created) return;
     if (userId && peerId) {

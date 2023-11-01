@@ -39,7 +39,17 @@ const MatchPage = () => {
         console.log("Incoming Call.....HELLO");
 
         console.log(":3");
-        const getUserMedia = navigator.mediaDevices
+
+        // Set the remote video stream
+        if (remoteVideoRef.current && call.remoteStream) {
+          remoteVideoRef.current.srcObject = call.remoteStream;
+          remoteVideoRef.current
+            .play()
+            .catch(() => console.log("Error in remote play"));
+          // Start playing the remote video stream
+        }
+
+        const answerCall = navigator.mediaDevices
           .getUserMedia({
             video: true,
             // audio: true,
@@ -60,16 +70,8 @@ const MatchPage = () => {
                 .catch(() => console.log("Error in local play"));
               // Start playing the local video stream
             }
-
-            // Set the remote video stream
-            if (remoteVideoRef.current && call.remoteStream) {
-              remoteVideoRef.current.srcObject = call.remoteStream;
-              remoteVideoRef.current
-                .play()
-                .catch(() => console.log("Error in remote play"));
-              // Start playing the remote video stream
-            }
           });
+        answerCall.catch(() => console.log("ERROR in answerCall"));
       });
     }
   }, [peer]);
