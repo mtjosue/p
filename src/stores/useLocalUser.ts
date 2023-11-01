@@ -1,15 +1,8 @@
 import { create } from "zustand";
-// import { type Location } from "prisma/selects/location";
-
-// type LocationStore = {
-//   location: Location | null;
-//   actions: {
-//     selectLocation: (location: Location) => void;
-//     deselectLocation: () => void;
-//   };
-// };
+import type { Peer } from "peerjs";
 
 type UserStore = {
+  peer: Peer | null;
   token: string;
   firstLoad: boolean;
   firstName: string;
@@ -19,19 +12,12 @@ type UserStore = {
     setUserId: (str: string) => void;
     setFirstLoad: (bol: boolean) => void;
     setToken: (token: string) => void;
+    setPeer: (peer: Peer) => void;
   };
 };
 
-// export const useLocationStore = create<LocationStore>((set) => ({
-//   location: null,
-
-//   actions: {
-//     selectLocation: (location) => set(() => ({ location })),
-//     deselectLocation: () => set(() => ({ location: null })),
-//   },
-// }));
-
 export const useUserStore = create<UserStore>((set) => ({
+  peer: null,
   token: "",
   firstLoad: false,
   firstName: "",
@@ -41,11 +27,12 @@ export const useUserStore = create<UserStore>((set) => ({
     setUserId: (userId) => set(() => ({ userId })),
     setFirstLoad: (firstLoad) => set(() => ({ firstLoad })),
     setToken: (token) => set(() => ({ token })),
+    setPeer: (peer) => set(() => ({ peer })),
   },
 }));
 
+export const usePeer = () => useUserStore((state) => state.peer);
+export const useSetPeer = () => useUserStore((state) => state.actions.setPeer);
+
 // export const useSelectedLocation = () =>
 //   useLocationStore((state) => state.location);
-
-// export const useSelectedLocationActions = () =>
-//   useLocationStore((state) => state.actions);

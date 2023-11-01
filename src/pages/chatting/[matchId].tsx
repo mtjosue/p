@@ -1,184 +1,397 @@
+import React, { useEffect, useRef, useState } from "react";
+import { useUser } from "@clerk/nextjs";
+// import type Peer from "peerjs";
 import { useRouter } from "next/router";
-import React, {
-  type MutableRefObject,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useUserStore } from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
-import {
-  type ICameraVideoTrack,
-  type IAgoraRTCClient,
-  type IAgoraRTCRemoteUser,
-  type IRemoteVideoTrack,
-} from "agora-rtc-sdk-ng";
-import { env } from "~/env.mjs";
+import { usePeer } from "~/stores/useLocalUser";
 import Link from "next/link";
 
-const VideoPlayer = ({
-  videoTrack,
-}: {
-  videoTrack: IRemoteVideoTrack | ICameraVideoTrack;
-}) => {
-  const ref = useRef(null);
+const MatchPage = () => {
+  const userId = useUser().user?.id;
+  const localVideoRef = useRef<null | HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
+  const peer = usePeer();
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const router = useRouter();
+  const matchId = router.query.matchId as string;
+
+  const { data } = api.user.getMatchForPage.useQuery({
+    matchId: matchId,
+  });
+  const endMatch = api.user.endMatch.useMutation();
+
+  const cleanup = () => {
+    if (peer) {
+      peer.destroy();
+    }
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop());
+    }
+  };
 
   useEffect(() => {
-    const playerRef = ref.current;
-    if (!videoTrack) return;
-    if (!playerRef) return;
+    if (peer) {
+      peer.on("call", (call) => {
+        console.log("Incoming Call.....HELLO");
+        const testFunc = async () => {
+          const getUserMedia = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            // audio: true,
+          });
 
-    videoTrack.play(playerRef);
+          call.answer(getUserMedia);
 
-    return () => {
-      videoTrack.stop();
-    };
-  }, [videoTrack]);
+          // Set the remote video stream
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = call.remoteStream;
+            remoteVideoRef.current.play().catch(() => console.log("playError")); // Start playing the remote video stream
+          }
+
+          // Set the local video stream
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = getUserMedia;
+            localVideoRef.current.play().catch(() => console.log("playError")); // Start playing the local video stream
+          }
+        };
+        testFunc().catch(() => console.log("ERROR IN TESTFUNC"));
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localStream, peer]);
+
+  const call = async (remotePeerId: string) => {
+    const getUserMedia = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      // audio: true,
+    });
+    setLocalStream(getUserMedia);
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = getUserMedia;
+      localVideoRef.current
+        .play()
+        .catch(() => console.log("ERROR IN LOCALVIDEOREF PLAY"));
+    }
+    if (peer && remotePeerId && getUserMedia) {
+      const call = peer.call(remotePeerId, getUserMedia);
+      call?.on("stream", (remoteStream) => {
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteStream;
+          remoteVideoRef.current
+            .play()
+            .catch(() => console.log("ERROR in remoteVideoRef : ")); // Start playing the remote video stream
+        }
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!data) return;
+    if (data.tempPeerId && data.sourceUserId !== userId) {
+      console.log("about to call");
+      call(data.tempPeerId).catch(() =>
+        console.log("ERROR IN... calling of call()"),
+      );
+      console.log("just tried to call");
+    }
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, userId]);
 
   return (
-    <div>
-      <div ref={ref} className="h-[200px] w-[200px]"></div>
+    <div className="flex h-full w-screen flex-col items-center justify-center p-8">
+      <h1>HELLO FROM MATCH PAGE</h1>
+      <div></div>
+      <Link
+        href={"/"}
+        onClick={() => {
+          endMatch.mutate({ matchid: matchId });
+        }}
+      >
+        Return Home
+      </Link>
+      <div className="min-h-60 min-w-60 flex">
+        <video ref={localVideoRef} className="h-[200px] w-[200px]"></video>
+        <video ref={remoteVideoRef} className="h-[200px] w-[200px]"></video>
+      </div>
     </div>
   );
 };
 
-const MatchingPage = () => {
-  const token = useUserStore().token;
-  const firstName = useUserStore().firstName;
-  const setToken = useUserStore().actions.setToken;
-  const userId = useUserStore().userId;
-  const router = useRouter();
-  const matchId = router.query.matchId as string;
+export default MatchPage;
 
-  const matchQuery = api.user.getMatchForPage.useQuery({ matchId: matchId });
-  const tokenQuery = api.user.generateToken.useQuery(
-    {
-      userId: userId,
-      matchId: matchQuery.data?.id ?? "",
-    },
-    {
-      refetchOnWindowFocus: false,
-      cacheTime: 0,
-      staleTime: 0,
-    },
-  );
+// const appendSourceUserPeerId = api.user.appendPeerId.useMutation();
 
-  const [users, setUsers] = useState<IAgoraRTCRemoteUser[] | never[]>([]);
-  const [otherUser, setOtherUser] = useState<IAgoraRTCRemoteUser>();
-  const [videoTrack, setVideoTrack] = useState<ICameraVideoTrack>();
+// useEffect(() => {
+//   // console.log("Hello from first useEffect");
+//   import("peerjs")
+//     .then(({ Peer }) => {
+//       const peer = new Peer();
+//       peer.on("open", (id) => {
+//         console.log("My peer ID is : ", id);
+//       });
+//       peer.on("call", (call) => {
+//         console.log("Incoming Call.....");
+//         // const getUserMedia = navigator.mediaDevices.getUserMedia({
+//         //   video: true,
+//         //   // audio: true,
+//         // });
+//         // console.log("getUserMedia", getUserMedia);
+//       });
+//       setPeer(peer);
+//     })
+//     .catch((error) => {
+//       console.error("Error loading peerjs:", error);
+//     });
 
-  useEffect(() => {
-    if (!tokenQuery.data) return;
-    setToken(tokenQuery.data);
-  }, [setToken, tokenQuery.data]);
+//   if (localVideoRef) {
+//     const trackAssign = async () => {
+//       if (localVideoRef.current) {
+//         await localVideoRef.current.play();
+//       }
+//     };
+//     trackAssign().catch(() => console.log("HELP!"));
+//   }
 
-  useEffect(() => {
-    if (token) {
-      const connect = async () => {
-        const { default: AgoraRTC } = await import("agora-rtc-sdk-ng");
-        // if (!localClient) {
-        const client = AgoraRTC.createClient({
-          mode: "rtc",
-          codec: "vp8",
-        });
-        // setLocalClient(client);
-        // }
+//   return () => {
+//     if (peer) {
+//       peer.destroy(); // Safely disconnect from the Peer server
+//     }
+//     if (localStream) {
+//       localStream.getTracks().forEach((track) => track.stop());
+//     }
+//   };
+//   // eslint-disable-next-line react-hooks/exhaustive-deps
+// }, [localStream]);
 
-        // console.log("localClient", localClient);
+// useEffect(() => {
+//   const data = getMatchForPage.data;
+//   if (data?.sourceUserId === user.user?.id && peer?.id) {
+//     appendSourceUserPeerId.mutate({ matchId: matchId, peerId: peer.id });
+//   }
+//   // eslint-disable-next-line react-hooks/exhaustive-deps
+// }, [
+//   // appendSourceUserPeerId,
+//   getMatchForPage.data,
+//   matchId,
+//   peer?.id,
+//   user.user?.id,
+// ]);
 
-        // if (localClient && matchId) {
-        await client.join(env.NEXT_PUBLIC_AGORA_APP_ID, matchId, token, userId);
-        // }
+// const call = async (remotePeerId: string) => {
+//   const getUserMedia = await navigator.mediaDevices.getUserMedia({
+//     video: true,
+//     // audio: true,
+//   });
 
-        client?.on("user-published", (user, mediaType) => {
-          client
-            .subscribe(user, mediaType)
-            .then(() => {
-              if (mediaType === "video") {
-                // setUsers((prev) => [...prev, user]);
-                setOtherUser(user);
-              }
-              if (mediaType === "audio") {
-                // setUsers((prev) => [...prev, user]);
-                otherUser?.audioTrack?.play();
-              }
-            })
-            .catch((e) => {
-              console.log("error : ", e);
-            });
-        });
+//   setLocalStream(getUserMedia);
 
-        const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-        setVideoTrack(tracks[1]);
-        await client.publish(tracks);
+//   if (peer && remotePeerId && getUserMedia) {
+//     peer.call(remotePeerId, getUserMedia);
+//   }
 
-        return { tracks, client };
+//   if (localVideoRef.current) {
+//     localVideoRef.current.srcObject = getUserMedia;
+//   }
+// };
 
-        // await localClient?.publish(tracks);
-      };
-      connect().catch(() => {
-        console.log("ERROR in connect in [matchId].tsx");
-      });
-    }
-  }, [matchId, otherUser?.audioTrack, token, userId]);
+// useEffect(() => {
+//   const data = getMatchForPage.data;
+//   if (data?.tempPeerId) {
+//     console.log("Match has a tempPeerId!!!");
+//     call(data.tempPeerId).catch(() => console.log("ERROR IN CALL"));
+//   }
+//   // eslint-disable-next-line react-hooks/exhaustive-deps
+// }, [getMatchForPage.data]);
 
-  const companionName = useMemo(() => {
-    if (userId === matchQuery.data?.sinkUser.userId) {
-      return matchQuery.data?.sourceUser.name;
-    } else if (userId === matchQuery.data?.sourceUser.userId) {
-      return matchQuery.data?.sinkUser.name;
-    }
-  }, [
-    matchQuery.data?.sinkUser.name,
-    matchQuery.data?.sinkUser.userId,
-    matchQuery.data?.sourceUser.name,
-    matchQuery.data?.sourceUser.userId,
-    userId,
-  ]);
+// console.log("Current Peer : ", peer);
 
-  console.log(users);
+// import React, { useEffect, useRef, useState } from "react";
+// import { useUser } from "@clerk/nextjs";
+// import type Peer from "peerjs";
+// import { useRouter } from "next/router";
+// import { api } from "~/utils/api";
+// import { useUserStore } from "~/stores/useLocalUser";
+// import Link from "next/link";
 
-  console.log("otherUser?.videoTrack", otherUser?.videoTrack);
+// const MatchPage = () => {
+//   const user = useUser();
+//   const localVideoRef = useRef<null | HTMLVideoElement>(null);
+//   const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
+//   //   const [localPeerId, setLocalPeerId] = useState<null | string>(null);
 
-  const otherUserMemo = useMemo(() => {
-    if (otherUser) {
-      return otherUser;
-    }
-  }, [otherUser]);
+//   const [peer, setPeer] = useState<Peer | null>(null);
+//   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+//   const router = useRouter();
+//   const matchId = router.query.matchId as string;
 
-  console.log("otherUserMemo", otherUserMemo);
+//   const getMatchForPage = api.user.getMatchForPage.useQuery({
+//     matchId: matchId,
+//   });
 
-  return (
-    <>
-      <h1>Matching Page</h1>
-      <h2>
-        <Link href={"/"}>RETURN HOME</Link>
-      </h2>
-      <body className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        {/* <span className="min-w-40 text-2xl">{companionName}</span> */}
-        {/* <span>My Personal Token Generated : {token.slice(0, 10)}</span> */}
+//   const endMatch = api.user.endMatch.useMutation();
 
-        <div className="grid h-full w-full grid-cols-2 bg-sky-800">
-          {videoTrack && (
-            <div>
-              <span>{firstName}</span>
-              <VideoPlayer videoTrack={videoTrack} />
-            </div>
-          )}
-          {otherUserMemo && (
-            <div>
-              <span>{companionName}</span>
+//   const appendSourceUserPeerId = api.user.appendPeerId.useMutation();
 
-              {otherUserMemo.videoTrack && (
-                <VideoPlayer videoTrack={otherUserMemo.videoTrack} />
-              )}
-            </div>
-          )}
-        </div>
-      </body>
-    </>
-  );
-};
+//   useEffect(() => {
+//     // console.log("Hello from first useEffect");
+//     import("peerjs")
+//       .then(({ Peer }) => {
+//         const peer = new Peer();
+//         peer.on("open", (id) => {
+//           console.log("My peer ID is : ", id);
+//         });
+//         peer.on("call", (call) => {
+//           console.log("Incoming Call.....");
+//           // const getUserMedia = navigator.mediaDevices.getUserMedia({
+//           //   video: true,
+//           //   // audio: true,
+//           // });
+//           // console.log("getUserMedia", getUserMedia);
+//         });
+//         setPeer(peer);
+//       })
+//       .catch((error) => {
+//         console.error("Error loading peerjs:", error);
+//       });
 
-export default MatchingPage;
+//     if (localVideoRef) {
+//       const trackAssign = async () => {
+//         if (localVideoRef.current) {
+//           await localVideoRef.current.play();
+//         }
+//       };
+//       trackAssign().catch(() => console.log("HELP!"));
+//     }
+
+//     return () => {
+//       if (peer) {
+//         peer.destroy(); // Safely disconnect from the Peer server
+//       }
+//       if (localStream) {
+//         localStream.getTracks().forEach((track) => track.stop());
+//       }
+//     };
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [localStream]);
+
+//   useEffect(() => {
+//     const data = getMatchForPage.data;
+//     if (data?.sourceUserId === user.user?.id && peer?.id) {
+//       appendSourceUserPeerId.mutate({ matchId: matchId, peerId: peer.id });
+//     }
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [
+//     // appendSourceUserPeerId,
+//     getMatchForPage.data,
+//     matchId,
+//     peer?.id,
+//     user.user?.id,
+//   ]);
+
+//   const call = async (remotePeerId: string) => {
+//     const getUserMedia = await navigator.mediaDevices.getUserMedia({
+//       video: true,
+//       // audio: true,
+//     });
+
+//     setLocalStream(getUserMedia);
+
+//     if (peer && remotePeerId && getUserMedia) {
+//       peer.call(remotePeerId, getUserMedia);
+//     }
+
+//     if (localVideoRef.current) {
+//       localVideoRef.current.srcObject = getUserMedia;
+//     }
+//   };
+
+//   useEffect(() => {
+//     const data = getMatchForPage.data;
+//     if (data?.tempPeerId) {
+//       console.log("Match has a tempPeerId!!!");
+//       call(data.tempPeerId).catch(() => console.log("ERROR IN CALL"));
+//     }
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [getMatchForPage.data]);
+
+//   console.log("Current Peer : ", peer);
+
+//   return (
+//     <div className="flex h-full w-screen flex-col items-center justify-center p-8">
+//       <h1>HELLO FROM MATCH PAGE</h1>
+//       <div></div>
+//       <Link
+//         href={"/"}
+//         onClick={() => {
+//           endMatch.mutate({ matchid: matchId });
+//         }}
+//       >
+//         Return Home
+//       </Link>
+//       <div className="min-h-60 min-w-60 flex">
+//         <video ref={localVideoRef} className="h-[200px] w-[200px]"></video>
+//         <video ref={remoteVideoRef} className="h-[200px] w-[200px]"></video>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default MatchPage;
+
+//   useEffect(() => {
+//     if (typeof window !== "undefined" && !newPeer) {
+//       import("peerjs")
+//         .then(({ Peer }) => {
+//           const peer = new Peer();
+//           peer.on("open", (id) => {
+//             setLocalPeerId(id);
+//             // console.log("My peer ID is : ", id);
+//           });
+//           peer.on("call", (call) => {
+//             const testFunc = async () => {
+//               const getUserMedia = await navigator.mediaDevices.getUserMedia({
+//                 video: true,
+//                 // audio: true,
+//               });
+
+//               call.answer(getUserMedia);
+
+//               // Set the local video stream
+//               if (localVideoRef.current) {
+//                 localVideoRef.current.srcObject = getUserMedia;
+//                 localVideoRef.current.play().catch(() => console.log("???")); // Start playing the local video stream
+//               }
+//             };
+//           });
+//           setNewPeer(peer); // Set the Peer object in the state
+//           console.log("newPeer from useEffect : ", peer);
+//         })
+//         .catch(() => console.log("ERROR in peerjs !"));
+//     }
+//   }, [newPeer]);
+
+//   console.log(localPeerId);
+
+// const call = async (remotePeerId: string) => {
+//   const getUserMedia = await navigator.mediaDevices.getUserMedia({
+//     video: true,
+//     // audio: true,
+//   });
+//   const call = newPeer?.call(remotePeerId, getUserMedia);
+//   // Set the local video stream
+//   if (localVideoRef.current) {
+//   localVideoRef.current.srcObject = getUserMedia;
+//   localVideoRef.current
+//     .play()
+//     .catch(() => console.log("ERROR in localVideoRef.play()")); // Start playing the local video stream
+//   }
+//   // Handle the remote stream
+//   call?.on("stream", (remoteStream) => {
+//     if (remoteVideoRef.current) {
+//       remoteVideoRef.current.srcObject = remoteStream;
+//       remoteVideoRef.current
+//         .play()
+//         .catch(() => console.log("ERROR in remoteVideoRef : ")); // Start playing the remote video stream
+//     }
+//   });
+// };
