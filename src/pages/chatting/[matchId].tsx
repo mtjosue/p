@@ -37,39 +37,56 @@ const MatchPage = () => {
     if (peer) {
       peer.on("call", (call) => {
         console.log("Incoming Call.....HELLO");
-        const testFunc = async () => {
-          const getUserMedia = await navigator.mediaDevices.getUserMedia({
+
+        const getUserMedia = navigator.mediaDevices
+          .getUserMedia({
             video: true,
             // audio: true,
+          })
+          .then((media) => {
+            call.answer(media);
+
+            //Logging the call.remoteStream
+            if (call.remoteStream) {
+              console.log("REMOTE STREAM IS THERE!");
+            }
+
+            // Set the local video stream
+            if (localVideoRef.current && media) {
+              localVideoRef.current.srcObject = media;
+              localVideoRef.current
+                .play()
+                .catch(() => console.log("Error in local play"));
+              // Start playing the local video stream
+            }
+
+            // Set the remote video stream
+            if (remoteVideoRef.current && call.remoteStream) {
+              remoteVideoRef.current.srcObject = call.remoteStream;
+              remoteVideoRef.current
+                .play()
+                .catch(() => console.log("Error in remote play"));
+              // Start playing the remote video stream
+            }
           });
-
-          // if (getUserMedia) {
-          //   console.log("getUserMedia", getUserMedia);
-          // }
-
-          call.answer(getUserMedia);
-
-          if (call.remoteStream) {
-            console.log("call.remoteStream", call.remoteStream);
-          }
-
-          // Set the remote video stream
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = call.remoteStream;
-            remoteVideoRef.current.play().catch(() => console.log("playError")); // Start playing the remote video stream
-          }
-
-          // Set the local video stream
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = getUserMedia;
-            localVideoRef.current.play().catch(() => console.log("playError")); // Start playing the local video stream
-          }
-        };
-        testFunc().catch(() => console.log("ERROR IN TESTFUNC"));
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localStream, peer]);
+  }, [peer]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  // useEffect(() => {
+  //   if (localVideoRef.current) {
+  //     localVideoRef.current
+  //       .play()
+  //       .catch(() => console.log("Error in LOCAL play"));
+  //   }
+
+  //   if (remoteVideoRef.current) {
+  //     remoteVideoRef.current
+  //       .play()
+  //       .catch(() => console.log("Error in REMOTE play"));
+  //   }
+  // }, [localVideoRef, remoteVideoRef]);
 
   const call = async (remotePeerId: string) => {
     const getUserMedia = await navigator.mediaDevices.getUserMedia({
