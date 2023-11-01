@@ -12,6 +12,7 @@ const MatchPage = () => {
   const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
   const peer = usePeer();
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const router = useRouter();
   const matchId = router.query.matchId as string;
 
@@ -27,6 +28,9 @@ const MatchPage = () => {
     if (localStream) {
       localStream.getTracks().forEach((track) => track.stop());
     }
+    if (remoteStream) {
+      remoteStream.getTracks().forEach((track) => track.stop());
+    }
   };
 
   useEffect(() => {
@@ -38,9 +42,11 @@ const MatchPage = () => {
             video: true,
             // audio: true,
           });
+
           if (getUserMedia) {
             console.log("getUserMedia", getUserMedia);
           }
+
           call.answer(getUserMedia);
 
           // Set the remote video stream
@@ -66,7 +72,9 @@ const MatchPage = () => {
       video: true,
       // audio: true,
     });
+
     setLocalStream(getUserMedia);
+
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = getUserMedia;
       localVideoRef.current
@@ -76,6 +84,8 @@ const MatchPage = () => {
     if (peer && remotePeerId && getUserMedia) {
       const call = peer.call(remotePeerId, getUserMedia);
       call?.on("stream", (remoteStream) => {
+        setRemoteStream(remoteStream);
+
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = remoteStream;
           remoteVideoRef.current
