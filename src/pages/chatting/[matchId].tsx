@@ -38,7 +38,9 @@ const MatchPage = () => {
             video: true,
             // audio: true,
           });
-
+          if (getUserMedia) {
+            console.log("getUserMedia", getUserMedia);
+          }
           call.answer(getUserMedia);
 
           // Set the remote video stream
