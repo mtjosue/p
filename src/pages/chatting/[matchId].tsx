@@ -43,11 +43,15 @@ const MatchPage = () => {
             // audio: true,
           });
 
-          if (getUserMedia) {
-            console.log("getUserMedia", getUserMedia);
-          }
+          // if (getUserMedia) {
+          //   console.log("getUserMedia", getUserMedia);
+          // }
 
           call.answer(getUserMedia);
+
+          if (call.remoteStream) {
+            console.log("call.remoteStream", call.remoteStream);
+          }
 
           // Set the remote video stream
           if (remoteVideoRef.current) {
@@ -84,8 +88,6 @@ const MatchPage = () => {
     if (peer && remotePeerId && getUserMedia) {
       const call = peer.call(remotePeerId, getUserMedia);
       call?.on("stream", (remoteStream) => {
-        setRemoteStream(remoteStream);
-
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = remoteStream;
           remoteVideoRef.current
