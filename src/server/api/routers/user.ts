@@ -138,23 +138,6 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
-  // appendPeerId: publicProcedure
-  //   .input(
-  //     z.object({
-  //       matchId: z.string(),
-  //       peerId: z.string(),
-  //     }),
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     return ctx.db.match.update({
-  //       where: {
-  //         id: input.matchId,
-  //       },
-  //       data: {
-  //         tempPeerId: input.peerId,
-  //       },
-  //     });
-  //   }),
   searchMatchOrCreate: publicProcedure
     .input(
       z.object({
@@ -182,6 +165,19 @@ export const userRouter = createTRPCRouter({
       });
 
       if (!firstMatch) return null;
+
+      await ctx.db.user.update({
+        where: { userId: input.userId },
+        data: {
+          status: "chatting",
+        },
+      });
+      await ctx.db.user.update({
+        where: { userId: firstMatch.userId },
+        data: {
+          status: "chatting",
+        },
+      });
 
       const match = await ctx.db.match.create({
         data: {

@@ -243,3 +243,147 @@
 // };
 
 // export default MatchingPage;
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+
+import React, { useEffect, useRef, useState } from "react";
+import { useUser } from "@clerk/nextjs";
+// import type Peer from "peerjs";
+import { useRouter } from "next/router";
+import { api } from "~/utils/api";
+import { useLocalMediaStream, usePeer } from "~/stores/useLocalUser";
+import Link from "next/link";
+
+const MatchPage = () => {
+  const userId = useUser().user?.id;
+  const localVideoRef = useRef<null | HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
+  const peer = usePeer();
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const router = useRouter();
+  const matchId = router.query.matchId as string;
+  const localMediaStream = useLocalMediaStream();
+
+  const { data } = api.user.getMatchForPage.useQuery({
+    matchId: matchId,
+  });
+  const endMatch = api.user.endMatch.useMutation();
+
+  const cleanup = () => {
+    if (peer) {
+      peer.destroy();
+    }
+    if (localStream) {
+      localStream.getTracks().forEach((track) => track.stop());
+    }
+    if (remoteStream) {
+      remoteStream.getTracks().forEach((track) => track.stop());
+    }
+  };
+
+  useEffect(() => {
+    if (peer) {
+      peer.on("call", (call) => {
+        console.log("Incoming Call.....HELLO");
+        const localVideoCur = localVideoRef.current;
+        const remoteVideoCur = remoteVideoRef.current;
+
+        if (!localMediaStream || !localVideoCur || !remoteVideoCur) return;
+        console.log("AYEEEE WE GOT ALL 3!");
+
+        // Set the local video stream
+
+        setLocalStream(localMediaStream);
+        localVideoCur.srcObject = localMediaStream;
+        localVideoCur
+          .play()
+          .catch((e: Error) => console.log("Error in local play", e));
+        // Start playing the local video stream
+
+        console.log("HOT DIGGITY DANG");
+
+        call.answer(localMediaStream);
+
+        // Set the remote video stream
+        if (call.remoteStream) {
+          setRemoteStream(call.remoteStream);
+          remoteVideoCur.srcObject = call.remoteStream;
+          remoteVideoCur
+            .play()
+            .catch(() => console.log("Error in remote play"));
+          // Start playing the remote video stream
+        }
+      });
+    }
+  }, [localMediaStream, peer]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  const call = (remotePeerId: string) => {
+    setLocalStream(localMediaStream);
+
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = localMediaStream;
+      localVideoRef.current
+        .play()
+        .catch(() => console.log("ERROR IN LOCALVIDEOREF PLAY"));
+    }
+    if (peer && remotePeerId && localMediaStream) {
+      const call = peer.call(remotePeerId, localMediaStream);
+      call?.on("stream", (remoteStream) => {
+        setRemoteStream(remoteStream);
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteStream;
+          remoteVideoRef.current
+            .play()
+            .catch(() => console.log("ERROR in remoteVideoRef : ")); // Start playing the remote video stream
+        }
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!data) return;
+    if (data.tempPeerId && data.sourceUserId !== userId) {
+      console.log("about to call");
+      call(data.tempPeerId);
+      console.log("just tried to call");
+    }
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, userId]);
+
+  return (
+    <div className="flex h-full w-screen flex-col items-center justify-center p-8">
+      <h1>HELLO FROM MATCH PAGE</h1>
+      <div></div>
+      <Link
+        href={"/"}
+        onClick={() => {
+          endMatch.mutate({ matchid: matchId });
+        }}
+      >
+        Return Home
+      </Link>
+      <div className="min-h-60 min-w-60 flex">
+        <video ref={localVideoRef} className="h-[200px] w-[200px]"></video>
+        <video ref={remoteVideoRef} className="h-[200px] w-[200px]"></video>
+      </div>
+    </div>
+  );
+};
+
+export default MatchPage;
+
+

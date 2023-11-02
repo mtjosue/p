@@ -2,7 +2,12 @@ import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
-import { usePeer, useSetPeer } from "~/stores/useLocalUser";
+import {
+  useLocalMediaStream,
+  usePeer,
+  useSetLocalMediaStream,
+  useSetPeer,
+} from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
 const WaitingPage = () => {
@@ -18,8 +23,8 @@ const WaitingPage = () => {
       }
     }
   }, [peer]);
-
-  console.log("peer in body of WaitingPage : ", peer);
+  const localMediaStream = useLocalMediaStream();
+  const setLocalMediaStream = useSetLocalMediaStream();
 
   const searchOrCreateMatch = api.user.searchMatchOrCreate.useMutation();
 
@@ -30,8 +35,8 @@ const WaitingPage = () => {
         .then(({ Peer }) => {
           if (!unmount) {
             const newPeer = new Peer();
-            newPeer.on("open", (id) => {
-              console.log("My peer ID is : ", id);
+            newPeer.on("open", () => {
+              // console.log("My peer ID is : ", id);
               setPeer(newPeer);
             });
           }
@@ -47,8 +52,8 @@ const WaitingPage = () => {
   }, [peer, setPeer]);
 
   useEffect(() => {
-    console.log("peerId : ", peerId);
-    console.log("created : ", created);
+    // console.log("peerId : ", peerId);
+    // console.log("created : ", created);
 
     if (!peerId || created) return;
     if (userId && peerId) {
@@ -71,6 +76,24 @@ const WaitingPage = () => {
         .catch(() => console.log("ERROR IN ROUTER.PUSH"));
     }
   }, [searchOrCreateMatch.data, router]);
+
+  const getLocalMediaStream = async () => {
+    const mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+    });
+    setLocalMediaStream(mediaStream);
+  };
+
+  useEffect(() => {
+    if (!localMediaStream) {
+      getLocalMediaStream().catch(() =>
+        console.log(
+          "ERROR IN... useEffect in Waiting executing getLocalMediaStream",
+        ),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localMediaStream]);
 
   const getMatch = api.user.getMatch.useQuery(
     { userId: userId ?? "" },
