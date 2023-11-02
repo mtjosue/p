@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-// import type Peer from "peerjs";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
-import { usePeer } from "~/stores/useLocalUser";
+import { useLocalMediaStream, usePeer } from "~/stores/useLocalUser";
 import Link from "next/link";
 
 const MatchPage = () => {
@@ -11,10 +10,11 @@ const MatchPage = () => {
   const localVideoRef = useRef<null | HTMLVideoElement>(null);
   const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
   const peer = usePeer();
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const router = useRouter();
   const matchId = router.query.matchId as string;
+  const localMediaStream = useLocalMediaStream();
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 
   const { data } = api.user.getMatchForPage.useQuery({
     matchId: matchId,
@@ -34,102 +34,75 @@ const MatchPage = () => {
   };
 
   useEffect(() => {
+    if (!localMediaStream) return;
+
+    // Set the local stream
+    setLocalStream(localMediaStream);
+
+    // Display local stream
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = localMediaStream;
+      localVideoRef.current
+        .play()
+        .catch((e: Error) => console.log("Error in local play", e));
+    }
+    // cleanup;
+  }, [localMediaStream]);
+
+  useEffect(() => {
     if (peer) {
       peer.on("call", (call) => {
         console.log("Incoming Call.....HELLO");
 
-        console.log(":3");
+        if (!localMediaStream) return;
+        // Answer the call with local stream
 
-        // Set the remote video stream
-        if (remoteVideoRef.current && call.remoteStream) {
-          remoteVideoRef.current.srcObject = call.remoteStream;
-          remoteVideoRef.current
-            .play()
-            .catch(() => console.log("Error in remote play"));
-          // Start playing the remote video stream
-        }
+        console.log("THERE IS A LOCAL STREAM");
 
-        const answerCall = navigator.mediaDevices
-          .getUserMedia({
-            video: true,
-            // audio: true,
-          })
-          .then((media) => {
-            call.answer(media);
+        call.answer(localMediaStream);
 
-            //Logging the call.remoteStream
-            if (call.remoteStream) {
-              console.log("REMOTE STREAM IS THERE!");
-            }
-
-            // Set the local video stream
-            if (localVideoRef.current && media) {
-              localVideoRef.current.srcObject = media;
-              localVideoRef.current
-                .play()
-                .catch(() => console.log("Error in local play"));
-              // Start playing the local video stream
-            }
-          });
-        answerCall.catch(() => console.log("ERROR in answerCall"));
+        call.on("stream", (remoteStream) => {
+          if (remoteStream) {
+            console.log("THE REMOTE STREAM IS HERE");
+          }
+          setRemoteStream(remoteStream);
+          const remoteVideo = remoteVideoRef.current;
+          if (remoteVideo) {
+            remoteVideo.srcObject = remoteStream;
+            remoteVideo
+              ?.play()
+              .catch(() => console.log("Error in remote play"));
+          }
+        });
       });
     }
-  }, [peer]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localMediaStream, peer]);
 
-  // useEffect(() => {
-  //   if (localVideoRef.current) {
-  //     localVideoRef.current
-  //       .play()
-  //       .catch(() => console.log("Error in LOCAL play"));
-  //   }
+  useEffect(() => {
+    if (!data || !peer) return;
+    if (data.tempPeerId && data.sourceUserId !== userId) {
+      console.log("about to call");
 
-  //   if (remoteVideoRef.current) {
-  //     remoteVideoRef.current
-  //       .play()
-  //       .catch(() => console.log("Error in REMOTE play"));
-  //   }
-  // }, [localVideoRef, remoteVideoRef]);
+      // Call with local stream
+      if (!localMediaStream) return;
+      const call = peer.call(data.tempPeerId, localMediaStream);
 
-  const call = async (remotePeerId: string) => {
-    const getUserMedia = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      // audio: true,
-    });
+      call.on("stream", (remoteStream) => {
+        setRemoteStream(remoteStream);
 
-    setLocalStream(getUserMedia);
-
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = getUserMedia;
-      localVideoRef.current
-        .play()
-        .catch(() => console.log("ERROR IN LOCALVIDEOREF PLAY"));
-    }
-    if (peer && remotePeerId && getUserMedia) {
-      const call = peer.call(remotePeerId, getUserMedia);
-      call?.on("stream", (remoteStream) => {
+        // Set the remote video stream
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = remoteStream;
           remoteVideoRef.current
             .play()
-            .catch(() => console.log("ERROR in remoteVideoRef : ")); // Start playing the remote video stream
+            .catch(() => console.log("Error in remote play"));
         }
       });
-    }
-  };
 
-  useEffect(() => {
-    if (!data) return;
-    if (data.tempPeerId && data.sourceUserId !== userId) {
-      console.log("about to call");
-      call(data.tempPeerId).catch(() =>
-        console.log("ERROR IN... calling of call()"),
-      );
       console.log("just tried to call");
     }
-    return cleanup;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, userId]);
+    // return cleanup;
+  }, [data, userId, localMediaStream, peer]);
 
   return (
     <div className="flex h-full w-screen flex-col items-center justify-center p-8">
@@ -152,6 +125,155 @@ const MatchPage = () => {
 };
 
 export default MatchPage;
+
+// import React, { useEffect, useRef, useState } from "react";
+// import { useUser } from "@clerk/nextjs";
+// // import type Peer from "peerjs";
+// import { useRouter } from "next/router";
+// import { api } from "~/utils/api";
+// import { useLocalMediaStream, usePeer } from "~/stores/useLocalUser";
+// import Link from "next/link";
+
+// const MatchPage = () => {
+//   const userId = useUser().user?.id;
+//   const localVideoRef = useRef<null | HTMLVideoElement>(null);
+//   const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
+//   const peer = usePeer();
+//   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+//   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+//   const router = useRouter();
+//   const matchId = router.query.matchId as string;
+//   const localMediaStream = useLocalMediaStream();
+
+//   const { data } = api.user.getMatchForPage.useQuery({
+//     matchId: matchId,
+//   });
+//   const endMatch = api.user.endMatch.useMutation();
+
+//   const cleanup = () => {
+//     if (peer) {
+//       peer.destroy();
+//     }
+//     if (localStream) {
+//       localStream.getTracks().forEach((track) => track.stop());
+//     }
+//     if (remoteStream) {
+//       remoteStream.getTracks().forEach((track) => track.stop());
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (peer) {
+//       peer.on("call", (call) => {
+//         console.log("Incoming Call.....HELLO");
+//         const localVideoCur = localVideoRef.current;
+//         const remoteVideoCur = remoteVideoRef.current;
+
+//         if (!localMediaStream || !localVideoCur || !remoteVideoCur) return;
+//         console.log("AYEEEE WE GOT ALL 3!");
+
+//         // Set the local video stream
+
+//         setLocalStream(localMediaStream);
+//         localVideoCur.srcObject = localMediaStream;
+//         localVideoCur
+//           .play()
+//           .catch((e: Error) => console.log("Error in local play", e));
+//         // Start playing the local video stream
+
+//         console.log("HOT DIGGITY DANG");
+
+//         call.answer(localMediaStream);
+
+//         // Set the remote video stream
+//         if (call.remoteStream) {
+//           setRemoteStream(call.remoteStream);
+//           remoteVideoCur.srcObject = call.remoteStream;
+//           remoteVideoCur
+//             .play()
+//             .catch(() => console.log("Error in remote play"));
+//           // Start playing the remote video stream
+//         }
+//       });
+//     }
+//   }, [localMediaStream, peer]);
+//   // eslint-disable-next-line react-hooks/exhaustive-deps
+
+//   const call = (remotePeerId: string) => {
+//     setLocalStream(localMediaStream);
+
+//     if (localVideoRef.current) {
+//       localVideoRef.current.srcObject = localMediaStream;
+//       localVideoRef.current
+//         .play()
+//         .catch(() => console.log("ERROR IN LOCALVIDEOREF PLAY"));
+//     }
+//     if (peer && remotePeerId && localMediaStream) {
+//       const call = peer.call(remotePeerId, localMediaStream);
+//       call?.on("stream", (remoteStream) => {
+//         setRemoteStream(remoteStream);
+//         if (remoteVideoRef.current) {
+//           remoteVideoRef.current.srcObject = remoteStream;
+//           remoteVideoRef.current
+//             .play()
+//             .catch(() => console.log("ERROR in remoteVideoRef : ")); // Start playing the remote video stream
+//         }
+//       });
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (!data) return;
+//     if (data.tempPeerId && data.sourceUserId !== userId) {
+//       console.log("about to call");
+//       call(data.tempPeerId);
+//       console.log("just tried to call");
+//     }
+//     return cleanup;
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [data, userId]);
+
+//   return (
+//     <div className="flex h-full w-screen flex-col items-center justify-center p-8">
+//       <h1>HELLO FROM MATCH PAGE</h1>
+//       <div></div>
+//       <Link
+//         href={"/"}
+//         onClick={() => {
+//           endMatch.mutate({ matchid: matchId });
+//         }}
+//       >
+//         Return Home
+//       </Link>
+//       <div className="min-h-60 min-w-60 flex">
+//         <video ref={localVideoRef} className="h-[200px] w-[200px]"></video>
+//         <video ref={remoteVideoRef} className="h-[200px] w-[200px]"></video>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default MatchPage;
+
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 
 // const appendSourceUserPeerId = api.user.appendPeerId.useMutation();
 

@@ -2,7 +2,12 @@ import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
-import { usePeer, useSetPeer } from "~/stores/useLocalUser";
+import {
+  useLocalMediaStream,
+  usePeer,
+  useSetLocalMediaStream,
+  useSetPeer,
+} from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
 const WaitingPage = () => {
@@ -18,6 +23,8 @@ const WaitingPage = () => {
       }
     }
   }, [peer]);
+  const localMediaStream = useLocalMediaStream();
+  const setLocalMediaStream = useSetLocalMediaStream();
 
   // console.log("peer in body of WaitingPage : ", peer);
 
@@ -71,6 +78,24 @@ const WaitingPage = () => {
         .catch(() => console.log("ERROR IN ROUTER.PUSH"));
     }
   }, [searchOrCreateMatch.data, router]);
+
+  const getLocalMediaStream = async () => {
+    const mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+    });
+    setLocalMediaStream(mediaStream);
+  };
+
+  useEffect(() => {
+    if (!localMediaStream) {
+      getLocalMediaStream().catch(() =>
+        console.log(
+          "ERROR IN... useEffect in Waiting executing getLocalMediaStream",
+        ),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localMediaStream]);
 
   const getMatch = api.user.getMatch.useQuery(
     { userId: userId ?? "" },
