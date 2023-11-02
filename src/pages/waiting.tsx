@@ -26,8 +26,6 @@ const WaitingPage = () => {
   const localMediaStream = useLocalMediaStream();
   const setLocalMediaStream = useSetLocalMediaStream();
 
-  // console.log("peer in body of WaitingPage : ", peer);
-
   const searchOrCreateMatch = api.user.searchMatchOrCreate.useMutation();
 
   useEffect(() => {
@@ -37,7 +35,7 @@ const WaitingPage = () => {
         .then(({ Peer }) => {
           if (!unmount) {
             const newPeer = new Peer();
-            newPeer.on("open", (id) => {
+            newPeer.on("open", () => {
               // console.log("My peer ID is : ", id);
               setPeer(newPeer);
             });

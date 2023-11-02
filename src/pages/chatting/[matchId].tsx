@@ -25,13 +25,18 @@ const MatchPage = () => {
     if (peer) {
       peer.destroy();
     }
-    if (localStream) {
-      localStream.getTracks().forEach((track) => track.stop());
-    }
-    if (remoteStream) {
-      remoteStream.getTracks().forEach((track) => track.stop());
-    }
   };
+
+  // const userStatusUpdate = api.user.statusUpdate.useMutation();
+  // useEffect(() => {
+  //   if (userId) {
+  //     userStatusUpdate.mutate({
+  //       userId: userId,
+  //       status: "chatting",
+  //     });
+  //   }
+  //   console.log("WE CHATTINGGGGG");
+  // }, [userId]);
 
   useEffect(() => {
     if (!localMediaStream) return;
@@ -46,7 +51,6 @@ const MatchPage = () => {
         .play()
         .catch((e: Error) => console.log("Error in local play", e));
     }
-    // cleanup;
   }, [localMediaStream]);
 
   useEffect(() => {
@@ -57,13 +61,13 @@ const MatchPage = () => {
         if (!localMediaStream) return;
         // Answer the call with local stream
 
-        console.log("THERE IS A LOCAL STREAM");
+        console.log("WE HAVE LOCAL STREAM while getting a call...");
 
         call.answer(localMediaStream);
 
         call.on("stream", (remoteStream) => {
           if (remoteStream) {
-            console.log("THE REMOTE STREAM IS HERE");
+            console.log("WE HAVE REMOTE STREAM while answering the call...");
           }
           setRemoteStream(remoteStream);
           const remoteVideo = remoteVideoRef.current;
@@ -76,7 +80,7 @@ const MatchPage = () => {
         });
       });
     }
-  }, [localMediaStream, peer]);
+  }, [localMediaStream, localStream, peer, remoteStream]);
 
   useEffect(() => {
     if (!data || !peer) return;
@@ -101,7 +105,10 @@ const MatchPage = () => {
 
       console.log("just tried to call");
     }
-    // return cleanup;
+    return () => {
+      cleanup();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, userId, localMediaStream, peer]);
 
   return (
@@ -112,6 +119,7 @@ const MatchPage = () => {
         href={"/"}
         onClick={() => {
           endMatch.mutate({ matchid: matchId });
+          cleanup();
         }}
       >
         Return Home
