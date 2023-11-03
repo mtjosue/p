@@ -125,8 +125,20 @@ const MatchPage = () => {
         Return Home
       </Link>
       <div className="min-h-60 min-w-60 flex">
-        <video ref={localVideoRef} className="h-[200px] w-[200px]"></video>
-        <video ref={remoteVideoRef} className="h-[200px] w-[200px]"></video>
+        <video
+          ref={localVideoRef}
+          className="h-[200px] w-[200px]"
+          autoPlay={true}
+          playsInline={true}
+          muted={true}
+        ></video>
+        <video
+          ref={remoteVideoRef}
+          className="h-[200px] w-[200px]"
+          autoPlay={true}
+          playsInline={true}
+          muted={true}
+        ></video>
       </div>
     </div>
   );
