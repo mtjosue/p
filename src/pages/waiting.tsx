@@ -28,100 +28,100 @@ const WaitingPage = () => {
 
   const searchOrCreateMatch = api.user.searchMatchOrCreate.useMutation();
 
-  // useEffect(() => {
-  //   if (!peer?.id) {
-  //     let unmount = false;
-  //     import("peerjs")
-  //       .then(({ Peer }) => {
-  //         if (!unmount) {
-  //           const newPeer = new Peer();
-  //           newPeer.on("open", () => {
-  //             // console.log("My peer ID is : ", id);
-  //             setPeer(newPeer);
-  //           });
-  //         }
-  //       })
-  //       .catch((error) => {
-  //         console.error("Error loading peerjs:", error);
-  //       });
+  useEffect(() => {
+    if (!peer?.id) {
+      let unmount = false;
+      import("peerjs")
+        .then(({ Peer }) => {
+          if (!unmount) {
+            const newPeer = new Peer();
+            newPeer.on("open", () => {
+              // console.log("My peer ID is : ", id);
+              setPeer(newPeer);
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error loading peerjs:", error);
+        });
 
-  //     return () => {
-  //       unmount = true;
-  //     };
-  //   }
-  // }, [peer, setPeer]);
+      return () => {
+        unmount = true;
+      };
+    }
+  }, [peer, setPeer]);
 
-  // useEffect(() => {
-  //   // console.log("peerId : ", peerId);
-  //   // console.log("created : ", created);
+  useEffect(() => {
+    // console.log("peerId : ", peerId);
+    // console.log("created : ", created);
 
-  //   if (!peerId || created) return;
-  //   if (userId && peerId) {
-  //     searchOrCreateMatch.mutate({
-  //       userId: userId,
-  //       tempId: peerId,
-  //     });
-  //     setCreated(true);
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [created, userId, peerId]);
+    if (!peerId || created) return;
+    if (userId && peerId) {
+      searchOrCreateMatch.mutate({
+        userId: userId,
+        tempId: peerId,
+      });
+      setCreated(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [created, userId, peerId]);
 
-  // useEffect(() => {
-  //   if (searchOrCreateMatch.data?.id) {
-  //     const matchId = searchOrCreateMatch.data.id; // Access the ID from the mutation result.
+  useEffect(() => {
+    if (searchOrCreateMatch.data?.id) {
+      const matchId = searchOrCreateMatch.data.id; // Access the ID from the mutation result.
 
-  //     // Now you can use the matchId to navigate to the new page.
-  //     router
-  //       .push(`/chatting/${matchId}`)
-  //       .catch(() => console.log("ERROR IN ROUTER.PUSH"));
-  //   }
-  // }, [searchOrCreateMatch.data, router]);
+      // Now you can use the matchId to navigate to the new page.
+      router
+        .push(`/chatting/${matchId}`)
+        .catch(() => console.log("ERROR IN ROUTER.PUSH"));
+    }
+  }, [searchOrCreateMatch.data, router]);
 
-  // const getLocalMediaStream = async () => {
-  //   const mediaStream = await navigator.mediaDevices.getUserMedia({
-  //     video: true,
-  //   });
-  //   setLocalMediaStream(mediaStream);
-  // };
+  const getLocalMediaStream = async () => {
+    const mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+    });
+    setLocalMediaStream(mediaStream);
+  };
 
-  // useEffect(() => {
-  //   if (!localMediaStream) {
-  //     getLocalMediaStream().catch(() =>
-  //       console.log(
-  //         "ERROR IN... useEffect in Waiting executing getLocalMediaStream",
-  //       ),
-  //     );
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [localMediaStream]);
+  useEffect(() => {
+    if (!localMediaStream) {
+      getLocalMediaStream().catch(() =>
+        console.log(
+          "ERROR IN... useEffect in Waiting executing getLocalMediaStream",
+        ),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localMediaStream]);
 
-  // const getMatch = api.user.getMatch.useQuery(
-  //   { userId: userId ?? "" },
-  //   {
-  //     refetchOnWindowFocus: false,
-  //     cacheTime: 0,
-  //     staleTime: 0,
-  //   },
-  // );
+  const getMatch = api.user.getMatch.useQuery(
+    { userId: userId ?? "" },
+    {
+      refetchOnWindowFocus: false,
+      cacheTime: 0,
+      staleTime: 0,
+    },
+  );
 
-  // useEffect(() => {
-  //   if (getMatch.data) {
-  //     router.push(`/chatting/${getMatch.data.id}`).catch(() => {
-  //       console.log("error");
-  //     });
-  //   }
-  // }, [getMatch.data, router, userId]);
+  useEffect(() => {
+    if (getMatch.data) {
+      router.push(`/chatting/${getMatch.data.id}`).catch(() => {
+        console.log("error");
+      });
+    }
+  }, [getMatch.data, router, userId]);
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     getMatch.refetch().catch(() => {
-  //       console.log("ERROR");
-  //     });
-  //   }, 5000);
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, [getMatch]);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      getMatch.refetch().catch(() => {
+        console.log("ERROR");
+      });
+    }, 5000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [getMatch]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
