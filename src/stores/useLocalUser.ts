@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Peer } from "peerjs";
 
 type UserStore = {
+  noSkips: boolean;
   peer: Peer | null;
   token: string;
   firstLoad: boolean;
@@ -19,6 +20,7 @@ type UserStore = {
 };
 
 export const useUserStore = create<UserStore>((set) => ({
+  noSkips: false,
   peer: null,
   token: "",
   firstLoad: false,

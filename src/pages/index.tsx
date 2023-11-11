@@ -8,11 +8,28 @@ import { api } from "~/utils/api";
 
 export default function Home() {
   const user = useUser();
+  const userId = useUser().user?.id;
   const router = useRouter();
   const firstName = useUserStore().firstName;
   const setFirstName = useUserStore().actions.setFirstName;
   const setUserId = useUserStore().actions.setUserId;
   const [termsAgreed, setTermsAgreed] = useState(false);
+  const [noSkips, setNoSkips] = useState(false);
+
+  const { data: userSkips } = api.user.skipsBalance.useQuery({
+    userId: userId ?? "",
+  });
+
+  useEffect(() => {
+    // if (userSkips) {
+    // console.log("userSkips REMAINING USER SKIPS", userSkips?.skips);
+    // }
+    if (userSkips) {
+      if (userSkips.skips < 1) {
+        setNoSkips(true);
+      }
+    }
+  }, [router, userSkips]);
 
   useEffect(() => {
     if (user.user?.id) {
@@ -31,6 +48,8 @@ export default function Home() {
       staleTime: 0,
     },
   );
+
+  console.log(searchUser.data?.skips);
 
   useEffect(() => {
     if (!user.isSignedIn) return;
@@ -97,10 +116,15 @@ export default function Home() {
         {user.isSignedIn && termsAgreed && <Modal />}
         {user.isSignedIn && (
           <button
+            disabled={noSkips}
             onClick={onBtnClick}
-            className="mt-10 rounded-sm bg-sky-400 px-3 py-2"
+            className={`mt-10 rounded-sm ${
+              noSkips ? "bg-slate-500" : "bg-sky-500"
+            } px-3 py-2`}
           >
-            Ready
+            {noSkips
+              ? "You've exhausted your daily allowance, come back tomorrow!"
+              : "Ready"}
           </button>
         )}
       </main>

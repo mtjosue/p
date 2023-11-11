@@ -54,38 +54,6 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
-  searchMatch: publicProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      if (!input.userId) {
-        console.log("NO USERID INPUT!");
-        return null;
-      }
-
-      const firstMatch = await ctx.db.user.findFirst({
-        where: {
-          status: "looking",
-          NOT: {
-            userId: input.userId || "",
-          },
-        },
-      });
-
-      if (!firstMatch) return null;
-
-      const match = await ctx.db.match.create({
-        data: {
-          sourceUserId: input.userId,
-          sinkUserId: firstMatch.userId,
-        },
-      });
-
-      return match;
-    }),
   getMatch: publicProcedure
     .input(
       z.object({
@@ -95,7 +63,7 @@ export const userRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const match = await ctx.db.match.findFirst({
         where: {
-          sinkUserId: input.userId,
+          remoteUserId: input.userId,
           status: { not: "ended" },
         },
       });
@@ -116,8 +84,8 @@ export const userRouter = createTRPCRouter({
 
         select: {
           tempPeerId: true,
-          sinkUserId: true,
-          sourceUserId: true,
+          remoteUserId: true,
+          localUserId: true,
           // sourceUser: true,
           // sinkUserId: true,
         },
@@ -128,10 +96,67 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         matchid: z.string(),
+        userId: z.string(),
+        count: z.number(),
+        status: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.match.update({
+      //
+      const match = await ctx.db.match.findFirst({
+        where: {
+          id: input.matchid,
+        },
+        select: {
+          skipped: true,
+        },
+      });
+      //
+      if (!match?.skipped) {
+        if (input.count > 0) {
+          await ctx.db.user.update({
+            where: { userId: input.userId },
+            data: {
+              skips: {
+                decrement: 1,
+              },
+              status: input.status,
+            },
+          });
+          await ctx.db.match.update({
+            where: {
+              id: input.matchid,
+            },
+            data: {
+              skipped: true,
+            },
+          });
+        } else {
+          await ctx.db.user.update({
+            where: { userId: input.userId },
+            data: {
+              status: input.status,
+            },
+          });
+          await ctx.db.match.update({
+            where: {
+              id: input.matchid,
+            },
+            data: {
+              skipped: true,
+            },
+          });
+        }
+      } else {
+        await ctx.db.user.update({
+          where: { userId: input.userId },
+          data: {
+            status: input.status,
+          },
+        });
+      }
+      //
+      return await ctx.db.match.update({
         where: { id: input.matchid },
         data: {
           status: "ended",
@@ -181,12 +206,29 @@ export const userRouter = createTRPCRouter({
 
       const match = await ctx.db.match.create({
         data: {
-          sourceUserId: input.userId,
-          sinkUserId: firstMatch.userId,
+          localUserId: input.userId,
+          remoteUserId: firstMatch.userId,
           tempPeerId: input.tempId,
         },
       });
 
       return match;
+    }),
+  skipsBalance: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+      }),
+    )
+    .query(({ ctx, input }) => {
+      const userSkipsBalance = ctx.db.user.findFirst({
+        where: {
+          userId: input.userId,
+        },
+        select: {
+          skips: true,
+        },
+      });
+      return userSkipsBalance;
     }),
 });

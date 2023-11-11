@@ -16,6 +16,16 @@ const MatchPage = () => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 
+  const { data: userSkips } = api.user.skipsBalance.useQuery({
+    userId: userId ?? "",
+  });
+
+  useEffect(() => {
+    if (userSkips) {
+      console.log("userSkips.skips :", userSkips.skips);
+    }
+  }, [userSkips]);
+
   const { data } = api.user.getMatchForPage.useQuery({
     matchId: matchId,
   });
@@ -27,8 +37,6 @@ const MatchPage = () => {
     }
   };
 
-  //Hello
-  //HelloPart2
   useEffect(() => {
     if (!localMediaStream) return;
 
@@ -47,7 +55,7 @@ const MatchPage = () => {
   useEffect(() => {
     if (peer) {
       peer.on("call", (call) => {
-        // console.log("Incoming Call.....HELLO");
+        console.log("Incoming Call.....HELLO");
 
         if (!localMediaStream) return;
         // Answer the call with local stream
@@ -75,24 +83,27 @@ const MatchPage = () => {
 
   useEffect(() => {
     if (!data || !peer) return;
-    if (data.tempPeerId && data.sourceUserId !== userId) {
-      // console.log("about to call");
+    if (data.tempPeerId && data.localUserId !== userId) {
+      console.log("about to call");
 
       // Call with local stream
       if (!localMediaStream) return;
       const call = peer.call(data.tempPeerId, localMediaStream);
 
-      call.on("stream", (remoteStream) => {
-        setRemoteStream(remoteStream);
+      //Only added to test
+      if (call) {
+        call.on("stream", (remoteStream) => {
+          setRemoteStream(remoteStream);
 
-        // Set the remote video stream
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = remoteStream;
-          remoteVideoRef.current
-            .play()
-            .catch(() => console.log("Error in remote play"));
-        }
-      });
+          // Set the remote video stream
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+            remoteVideoRef.current
+              .play()
+              .catch(() => console.log("Error in remote play"));
+          }
+        });
+      }
 
       // console.log("just tried to call");
     }
@@ -163,8 +174,20 @@ const MatchPage = () => {
       <Link
         href={"/"}
         onClick={() => {
-          endMatch.mutate({ matchid: matchId });
+          // endMatch.mutate({ matchid: matchId });
           cleanup();
+
+          if (userId) {
+            endMatch.mutate({
+              count: 0,
+              matchid: matchId,
+              userId: userId,
+              status: "waiting",
+            });
+          }
+          router
+            .push("/waiting")
+            .catch(() => console.log("ERROR in router.puush of SKIP"));
         }}
       >
         Return Home
@@ -245,6 +268,41 @@ const MatchPage = () => {
       </div>
 
       <div>{countdown}</div>
+      <div>
+        <button
+          className="border p-2 font-semibold"
+          onClick={() => {
+            console.log("SKIPS REMAINING 1", userSkips?.skips);
+            cleanup();
+
+            if (userId) {
+              endMatch.mutate({
+                count: countdown,
+                matchid: matchId,
+                userId: userId,
+                status: "looking",
+              });
+            }
+
+            if (userSkips?.skips === 1 && countdown > 0) {
+              router
+                .push("/")
+                .catch(() => console.log("ERROR in router.puush of SKIP"));
+            } else {
+              setTimeout(() => {
+                router
+                  .push("/waiting")
+                  .catch(() => console.log("ERROR in router.puush of SKIP"));
+              }, 2000);
+            }
+
+            console.log("SKIPS REMAINING 2", userSkips?.skips);
+            // if (!userSkips?.skips) return;
+          }}
+        >
+          Skip
+        </button>
+      </div>
     </div>
   );
 };

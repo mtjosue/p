@@ -50,25 +50,26 @@ model User {
   userId        String   @unique
   createdAt     DateTime @default(now())
   status        String   @default("waiting")
-  sourceMatches Match[]  @relation("SourceMatches")
-  sinkMatches   Match[]  @relation("SinkMatches")
-  // balance       Int      @default(1000)
+  localMatches  Match[]  @relation("LocalMatches")
+  remoteMatches Match[]  @relation("RemoteMatches")
+  skips         Int      @default(20)
 
   @@index([id])
 }
 
 model Match {
   id           String   @id @default(cuid())
-  sourceUserId String
-  sinkUserId   String
-  sourceUser   User     @relation("SourceMatches", fields: [sourceUserId], references: [userId], onDelete: Cascade)
-  sinkUser     User     @relation("SinkMatches", fields: [sinkUserId], references: [userId], onDelete: Cascade)
+  localUserId  String
+  remoteUserId String
+  localUser    User     @relation("LocalMatches", fields: [localUserId], references: [userId], onDelete: Cascade)
+  remoteUser   User     @relation("RemoteMatches", fields: [remoteUserId], references: [userId], onDelete: Cascade)
   status       String   @default("running")
   createdAt    DateTime @default(now())
   tempPeerId   String   @default("")
+  skipped      Boolean  @default(false)
 
-  @@index([sinkUserId])
-  @@index([sourceUserId])
+  @@index([remoteUserId])
+  @@index([localUserId])
 }
 
 // model Match {
