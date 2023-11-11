@@ -20,12 +20,6 @@ const MatchPage = () => {
     userId: userId ?? "",
   });
 
-  useEffect(() => {
-    if (userSkips) {
-      console.log("userSkips.skips :", userSkips.skips);
-    }
-  }, [userSkips]);
-
   const { data } = api.user.getMatchForPage.useQuery({
     matchId: matchId,
   });

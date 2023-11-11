@@ -8,28 +8,12 @@ import { api } from "~/utils/api";
 
 export default function Home() {
   const user = useUser();
-  const userId = useUser().user?.id;
   const router = useRouter();
   const firstName = useUserStore().firstName;
   const setFirstName = useUserStore().actions.setFirstName;
   const setUserId = useUserStore().actions.setUserId;
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [noSkips, setNoSkips] = useState(false);
-
-  const { data: userSkips } = api.user.skipsBalance.useQuery({
-    userId: userId ?? "",
-  });
-
-  useEffect(() => {
-    // if (userSkips) {
-    // console.log("userSkips REMAINING USER SKIPS", userSkips?.skips);
-    // }
-    if (userSkips) {
-      if (userSkips.skips < 1) {
-        setNoSkips(true);
-      }
-    }
-  }, [router, userSkips]);
 
   useEffect(() => {
     if (user.user?.id) {
@@ -49,7 +33,13 @@ export default function Home() {
     },
   );
 
-  console.log(searchUser.data?.skips);
+  useEffect(() => {
+    if (searchUser.data) {
+      if (searchUser.data.skips < 1) {
+        setNoSkips(true);
+      }
+    }
+  }, [router, searchUser.data]);
 
   useEffect(() => {
     if (!user.isSignedIn) return;

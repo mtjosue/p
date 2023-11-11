@@ -26,12 +26,25 @@ const WaitingPage = () => {
   const localMediaStream = useLocalMediaStream();
   const setLocalMediaStream = useSetLocalMediaStream();
 
+  //Search for a user available, if found create a match, if not = null
   const searchOrCreateMatch = api.user.searchMatchOrCreate.useMutation();
-  const { data: userSkips } = api.user.skipsBalance.useQuery({
-    userId: userId ?? "",
-  });
+
+  //
+  const { data: userSkips } = api.user.skipsBalance.useQuery(
+    {
+      userId: userId ?? "",
+    },
+    {
+      refetchOnWindowFocus: false,
+      cacheTime: 0,
+      staleTime: 0,
+    },
+  );
+
+  //
   const userStatusUpdate = api.user.statusUpdate.useMutation();
 
+  //Checking skips remaining.
   useEffect(() => {
     console.log("userSkips REMAINING USER SKIPS", userSkips?.skips);
 
@@ -47,6 +60,7 @@ const WaitingPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, userSkips]);
 
+  //If not peer, create peer.
   useEffect(() => {
     if (!peer?.id) {
       let unmount = false;
@@ -70,6 +84,7 @@ const WaitingPage = () => {
     }
   }, [peer, setPeer]);
 
+  //If first time execute searchOrCreateMatch.
   useEffect(() => {
     // console.log("peerId : ", peerId);
     // console.log("created : ", created);
@@ -85,6 +100,7 @@ const WaitingPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [created, userId, peerId]);
 
+  //If theres data in the searchOrCreateMatch push to chatting.
   useEffect(() => {
     if (searchOrCreateMatch.data?.id) {
       const matchId = searchOrCreateMatch.data.id; // Access the ID from the mutation result.
@@ -96,6 +112,7 @@ const WaitingPage = () => {
     }
   }, [searchOrCreateMatch.data, router]);
 
+  //Getting local media stream.
   const getLocalMediaStream = async () => {
     const mediaStream = await navigator.mediaDevices.getUserMedia({
       video: true,
@@ -103,6 +120,7 @@ const WaitingPage = () => {
     setLocalMediaStream(mediaStream);
   };
 
+  //RETRYING Getting local media stream if you dont have it yet.
   useEffect(() => {
     if (!localMediaStream) {
       getLocalMediaStream().catch(() =>
@@ -114,6 +132,7 @@ const WaitingPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localMediaStream]);
 
+  //Looking for a match with your id in it.
   const getMatch = api.user.getMatch.useQuery(
     { userId: userId ?? "" },
     {
@@ -123,6 +142,7 @@ const WaitingPage = () => {
     },
   );
 
+  //If you find yourself in match right away.
   useEffect(() => {
     if (getMatch.data) {
       router.push(`/chatting/${getMatch.data.id}`).catch(() => {
@@ -131,6 +151,7 @@ const WaitingPage = () => {
     }
   }, [getMatch.data, router, userId]);
 
+  //getMatch REFETCH only 3 times every 5 seconds.
   useEffect(() => {
     let count = 0;
     const interval = setInterval(() => {
