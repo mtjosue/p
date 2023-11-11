@@ -65,6 +65,7 @@ export const userRouter = createTRPCRouter({
         where: {
           remoteUserId: input.userId,
           status: { not: "ended" },
+          skipped: { not: true },
         },
       });
 

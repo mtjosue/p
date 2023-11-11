@@ -168,7 +168,6 @@ const MatchPage = () => {
       <Link
         href={"/"}
         onClick={() => {
-          // endMatch.mutate({ matchid: matchId });
           cleanup();
 
           if (userId) {
@@ -180,7 +179,7 @@ const MatchPage = () => {
             });
           }
           router
-            .push("/waiting")
+            .push("/")
             .catch(() => console.log("ERROR in router.puush of SKIP"));
         }}
       >
