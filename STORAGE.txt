@@ -1,389 +1,173 @@
-// import { useRouter } from "next/router";
-// import React, { useEffect, useMemo, useRef, useState } from "react";
-// import { useUserStore } from "~/stores/useLocalUser";
-// import { api } from "~/utils/api";
-// import {
-//   type ICameraVideoTrack,
-//   type IAgoraRTCClient,
-//   type IAgoraRTCRemoteUser,
-//   type IRemoteVideoTrack,
-//   type IMicrophoneAudioTrack,
-// } from "agora-rtc-sdk-ng";
-// import { env } from "~/env.mjs";
-// import Link from "next/link";
-// import Countdown from "react-countdown";
-
-// const VideoPlayer = ({
-//   videoTrack,
-// }: {
-//   videoTrack: IRemoteVideoTrack | ICameraVideoTrack;
-// }) => {
-//   const ref = useRef(null);
-
-//   useEffect(() => {
-//     const playerRef = ref.current;
-//     if (!videoTrack) return;
-//     if (!playerRef) return;
-
-//     videoTrack.play(playerRef);
-
-//     return () => {
-//       videoTrack.stop();
-//       videoTrack.unpipe();
-//       videoTrack.removeAllListeners();
-//     };
-//   }, [videoTrack]);
-
-//   return (
-//     <div>
-//       <div ref={ref} className="h-[200px] w-[200px]"></div>
-//     </div>
-//   );
-// };
-
-// const MatchingPage = () => {
-//   const [timeLeft] = useState(Date.now() + 1000 * 60 * 1);
-//   const userId = useUserStore().userId;
-//   const router = useRouter();
-//   const token = useUserStore().token;
-//   const setToken = useUserStore().actions.setToken;
-//   const matchId = router.query.matchId as string;
-//   const firstName = useUserStore().firstName;
-//   const [otherUser, setOtherUser] = useState<IAgoraRTCRemoteUser>();
-//   const [videoTrack, setVideoTrack] = useState<ICameraVideoTrack>();
-
-//   useEffect(() => {
-//     if (!userId) {
-//       endMatch.mutate({
-//         matchid: matchId,
-//       });
-//       router.push("/").catch(() => console.log("MATCHING NO USERID PUSH"));
-//     }
-//     return () => {
-//       const disconnect = async () => {
-//         const client = await connectionPromiseRef.current;
-//         if (client) {
-//           client.client.removeAllListeners();
-
-//           await client.client.unpublish(client.tracks[1]);
-//           await client.client.leave();
-//         }
-//         if (videoTrack) {
-//           videoTrack.stop();
-//           videoTrack.close();
-//         }
-//       };
-//       connectionPromiseRef?.current?.then(disconnect).catch((e) => {
-//         console.log("ERROR FROM SWAY : ", e);
-//       });
-//     };
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [matchId, router, userId, videoTrack]);
-
-//   const connectionPromiseRef = useRef<Promise<{
-//     tracks: [IMicrophoneAudioTrack, ICameraVideoTrack];
-//     client: IAgoraRTCClient;
-//   }> | null>(null);
-
-//   const matchQuery = api.user.getMatchForPage.useQuery(
-//     { matchId: matchId },
-//     {
-//       refetchOnWindowFocus: false,
-//       cacheTime: 0,
-//       staleTime: 0,
-//     },
-//   );
-
-//   const tokenQuery = api.user.generateToken.useQuery(
-//     {
-//       userId: userId,
-//       matchId: matchQuery.data?.id ?? "",
-//     },
-//     {
-//       refetchOnWindowFocus: false,
-//       cacheTime: 0,
-//       staleTime: 0,
-//     },
-//   );
-
-//   const endMatch = api.user.endMatch.useMutation();
-
-//   useEffect(() => {
-//     if (!tokenQuery.data) return;
-//     setToken(tokenQuery.data);
-//   }, [setToken, tokenQuery.data]);
-
-//   useEffect(() => {
-//     if (!token) return;
-
-//     const connect = async () => {
-//       const { default: AgoraRTC } = await import("agora-rtc-sdk-ng");
-
-//       const client = AgoraRTC.createClient({
-//         mode: "rtc",
-//         codec: "vp8",
-//       });
-
-//       await client.join(env.NEXT_PUBLIC_AGORA_APP_ID, matchId, token, userId);
-
-//       client?.on("user-published", (user, mediaType) => {
-//         client
-//           .subscribe(user, mediaType)
-//           .then(() => {
-//             if (mediaType === "video") {
-//               setOtherUser(user);
-//             }
-//             if (mediaType === "audio") {
-//               otherUser?.audioTrack?.play();
-//             }
-//           })
-//           .catch((e) => {
-//             console.log("error : ", e);
-//           });
-//       });
-
-//       const tracks = await AgoraRTC.createMicrophoneAndCameraTracks({
-//         encoderConfig: {
-//           sampleSize: 720,
-//           bitrate: 600,
-//           sampleRate: 15,
-//         },
-//       });
-
-//       setVideoTrack(tracks[1]);
-
-//       await client.publish(tracks[1]);
-
-//       connectionPromiseRef.current = Promise.resolve({ tracks, client });
-
-//       return { tracks, client };
-//     };
-
-//     connect().catch(() => {
-//       console.log("ERROR in CONNECT in [matchId].tsx");
-//     });
-
-//     return () => {
-//       const disconnect = async () => {
-//         const client = await connectionPromiseRef.current;
-//         if (client) {
-//           client.client.removeAllListeners();
-
-//           await client.client.unpublish(client.tracks[1]);
-//           await client.client.leave();
-//         }
-//         if (videoTrack) {
-//           videoTrack.stop();
-//           videoTrack.close();
-//         }
-//         endMatch.mutate({
-//           matchid: matchId,
-//         });
-//       };
-//       connectionPromiseRef?.current?.then(disconnect).catch((e) => {
-//         console.log("ERROR FROM SWAY : ", e);
-//       });
-//     };
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [matchId, otherUser?.audioTrack, token, userId, videoTrack]);
-
-//   const companionName = useMemo(() => {
-//     if (userId === matchQuery.data?.sinkUser.userId) {
-//       return matchQuery.data?.sourceUser.name;
-//     } else if (userId === matchQuery.data?.sourceUser.userId) {
-//       return matchQuery.data?.sinkUser.name;
-//     }
-//   }, [
-//     matchQuery.data?.sinkUser.name,
-//     matchQuery.data?.sinkUser.userId,
-//     matchQuery.data?.sourceUser.name,
-//     matchQuery.data?.sourceUser.userId,
-//     userId,
-//   ]);
-
-//   const otherUserMemo = useMemo(() => {
-//     if (otherUser) {
-//       return otherUser;
-//     }
-//   }, [otherUser]);
-
-//   return (
-//     <>
-//       <h1>Matching Page</h1>
-//       <h2>
-//         <Link href={"/"}>RETURN HOME</Link>
-//       </h2>
-//       <h3>
-//         <Countdown date={timeLeft} />
-//       </h3>
-//       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-//         <span className="min-w-40 text-2xl">{companionName}</span>
-//         <span>My Personal Token Generated : {token.slice(0, 10)}</span>
-
-//         <div className="grid h-full w-full grid-cols-2 bg-sky-800">
-//           {videoTrack && (
-//             <div>
-//               <span>{firstName}</span>
-//               <VideoPlayer videoTrack={videoTrack} />
-//             </div>
-//           )}
-//           {otherUserMemo && (
-//             <div>
-//               <span>{companionName}</span>
-
-//               {otherUserMemo.videoTrack && (
-//                 <VideoPlayer videoTrack={otherUserMemo.videoTrack} />
-//               )}
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-
-// export default MatchingPage;
-
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-
-import React, { useEffect, useRef, useState } from "react";
-import { useUser } from "@clerk/nextjs";
-// import type Peer from "peerjs";
+import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
+import Head from "next/head";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import Modal from "~/components/modal";
+import {
+  useFirstLoad,
+  useSetFirstLoad,
+  useSetTermsAgreed,
+  useSetUserId,
+  useTermsAgreed,
+  useUserId,
+} from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
-import { useLocalMediaStream, usePeer } from "~/stores/useLocalUser";
-import Link from "next/link";
 
-const MatchPage = () => {
+export default function Home() {
+  const firstLoad = useFirstLoad();
+  console.log("firstLoad", firstLoad);
+  const setFirstLoad = useSetFirstLoad();
+  const user = useUser();
   const userId = useUser().user?.id;
-  const localVideoRef = useRef<null | HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
-  const peer = usePeer();
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const zusUserId = useUserId();
+  const setZusUserId = useSetUserId();
   const router = useRouter();
-  const matchId = router.query.matchId as string;
-  const localMediaStream = useLocalMediaStream();
+  // const firstName = useUserStore().firstName;
+  // const setFirstName = useUserStore().actions.setFirstName;
+  const termsAgreed = useTermsAgreed();
+  const setTermsAgreed = useSetTermsAgreed();
+  const [noSkips, setNoSkips] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
 
-  const { data } = api.user.getMatchForPage.useQuery({
-    matchId: matchId,
-  });
-  const endMatch = api.user.endMatch.useMutation();
+  //
+  const userStatusUpdate = api.user.statusUpdate.useMutation();
 
-  const cleanup = () => {
-    if (peer) {
-      peer.destroy();
-    }
-    if (localStream) {
-      localStream.getTracks().forEach((track) => track.stop());
-    }
-    if (remoteStream) {
-      remoteStream.getTracks().forEach((track) => track.stop());
-    }
-  };
+  //
+  const searchUser = api.user.userCheck.useQuery(
+    {
+      userId: userId ?? "",
+      firstLoad: firstLoad,
+    },
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      retryOnMount: false,
+      refetchInterval: 0,
+      cacheTime: 0,
+      staleTime: 0,
+    },
+  );
 
-  useEffect(() => {
-    if (peer) {
-      peer.on("call", (call) => {
-        console.log("Incoming Call.....HELLO");
-        const localVideoCur = localVideoRef.current;
-        const remoteVideoCur = remoteVideoRef.current;
-
-        if (!localMediaStream || !localVideoCur || !remoteVideoCur) return;
-        console.log("AYEEEE WE GOT ALL 3!");
-
-        // Set the local video stream
-
-        setLocalStream(localMediaStream);
-        localVideoCur.srcObject = localMediaStream;
-        localVideoCur
-          .play()
-          .catch((e: Error) => console.log("Error in local play", e));
-        // Start playing the local video stream
-
-        console.log("HOT DIGGITY DANG");
-
-        call.answer(localMediaStream);
-
-        // Set the remote video stream
-        if (call.remoteStream) {
-          setRemoteStream(call.remoteStream);
-          remoteVideoCur.srcObject = call.remoteStream;
-          remoteVideoCur
-            .play()
-            .catch(() => console.log("Error in remote play"));
-          // Start playing the remote video stream
-        }
-      });
-    }
-  }, [localMediaStream, peer]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-
-  const call = (remotePeerId: string) => {
-    setLocalStream(localMediaStream);
-
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = localMediaStream;
-      localVideoRef.current
-        .play()
-        .catch(() => console.log("ERROR IN LOCALVIDEOREF PLAY"));
-    }
-    if (peer && remotePeerId && localMediaStream) {
-      const call = peer.call(remotePeerId, localMediaStream);
-      call?.on("stream", (remoteStream) => {
-        setRemoteStream(remoteStream);
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = remoteStream;
-          remoteVideoRef.current
-            .play()
-            .catch(() => console.log("ERROR in remoteVideoRef : ")); // Start playing the remote video stream
-        }
-      });
-    }
-  };
+  console.log("zusUserId", zusUserId);
 
   useEffect(() => {
-    if (!data) return;
-    if (data.tempPeerId && data.sourceUserId !== userId) {
-      console.log("about to call");
-      call(data.tempPeerId);
-      console.log("just tried to call");
+    if (!searchUser.data) return;
+
+    if (searchUser.isSuccess) {
+      setZusUserId(searchUser.data.userId);
+      setFirstLoad(false);
+      if (searchUser.data.termsAgreed) {
+        setTermsAgreed(false);
+      }
+      if (!searchUser.data.termsAgreed) {
+        setTermsAgreed(true);
+      }
     }
-    return cleanup;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, userId]);
+
+    // if (searchUser.isSuccess && !searchUser.data.termsAgreed) {
+    //   setTermsAgreed(true);
+    // }
+  }, [
+    searchUser.data,
+    searchUser.isSuccess,
+    setFirstLoad,
+    setTermsAgreed,
+    setZusUserId,
+    zusUserId,
+  ]);
+  0;
+  // console.log("SEARCHUSER :", searchUser.data);
+
+  useEffect(() => {
+    console.log("user.isSignedIn", user.isSignedIn);
+    console.log("termsAgreed---------", termsAgreed);
+
+    if (!user.isSignedIn) return;
+
+    if (
+      !searchUser.isFetching &&
+      !searchUser.isLoading &&
+      !searchUser.error &&
+      !searchUser.isRefetching &&
+      !searchUser.data
+    ) {
+      // if (!termsAgreed) {
+      // }
+      if (termsAgreed !== null) {
+        if (termsAgreed) {
+          console.log("FIRING OVERHERE");
+        } else {
+          // setTermsAgreed(true);
+          // console.log("ELSEEEEEE FIRING OVERHERE");
+        }
+      } else {
+        setTermsAgreed(true);
+      }
+    }
+  }, [
+    searchUser.data,
+    searchUser.error,
+    searchUser.isFetching,
+    searchUser.isLoading,
+    searchUser.isRefetching,
+    setTermsAgreed,
+    termsAgreed,
+    user.isSignedIn,
+  ]);
+
+  // useEffect(() => {
+  //   if (searchUser.data) {
+  //     if (searchUser.data.skips < 1) {
+  //       setNoSkips(true);
+  //     }
+  //   }
+  // }, [router, searchUser.data]);
+
+  const onBtnClick = async () => {
+    if (userId) {
+      userStatusUpdate.mutate({
+        userId: userId,
+        status: "looking",
+      });
+    }
+    await router.push("/waiting");
+  };
+
+  console.log("termsAgreed ::::::", termsAgreed);
 
   return (
-    <div className="flex h-full w-screen flex-col items-center justify-center p-8">
-      <h1>HELLO FROM MATCH PAGE</h1>
-      <div></div>
-      <Link
-        href={"/"}
-        onClick={() => {
-          endMatch.mutate({ matchid: matchId });
-        }}
-      >
-        Return Home
-      </Link>
-      <div className="min-h-60 min-w-60 flex">
-        <video ref={localVideoRef} className="h-[200px] w-[200px]"></video>
-        <video ref={remoteVideoRef} className="h-[200px] w-[200px]"></video>
-      </div>
-    </div>
+    <>
+      <Head>
+        <title>Pixelmate</title>
+        <meta name="description" content="Generated by create-t3-app" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
+        <div className="text-white">
+          <h1>Hello Welcome</h1>
+          {!user.isSignedIn && <SignInButton />}
+          {!!user.isSignedIn && <SignOutButton />}
+        </div>
+
+        {/* {!termsAgreed && !searchUser.isFetching && !searchUser.isRefetching && (
+          <Modal />
+        )} */}
+        {termsAgreed ? <Modal /> : ""}
+        {user.isSignedIn && (
+          <button
+            disabled={noSkips}
+            onClick={onBtnClick}
+            className={`mt-10 rounded-sm ${
+              noSkips ? "bg-slate-500" : "bg-sky-500"
+            } px-3 py-2`}
+          >
+            {noSkips
+              ? "You've exhausted your daily allowance, come back tomorrow!"
+              : "Ready"}
+          </button>
+        )}
+      </main>
+    </>
   );
-};
-
-export default MatchPage;
-
-
+}

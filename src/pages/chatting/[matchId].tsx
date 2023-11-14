@@ -1,105 +1,49 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
-import { useLocalMediaStream, usePeer } from "~/stores/useLocalUser";
+import {
+  useLocalMediaStream,
+  usePeer,
+  useSetNoSkips,
+  useSetRefreshed,
+  useSetSkips,
+  useSetStatus,
+  useSkips,
+  useUserId,
+} from "~/stores/useLocalUser";
 import Link from "next/link";
 
 const MatchPage = () => {
-  const userId = useUser().user?.id;
-  const localVideoRef = useRef<null | HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
-  const peer = usePeer();
   const router = useRouter();
   const matchId = router.query.matchId as string;
+  const userId = useUserId();
+  const localVideoRef = useRef<null | HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
   const localMediaStream = useLocalMediaStream();
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const peer = usePeer();
+  const skips = useSkips();
+  const setStatus = useSetStatus();
+  const setSkips = useSetSkips();
+  const setNoSkips = useSetNoSkips();
+  const [matchIsRunning, setMatchIsRunning] = useState(true);
+  const [countdown, setCountdown] = useState(90);
+  const setRefreshed = useSetRefreshed();
 
-  const { data } = api.user.getMatchForPage.useQuery({
-    matchId: matchId,
-  });
-  const endMatch = api.user.endMatch.useMutation();
-
+  //Cleanup up peer stores in zustand
   const cleanup = () => {
     if (peer) {
       peer.destroy();
     }
   };
-
-  //Hello
-  useEffect(() => {
-    if (!localMediaStream) return;
-
-    // Set the local stream
-    setLocalStream(localMediaStream);
-
-    // Display local stream
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = localMediaStream;
-      localVideoRef.current
-        .play()
-        .catch((e: Error) => console.log("Error in local play", e));
-    }
-  }, [localMediaStream]);
-
-  useEffect(() => {
-    if (peer) {
-      peer.on("call", (call) => {
-        // console.log("Incoming Call.....HELLO");
-
-        if (!localMediaStream) return;
-        // Answer the call with local stream
-
-        // console.log("WE HAVE LOCAL STREAM while getting a call...");
-
-        call.answer(localMediaStream);
-
-        call.on("stream", (remoteStream) => {
-          if (remoteStream) {
-            // console.log("WE HAVE REMOTE STREAM while answering the call...");
-          }
-          setRemoteStream(remoteStream);
-          const remoteVideo = remoteVideoRef.current;
-          if (remoteVideo) {
-            remoteVideo.srcObject = remoteStream;
-            remoteVideo
-              ?.play()
-              .catch(() => console.log("Error in remote play"));
-          }
-        });
-      });
-    }
-  }, [localMediaStream, localStream, peer, remoteStream]);
-
-  useEffect(() => {
-    if (!data || !peer) return;
-    if (data.tempPeerId && data.sourceUserId !== userId) {
-      // console.log("about to call");
-
-      // Call with local stream
-      if (!localMediaStream) return;
-      const call = peer.call(data.tempPeerId, localMediaStream);
-
-      call.on("stream", (remoteStream) => {
-        setRemoteStream(remoteStream);
-
-        // Set the remote video stream
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = remoteStream;
-          remoteVideoRef.current
-            .play()
-            .catch(() => console.log("Error in remote play"));
-        }
-      });
-
-      // console.log("just tried to call");
-    }
-    return () => {
-      cleanup();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, userId, localMediaStream, peer]);
+  //Match data which decides who calls and who answers
+  const { data } = api.user.getMatchForPage.useQuery({
+    matchId: matchId,
+  });
+  //Mutation to end Match so that users are unable to join the same match id session
+  const endMatch = api.user.endMatch.useMutation();
+  //Mutation to update status and skips
+  const userStatusUpdate = api.user.statusUpdate.useMutation();
 
   //EMP = Element Manipulation Prevention.
   useEffect(() => {
@@ -136,8 +80,108 @@ const MatchPage = () => {
     };
   }, [router]);
 
-  const [countdown, setCountdown] = useState(95);
+  //Pay your skip if you refresh the conversation.
+  useEffect(() => {
+    if (!userId) {
+      setRefreshed(true);
+      router
+        .push("/")
+        .catch(() => console.log("ERROR in router.puush of SKIP"));
+    }
+  }, [router, setRefreshed, userId]);
 
+  //ending the match as soon as connection is made so no chance
+  //of reconnecting to same session once you leave
+  useEffect(() => {
+    if (remoteStream?.active && matchIsRunning) {
+      endMatch.mutate({
+        matchid: matchId,
+        userId: userId,
+      });
+      setMatchIsRunning(false);
+      setStatus("waiting");
+    }
+  }, [
+    endMatch,
+    matchId,
+    matchIsRunning,
+    remoteStream?.active,
+    setStatus,
+    userId,
+  ]);
+
+  //If localMediaStream ? set and play video stream
+  useEffect(() => {
+    if (!localMediaStream) return;
+
+    // Display local stream
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = localMediaStream;
+      localVideoRef.current
+        .play()
+        .catch((e: Error) => console.log("Error in local play", e));
+    }
+  }, [localMediaStream]);
+
+  //Defining peer.on("call", ...) the "answering" of the call
+  useEffect(() => {
+    if (peer) {
+      peer.on("call", (call) => {
+        if (!localMediaStream) return;
+
+        // Answer the call with local stream
+        call.answer(localMediaStream);
+
+        // Once stream begins Set remoteStream to your local "remote video element"
+        call.on("stream", (remoteStream) => {
+          setRemoteStream(remoteStream);
+          const remoteVideo = remoteVideoRef.current;
+          if (remoteVideo) {
+            remoteVideo.srcObject = remoteStream;
+            remoteVideo
+              ?.play()
+              .catch(() => console.log("Error in remote play"));
+          }
+        });
+      });
+    }
+  }, [localMediaStream, peer]);
+
+  //if localUserId from getMatchForPage is not the userId, CALL
+  useEffect(() => {
+    if (!data || !peer) return;
+    if (data.tempPeerId && data.localUserId !== userId) {
+      console.log("about to call");
+
+      // Call with local stream
+      if (!localMediaStream) return;
+      const call = peer.call(data.tempPeerId, localMediaStream);
+
+      //Only added to test
+      if (call) {
+        call.on("stream", (remoteStream) => {
+          setRemoteStream(remoteStream);
+
+          // Set the remote video stream
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+            remoteVideoRef.current
+              .play()
+              .catch(() => console.log("Error in remote play"));
+          }
+        });
+      }
+
+      // console.log("just tried to call");
+    }
+    return () => {
+      cleanup();
+    };
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, userId, localMediaStream, peer]);
+
+  //CountDown
   useEffect(() => {
     if (!remoteStream?.getTracks()[0]) return;
     const timer = setInterval(() => {
@@ -155,6 +199,26 @@ const MatchPage = () => {
     return () => clearInterval(timer);
   }, [remoteStream]);
 
+  // In case users want to auto match with the next person,
+  // instead of having to click "Next"
+  // useEffect(() => {
+  //   const timeOut = setTimeout(() => {
+  //     if (!remoteStream?.active) {
+  //       endMatch.mutate({
+  //         matchid: matchId,
+  //         userId: userId,
+  //         status: "looking",
+  //       });
+  //       router
+  //         .push("/waiting")
+  //         .catch(() => console.log("ERROR in router.puush of SKIP"));
+  //     }
+  //   }, 4000);
+  //   return () => {
+  //     clearTimeout(timeOut);
+  //   };
+  // }, [endMatch, matchId, remoteStream?.active, router, userId]);
+
   return (
     <div className="flex h-full w-screen flex-col items-center justify-center p-8">
       <h1>HELLO FROM MATCH PAGE</h1>
@@ -162,8 +226,36 @@ const MatchPage = () => {
       <Link
         href={"/"}
         onClick={() => {
-          endMatch.mutate({ matchid: matchId });
           cleanup();
+          if (!remoteStream?.active) {
+            router
+              .push("/")
+              .catch(() => console.log("ERROR in router.puush of SKIP"));
+          }
+          if (remoteStream?.active && countdown > 0) {
+            userStatusUpdate.mutate({
+              userId: userId,
+              status: "waiting",
+              skips: 1,
+            });
+            if (skips < 2) {
+              setSkips(skips - 1);
+              setNoSkips(true);
+              router
+                .push("/")
+                .catch(() => console.log("ERROR in router.puush of SKIP"));
+            } else {
+              setSkips(skips - 1);
+              router
+                .push("/")
+                .catch(() => console.log("ERROR in router.puush of SKIP"));
+            }
+          }
+          if (remoteStream?.active && countdown < 1) {
+            router
+              .push("/")
+              .catch(() => console.log("ERROR in router.puush of SKIP"));
+          }
         }}
       >
         Return Home
@@ -176,6 +268,13 @@ const MatchPage = () => {
           playsInline={true}
           muted={true}
         ></video>
+        {remoteStream?.active ? (
+          ""
+        ) : (
+          <div className="flex h-[100px] w-[100px] items-center justify-center">
+            Loading...
+          </div>
+        )}
         <video
           ref={remoteVideoRef}
           className={`h-[200px] w-[200px] ${
@@ -234,7 +333,7 @@ const MatchPage = () => {
               : countdown > 8
               ? "blur-[0.6px]"
               : countdown > 0
-              ? "blur-[0.2px]"
+              ? "blur-[0.3px]"
               : "blur-none"
           }`}
           autoPlay={true}
@@ -244,6 +343,53 @@ const MatchPage = () => {
       </div>
 
       <div>{countdown}</div>
+      <div>
+        <button
+          className="border p-2 font-semibold"
+          onClick={() => {
+            cleanup();
+            setStatus("looking");
+            if (!remoteStream?.active) {
+              setTimeout(() => {
+                router
+                  .push("/waiting")
+                  .catch(() => console.log("ERROR in router.puush of SKIP"));
+              }, 1100);
+            }
+            if (remoteStream?.active && countdown > 0) {
+              userStatusUpdate.mutate({
+                userId: userId,
+                status: "looking",
+                skips: 1,
+              });
+              if (skips < 2) {
+                setNoSkips(true);
+                setTimeout(() => {
+                  router
+                    .push("/")
+                    .catch(() => console.log("ERROR in router.puush of SKIP"));
+                }, 1100);
+              } else {
+                setSkips(skips - 1);
+                setTimeout(() => {
+                  router
+                    .push("/waiting")
+                    .catch(() => console.log("ERROR in router.puush of SKIP"));
+                }, 1100);
+              }
+            }
+            if (remoteStream?.active && countdown < 1) {
+              setTimeout(() => {
+                router
+                  .push("/waiting")
+                  .catch(() => console.log("ERROR in router.puush of SKIP"));
+              }, 1100);
+            }
+          }}
+        >
+          Skip
+        </button>
+      </div>
     </div>
   );
 };

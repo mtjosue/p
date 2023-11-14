@@ -3,49 +3,98 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Modal from "~/components/modal";
-import { useUserStore } from "~/stores/useLocalUser";
+import {
+  useFirstLoad,
+  useNoSkips,
+  useRefreshed,
+  useSetFirstLoad,
+  useSetNoSkips,
+  useSetSkips,
+  useSetStatus,
+  useSetUserId,
+  useStatus,
+  useUserId,
+} from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
 export default function Home() {
-  const user = useUser();
   const router = useRouter();
-  const firstName = useUserStore().firstName;
-  const setFirstName = useUserStore().actions.setFirstName;
-  const setUserId = useUserStore().actions.setUserId;
-  const [termsAgreed, setTermsAgreed] = useState(false);
-
-  useEffect(() => {
-    if (user.user?.id) {
-      setUserId(user.user.id);
-    }
-  }, [setUserId, user.user?.id]);
+  const firstLoad = useFirstLoad();
+  const setFirstLoad = useSetFirstLoad();
+  const user = useUser();
+  const userId = useUserId();
+  const setUserId = useSetUserId();
+  const setSkips = useSetSkips();
+  const noSkips = useNoSkips();
+  const setNoSkips = useSetNoSkips();
+  const status = useStatus();
+  const [termsAgreed, setTermsAgreed] = useState(true);
+  const refreshed = useRefreshed();
+  const setStatus = useSetStatus();
 
   const userStatusUpdate = api.user.statusUpdate.useMutation();
+  const refresh = api.user.refresh.useMutation();
   const searchUser = api.user.userCheck.useQuery(
     {
       userId: user.user?.id ?? "",
+      firstLoad: firstLoad,
     },
     {
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      retryOnMount: false,
+      //
+      // enabled: false,
+      refetchInterval: 0,
       cacheTime: 0,
       staleTime: 0,
     },
   );
 
+  //Pay your skips if you refreshed in the match page
+  useEffect(() => {
+    if (!refreshed) return;
+    if (userId && refreshed) {
+      refresh.mutate({
+        userId: userId,
+      });
+    }
+  }, [refresh, refreshed, userId]);
+
+  //searchfor yourself as User and set User properties locally
+  useEffect(() => {
+    if (searchUser.data) {
+      setUserId(searchUser.data.userId);
+      console.log("searchUser.data.skips", searchUser.data.skips);
+
+      if (searchUser.data.skips < 2) {
+        setNoSkips(true);
+        setSkips(0);
+      } else if (searchUser.data.skips > 1) {
+        setSkips(searchUser.data.skips);
+      }
+      setFirstLoad(false);
+    }
+  }, [searchUser.data, setFirstLoad, setNoSkips, setSkips, setUserId]);
+
+  //If we're not actively searching and we have gotten back nothing
+  //Open Terms of agreement to create new user
   useEffect(() => {
     if (!user.isSignedIn) return;
     if (
       !searchUser.isFetching &&
       !searchUser.isLoading &&
-      !searchUser.error &&
       !searchUser.isRefetching &&
+      !searchUser.error &&
       !searchUser.data
     ) {
-      if (!termsAgreed) {
-        setTermsAgreed(true);
+      if (termsAgreed && firstLoad) {
+        setTermsAgreed(false);
       }
     }
   }, [
+    firstLoad,
     searchUser.data,
     searchUser.error,
     searchUser.isFetching,
@@ -55,24 +104,25 @@ export default function Home() {
     user.isSignedIn,
   ]);
 
+  //if somehow we get to the home page and the user status is not waiting
+  //Set it to 'waiting' in the db
   useEffect(() => {
     if (!searchUser.data) return;
+    if (status === "waiting") return;
 
     if (searchUser.data.status !== "waiting") {
+      setStatus("waiting");
       userStatusUpdate.mutate({
         userId: searchUser.data.userId,
         status: "waiting",
       });
     }
-    if (searchUser.data && firstName !== searchUser.data.name) {
-      setFirstName(searchUser.data.name);
-    }
+  }, [searchUser.data, setStatus, status, userStatusUpdate]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firstName, searchUser.data]);
-
+  // Set user status to 'looking'
   const onBtnClick = async () => {
     if (user.user?.id) {
+      setStatus("looking");
       userStatusUpdate.mutate({
         userId: user.user.id,
         status: "looking",
@@ -94,13 +144,18 @@ export default function Home() {
           {!user.isSignedIn && <SignInButton />}
           {!!user.isSignedIn && <SignOutButton />}
         </div>
-        {user.isSignedIn && termsAgreed && <Modal />}
+        {user.isSignedIn && !termsAgreed && <Modal />}
         {user.isSignedIn && (
           <button
+            disabled={noSkips}
             onClick={onBtnClick}
-            className="mt-10 rounded-sm bg-sky-400 px-3 py-2"
+            className={`mt-10 rounded-sm ${
+              noSkips ? "bg-slate-500" : "bg-sky-500"
+            } px-3 py-2`}
           >
-            Ready
+            {noSkips
+              ? "You've exhausted your daily allowance, come back tomorrow!"
+              : "Ready"}
           </button>
         )}
       </main>
