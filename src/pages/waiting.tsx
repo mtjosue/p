@@ -150,7 +150,6 @@ const WaitingPage = () => {
       } else {
         userStatusUpdate.mutate({
           userId: userId,
-          status: false,
         });
         router
           .push("/")
@@ -170,8 +169,7 @@ const WaitingPage = () => {
           onClick={() => {
             setStatus("waiting");
             userStatusUpdate.mutate({
-              userId: userId ?? "",
-              status: false,
+              userId: userId,
             });
           }}
           href={"/"}

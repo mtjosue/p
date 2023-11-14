@@ -43,30 +43,6 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
-  statusUpdate: publicProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-        status: z.boolean(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (input.status) {
-        return await ctx.db.user.update({
-          where: { userId: input.userId },
-          data: {
-            status: "looking",
-          },
-        });
-      } else if (!input.status) {
-        return await ctx.db.user.update({
-          where: { userId: input.userId },
-          data: {
-            status: "waiting",
-          },
-        });
-      }
-    }),
   searchMatchOrCreate: publicProcedure
     .input(
       z.object({
@@ -172,24 +148,6 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
-  refresh: publicProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!input.userId) return null;
-      return await ctx.db.user.update({
-        where: {
-          userId: input.userId,
-        },
-        data: {
-          skips: { decrement: 1 },
-          status: "waiting",
-        },
-      });
-    }),
   skipsUpdate: publicProcedure
     .input(
       z.object({
@@ -208,13 +166,39 @@ export const userRouter = createTRPCRouter({
             skips: { decrement: 1 },
           },
         });
-      } else if (input.status) {
+      }
+      if (input.status) {
         return await ctx.db.user.update({
           where: {
             userId: input.userId,
           },
           data: {
             skips: { decrement: 1 },
+            status: "looking",
+          },
+        });
+      }
+    }),
+  statusUpdate: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        status: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!input.status) {
+        return await ctx.db.user.update({
+          where: { userId: input.userId },
+          data: {
+            status: "waiting",
+          },
+        });
+      }
+      if (input.status) {
+        return await ctx.db.user.update({
+          where: { userId: input.userId },
+          data: {
             status: "looking",
           },
         });

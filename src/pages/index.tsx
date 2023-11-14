@@ -33,7 +33,8 @@ export default function Home() {
   const setStatus = useSetStatus();
 
   const userStatusUpdate = api.user.statusUpdate.useMutation();
-  const refresh = api.user.refresh.useMutation();
+  const skipsUpdate = api.user.skipsUpdate.useMutation();
+
   const searchUser = api.user.userCheck.useQuery(
     {
       userId: user.user?.id ?? "",
@@ -56,11 +57,11 @@ export default function Home() {
   useEffect(() => {
     if (!refreshed) return;
     if (userId && refreshed) {
-      refresh.mutate({
+      skipsUpdate.mutate({
         userId: userId,
       });
     }
-  }, [refresh, refreshed, userId]);
+  }, [refreshed, skipsUpdate, userId]);
 
   //searchfor yourself as User and set User properties locally
   useEffect(() => {
@@ -114,7 +115,6 @@ export default function Home() {
       setStatus("waiting");
       userStatusUpdate.mutate({
         userId: searchUser.data.userId,
-        status: false,
       });
     }
   }, [searchUser.data, setStatus, status, userStatusUpdate]);
