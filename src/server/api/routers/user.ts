@@ -11,11 +11,20 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         userId: z.string(),
+        firstLoad: z.boolean(),
       }),
     )
-    .query(({ ctx, input }) => {
-      const userFound = ctx.db.user.findUnique({
+    .query(async ({ ctx, input }) => {
+      if (!input.firstLoad) return null;
+      if (!input.userId) return null;
+      const userFound = await ctx.db.user.findUnique({
         where: { userId: input.userId },
+        select: {
+          userId: true,
+          termsAgreed: true,
+          skips: true,
+          status: true,
+        },
       });
       return userFound;
     }),
@@ -44,125 +53,28 @@ export const userRouter = createTRPCRouter({
       z.object({
         userId: z.string(),
         status: z.string(),
+        skips: z.number().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.user.update({
-        where: { userId: input.userId },
-        data: {
-          status: input.status,
-        },
-      });
-    }),
-  getMatch: publicProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const match = await ctx.db.match.findFirst({
-        where: {
-          remoteUserId: input.userId,
-          status: { not: "ended" },
-          skipped: { not: true },
-        },
-      });
-
-      return match;
-    }),
-  getMatchForPage: publicProcedure
-    .input(
-      z.object({
-        matchId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const match = await ctx.db.match.findUnique({
-        where: {
-          id: input.matchId,
-        },
-
-        select: {
-          tempPeerId: true,
-          remoteUserId: true,
-          localUserId: true,
-          // sourceUser: true,
-          // sinkUserId: true,
-        },
-      });
-      return match;
-    }),
-  endMatch: publicProcedure
-    .input(
-      z.object({
-        matchid: z.string(),
-        userId: z.string(),
-        count: z.number(),
-        status: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      //
-      const match = await ctx.db.match.findFirst({
-        where: {
-          id: input.matchid,
-        },
-        select: {
-          skipped: true,
-        },
-      });
-      //
-      if (!match?.skipped) {
-        if (input.count > 0) {
-          await ctx.db.user.update({
-            where: { userId: input.userId },
-            data: {
-              skips: {
-                decrement: 1,
-              },
-              status: input.status,
+      if (input.skips) {
+        return await ctx.db.user.update({
+          where: { userId: input.userId },
+          data: {
+            status: input.status,
+            skips: {
+              decrement: 1,
             },
-          });
-          await ctx.db.match.update({
-            where: {
-              id: input.matchid,
-            },
-            data: {
-              skipped: true,
-            },
-          });
-        } else {
-          await ctx.db.user.update({
-            where: { userId: input.userId },
-            data: {
-              status: input.status,
-            },
-          });
-          await ctx.db.match.update({
-            where: {
-              id: input.matchid,
-            },
-            data: {
-              skipped: true,
-            },
-          });
-        }
+          },
+        });
       } else {
-        await ctx.db.user.update({
+        return await ctx.db.user.update({
           where: { userId: input.userId },
           data: {
             status: input.status,
           },
         });
       }
-      //
-      return await ctx.db.match.update({
-        where: { id: input.matchid },
-        data: {
-          status: "ended",
-        },
-      });
     }),
   searchMatchOrCreate: publicProcedure
     .input(
@@ -195,13 +107,13 @@ export const userRouter = createTRPCRouter({
       await ctx.db.user.update({
         where: { userId: input.userId },
         data: {
-          status: "chatting",
+          status: "waiting",
         },
       });
       await ctx.db.user.update({
         where: { userId: firstMatch.userId },
         data: {
-          status: "chatting",
+          status: "waiting",
         },
       });
 
@@ -215,21 +127,86 @@ export const userRouter = createTRPCRouter({
 
       return match;
     }),
-  skipsBalance: publicProcedure
+  getMatch: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        created: z.boolean(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (!input.created) return null;
+      const match = await ctx.db.match.findFirst({
+        where: {
+          remoteUserId: input.userId,
+          status: { not: "ended" },
+        },
+      });
+
+      return match;
+    }),
+  getMatchForPage: publicProcedure
+    .input(
+      z.object({
+        matchId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const match = await ctx.db.match.findUnique({
+        where: {
+          id: input.matchId,
+        },
+
+        select: {
+          tempPeerId: true,
+          remoteUserId: true,
+          localUserId: true,
+          // sourceUser: true,
+          // sinkUserId: true,
+        },
+      });
+      return match;
+    }),
+  endMatch: publicProcedure
+    .input(
+      z.object({
+        matchid: z.string(),
+        userId: z.string(),
+        status: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.status) {
+        await ctx.db.user.update({
+          where: { userId: input.userId },
+          data: {
+            status: input.status,
+          },
+        });
+      }
+      return await ctx.db.match.update({
+        where: { id: input.matchid },
+        data: {
+          status: "ended",
+        },
+      });
+    }),
+  refresh: publicProcedure
     .input(
       z.object({
         userId: z.string(),
       }),
     )
-    .query(({ ctx, input }) => {
-      const userSkipsBalance = ctx.db.user.findFirst({
+    .mutation(async ({ ctx, input }) => {
+      if (!input.userId) return null;
+      return await ctx.db.user.update({
         where: {
           userId: input.userId,
         },
-        select: {
-          skips: true,
+        data: {
+          skips: { decrement: 1 },
+          status: "waiting",
         },
       });
-      return userSkipsBalance;
     }),
 });

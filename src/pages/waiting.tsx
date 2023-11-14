@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -7,13 +6,18 @@ import {
   usePeer,
   useSetLocalMediaStream,
   useSetPeer,
+  useSetStatus,
+  useUserId,
 } from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
 const WaitingPage = () => {
-  const userId = useUser().user?.id;
   const router = useRouter();
   const [created, setCreated] = useState(false);
+  const localMediaStream = useLocalMediaStream();
+  const setLocalMediaStream = useSetLocalMediaStream();
+  const userId = useUserId();
+  const setStatus = useSetStatus();
   const peer = usePeer();
   const setPeer = useSetPeer();
   const peerId = useMemo(() => {
@@ -23,44 +27,23 @@ const WaitingPage = () => {
       }
     }
   }, [peer]);
-  const localMediaStream = useLocalMediaStream();
-  const setLocalMediaStream = useSetLocalMediaStream();
 
-  //Search for a user available, if found create a match, if not = null
+  //Mutation to Search for a user available, if found create a match, if not = null
   const searchOrCreateMatch = api.user.searchMatchOrCreate.useMutation();
-
-  //
-  const { data: userSkips } = api.user.skipsBalance.useQuery(
-    {
-      userId: userId ?? "",
-    },
-    {
-      refetchOnWindowFocus: false,
-      cacheTime: 0,
-      staleTime: 0,
-    },
-  );
-
-  //
+  //Mutation to Update user status and skips
   const userStatusUpdate = api.user.statusUpdate.useMutation();
 
-  //Checking skips remaining.
+  //Redirect to home if refreshed
   useEffect(() => {
-    console.log("userSkips REMAINING USER SKIPS", userSkips?.skips);
-
-    if (userSkips) {
-      if (userSkips.skips < 1 && userId) {
-        userStatusUpdate.mutate({
-          userId: userId,
-          status: "waiting",
-        });
-        router.push("/").catch(() => console.log("ERROR in PUSH from 0 SKIPS"));
-      }
+    if (!userId) {
+      router
+        .push("/")
+        .catch(() => console.log("ERROR in router.puush of SKIP"));
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router, userSkips]);
+  }, [router, userId]);
 
-  //If not peer, create peer.
+  //If no peer in zustand, create peer
   useEffect(() => {
     if (!peer?.id) {
       let unmount = false;
@@ -84,7 +67,7 @@ const WaitingPage = () => {
     }
   }, [peer, setPeer]);
 
-  //If first time execute searchOrCreateMatch.
+  //If first load then execute searchOrCreateMatch
   useEffect(() => {
     // console.log("peerId : ", peerId);
     // console.log("created : ", created);
@@ -100,7 +83,7 @@ const WaitingPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [created, userId, peerId]);
 
-  //If theres data in the searchOrCreateMatch push to chatting.
+  //If theres data in the searchOrCreateMatch push to chatting
   useEffect(() => {
     if (searchOrCreateMatch.data?.id) {
       const matchId = searchOrCreateMatch.data.id; // Access the ID from the mutation result.
@@ -120,7 +103,7 @@ const WaitingPage = () => {
     setLocalMediaStream(mediaStream);
   };
 
-  //RETRYING Getting local media stream if you dont have it yet.
+  //RETRYING Getting local media stream if you dont have it yet
   useEffect(() => {
     if (!localMediaStream) {
       getLocalMediaStream().catch(() =>
@@ -132,9 +115,9 @@ const WaitingPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localMediaStream]);
 
-  //Looking for a match with your id in it.
+  //Looking for a match with your id as the remoteUserId
   const getMatch = api.user.getMatch.useQuery(
-    { userId: userId ?? "" },
+    { userId: userId ?? "", created: created },
     {
       refetchOnWindowFocus: false,
       cacheTime: 0,
@@ -142,7 +125,7 @@ const WaitingPage = () => {
     },
   );
 
-  //If you find yourself in match right away.
+  //If you find yourself in match right away
   useEffect(() => {
     if (getMatch.data) {
       router.push(`/chatting/${getMatch.data.id}`).catch(() => {
@@ -151,7 +134,8 @@ const WaitingPage = () => {
     }
   }, [getMatch.data, router, userId]);
 
-  //getMatch REFETCH only 3 times every 5 seconds.
+  //if you dont, Search 3 times with 5 seconds in between
+  //after 15 seconds return to home and set status to "waiting"
   useEffect(() => {
     let count = 0;
     const interval = setInterval(() => {
@@ -164,21 +148,36 @@ const WaitingPage = () => {
         });
         count++;
       } else {
+        userStatusUpdate.mutate({
+          userId: userId,
+          status: "waiting",
+        });
         router
           .push("/")
           .catch(() => console.log("ERROR in Refetch PUSH /waiting"));
       }
-    }, 5000);
+    }, 3000);
     return () => {
       clearInterval(interval);
     };
-  }, [getMatch, router]);
+  }, [getMatch, router, userId, userStatusUpdate]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
       <div className="text-white">
         <h2>Waiting for Users to Connect With...</h2>
-        <Link href={"/"}>RETURN HOME</Link>
+        <Link
+          onClick={() => {
+            setStatus("waiting");
+            userStatusUpdate.mutate({
+              userId: userId ?? "",
+              status: "waiting",
+            });
+          }}
+          href={"/"}
+        >
+          RETURN HOME
+        </Link>
       </div>
     </main>
   );
