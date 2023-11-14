@@ -44,6 +44,8 @@ const MatchPage = () => {
   const endMatch = api.user.endMatch.useMutation();
   //Mutation to update status and skips
   const userStatusUpdate = api.user.statusUpdate.useMutation();
+  //Mutation Skips update
+  const skipsUpdate = api.user.skipsUpdate.useMutation();
 
   //EMP = Element Manipulation Prevention.
   useEffect(() => {
@@ -96,7 +98,6 @@ const MatchPage = () => {
     if (remoteStream?.active && matchIsRunning) {
       endMatch.mutate({
         matchid: matchId,
-        userId: userId,
       });
       setMatchIsRunning(false);
       setStatus("waiting");
@@ -232,29 +233,26 @@ const MatchPage = () => {
               .push("/")
               .catch(() => console.log("ERROR in router.puush of SKIP"));
           }
+          if (remoteStream?.active && countdown < 1) {
+            router
+              .push("/")
+              .catch(() => console.log("ERROR in router.puush of SKIP"));
+          }
           if (remoteStream?.active && countdown > 0) {
-            userStatusUpdate.mutate({
+            skipsUpdate.mutate({
               userId: userId,
-              status: "waiting",
-              skips: 1,
             });
             if (skips < 2) {
-              setSkips(skips - 1);
               setNoSkips(true);
               router
                 .push("/")
                 .catch(() => console.log("ERROR in router.puush of SKIP"));
-            } else {
+            } else if (skips > 1) {
               setSkips(skips - 1);
               router
                 .push("/")
                 .catch(() => console.log("ERROR in router.puush of SKIP"));
             }
-          }
-          if (remoteStream?.active && countdown < 1) {
-            router
-              .push("/")
-              .catch(() => console.log("ERROR in router.puush of SKIP"));
           }
         }}
       >
@@ -350,40 +348,39 @@ const MatchPage = () => {
             cleanup();
             setStatus("looking");
             if (!remoteStream?.active) {
-              setTimeout(() => {
-                router
-                  .push("/waiting")
-                  .catch(() => console.log("ERROR in router.puush of SKIP"));
-              }, 1100);
-            }
-            if (remoteStream?.active && countdown > 0) {
               userStatusUpdate.mutate({
                 userId: userId,
-                status: "looking",
-                skips: 1,
+                status: true,
               });
-              if (skips < 2) {
-                setNoSkips(true);
-                setTimeout(() => {
-                  router
-                    .push("/")
-                    .catch(() => console.log("ERROR in router.puush of SKIP"));
-                }, 1100);
-              } else {
-                setSkips(skips - 1);
-                setTimeout(() => {
-                  router
-                    .push("/waiting")
-                    .catch(() => console.log("ERROR in router.puush of SKIP"));
-                }, 1100);
-              }
+              router
+                .push("/waiting")
+                .catch(() => console.log("ERROR in router.puush of SKIP"));
             }
             if (remoteStream?.active && countdown < 1) {
-              setTimeout(() => {
+              userStatusUpdate.mutate({
+                userId: userId,
+                status: true,
+              });
+              router
+                .push("/waiting")
+                .catch(() => console.log("ERROR in router.puush of SKIP"));
+            }
+            if (remoteStream?.active && countdown > 0) {
+              if (skips < 2) {
+                setNoSkips(true);
+                router
+                  .push("/")
+                  .catch(() => console.log("ERROR in router.puush of SKIP"));
+              } else if (skips > 1) {
+                skipsUpdate.mutate({
+                  userId: userId,
+                  status: true,
+                });
+                setSkips(skips - 1);
                 router
                   .push("/waiting")
                   .catch(() => console.log("ERROR in router.puush of SKIP"));
-              }, 1100);
+              }
             }
           }}
         >

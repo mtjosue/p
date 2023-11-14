@@ -47,26 +47,22 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         userId: z.string(),
-        status: z.string(),
-        skips: z.number().optional(),
+        status: z.boolean(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (input.skips) {
+      if (input.status) {
         return await ctx.db.user.update({
           where: { userId: input.userId },
           data: {
-            status: input.status,
-            skips: {
-              decrement: 1,
-            },
+            status: "looking",
           },
         });
-      } else {
+      } else if (!input.status) {
         return await ctx.db.user.update({
           where: { userId: input.userId },
           data: {
-            status: input.status,
+            status: "waiting",
           },
         });
       }
@@ -166,19 +162,9 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         matchid: z.string(),
-        userId: z.string(),
-        status: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (input.status) {
-        await ctx.db.user.update({
-          where: { userId: input.userId },
-          data: {
-            status: input.status,
-          },
-        });
-      }
       return await ctx.db.match.update({
         where: { id: input.matchid },
         data: {
@@ -203,5 +189,35 @@ export const userRouter = createTRPCRouter({
           status: "waiting",
         },
       });
+    }),
+  skipsUpdate: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        status: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!input.userId) return null;
+      if (!input.status) {
+        return await ctx.db.user.update({
+          where: {
+            userId: input.userId,
+          },
+          data: {
+            skips: { decrement: 1 },
+          },
+        });
+      } else if (input.status) {
+        return await ctx.db.user.update({
+          where: {
+            userId: input.userId,
+          },
+          data: {
+            skips: { decrement: 1 },
+            status: "looking",
+          },
+        });
+      }
     }),
 });

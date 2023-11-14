@@ -114,7 +114,7 @@ export default function Home() {
       setStatus("waiting");
       userStatusUpdate.mutate({
         userId: searchUser.data.userId,
-        status: "waiting",
+        status: false,
       });
     }
   }, [searchUser.data, setStatus, status, userStatusUpdate]);
@@ -125,7 +125,7 @@ export default function Home() {
       setStatus("looking");
       userStatusUpdate.mutate({
         userId: user.user.id,
-        status: "looking",
+        status: true,
       });
     }
     await router.push("/waiting");

@@ -142,7 +142,7 @@ const WaitingPage = () => {
       console.log("REFETCHING");
       console.log("count :", count);
 
-      if (count < 3) {
+      if (count < 8) {
         getMatch.refetch().catch(() => {
           console.log("ERROR");
         });
@@ -150,7 +150,7 @@ const WaitingPage = () => {
       } else {
         userStatusUpdate.mutate({
           userId: userId,
-          status: "waiting",
+          status: false,
         });
         router
           .push("/")
@@ -171,7 +171,7 @@ const WaitingPage = () => {
             setStatus("waiting");
             userStatusUpdate.mutate({
               userId: userId ?? "",
-              status: "waiting",
+              status: false,
             });
           }}
           href={"/"}
