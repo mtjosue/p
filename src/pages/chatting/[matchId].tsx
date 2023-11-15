@@ -7,8 +7,10 @@ import {
   useSetNoSkips,
   useSetRefreshed,
   useSetSkips,
+  useSetSolo,
   useSetStatus,
   useSkips,
+  useSolo,
   useUserId,
 } from "~/stores/useLocalUser";
 import Link from "next/link";
@@ -28,7 +30,10 @@ const MatchPage = () => {
   const setNoSkips = useSetNoSkips();
   const [matchIsRunning, setMatchIsRunning] = useState(true);
   const [countdown, setCountdown] = useState(90);
+  const [countdown2, setCountdown2] = useState(8);
   const setRefreshed = useSetRefreshed();
+  const setSolo = useSetSolo();
+  const solo = useSolo();
 
   //Cleanup up peer stores in zustand
   const cleanup = () => {
@@ -106,16 +111,6 @@ const MatchPage = () => {
       setMatchIsRunning(false);
       setStatus("waiting");
     }
-
-    // setTimeout(() => {
-    //   if (!remoteStream?.active) {
-    //     endMatch.mutate({
-    //       matchid: matchId,
-    //     });
-    //     setMatchIsRunning(false);
-    //     setStatus("waiting");
-    //   }
-    // }, 5000);
   }, [
     data?.remoteUserId,
     endMatch,
@@ -125,6 +120,33 @@ const MatchPage = () => {
     setStatus,
     userId,
   ]);
+
+  //If remote user never joins after 7 seconds turn solo on.
+  useEffect(() => {
+    if (countdown2 === 1 && !remoteStream?.active) {
+      setSolo(true);
+    }
+  }, [countdown2, remoteStream?.active, setSolo]);
+
+  //If solo is on turn end match return to "looking" in "waiting" page
+  useEffect(() => {
+    if (solo) {
+      setSolo(false);
+      setStatus("looking");
+      cleanup();
+      endMatch.mutate({
+        matchid: matchId,
+      });
+      userStatusUpdate.mutate({
+        userId: userId,
+        status: true,
+      });
+
+      router.push(`/waiting`).catch(() => console.log("ERROR IN ROUTER.PUSH"));
+    }
+    //cleanup
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [endMatch, matchId, router, solo, userId, userStatusUpdate]);
 
   //If localMediaStream ? set and play video stream
   useEffect(() => {
@@ -214,6 +236,23 @@ const MatchPage = () => {
 
     return () => clearInterval(timer);
   }, [remoteStream]);
+
+  //CountDown2
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown2((prev) => {
+        if (prev > 0) {
+          // Your countdown logic
+          return prev - 1;
+        } else {
+          clearInterval(timer);
+          return 0;
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // In case users want to auto match with the next person,
   // instead of having to click "Next"

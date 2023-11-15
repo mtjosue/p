@@ -7,7 +7,6 @@ import {
   useFirstLoad,
   useLocalMediaStream,
   useNoSkips,
-  useRefreshed,
   useSetFirstLoad,
   useSetLocalMediaStream,
   useSetNoSkips,
@@ -15,7 +14,8 @@ import {
   useSetStatus,
   useSetUserId,
   useStatus,
-  useUserId,
+  // useRefreshed,
+  // useUserId,
 } from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
@@ -24,20 +24,20 @@ export default function Home() {
   const firstLoad = useFirstLoad();
   const setFirstLoad = useSetFirstLoad();
   const user = useUser();
-  const userId = useUserId();
+  // const userId = useUserId();
   const setUserId = useSetUserId();
   const setSkips = useSetSkips();
   const noSkips = useNoSkips();
   const setNoSkips = useSetNoSkips();
   const status = useStatus();
   const [termsAgreed, setTermsAgreed] = useState(true);
-  const refreshed = useRefreshed();
+  // const refreshed = useRefreshed();
   const setStatus = useSetStatus();
   const localMediaStream = useLocalMediaStream();
   const setLocalMediaStream = useSetLocalMediaStream();
 
   const userStatusUpdate = api.user.statusUpdate.useMutation();
-  const skipsUpdate = api.user.skipsUpdate.useMutation();
+  // const skipsUpdate = api.user.skipsUpdate.useMutation();
   const searchUser = api.user.userCheck.useQuery(
     {
       userId: user.user?.id ?? "",
@@ -77,16 +77,17 @@ export default function Home() {
   }, [localMediaStream]);
 
   //Pay your skips if you refreshed in the match page
-  useEffect(() => {
-    if (!refreshed) return;
-    if (userId && refreshed) {
-      skipsUpdate.mutate({
-        userId: userId,
-      });
-    }
-  }, [refreshed, skipsUpdate, userId]);
+  // useEffect(() => {
+  //   if (!refreshed) return;
+  //   if (userId && refreshed) {
+  //     skipsUpdate.mutate({
+  //       userId: userId,
+  //     });
+  //   }
+  // }, [refreshed, skipsUpdate, userId]);
 
   //searchfor yourself as User and set User properties locally
+
   useEffect(() => {
     if (searchUser.data) {
       setUserId(searchUser.data.userId);

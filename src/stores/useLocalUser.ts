@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Peer } from "peerjs";
 
 type UserStore = {
+  solo: boolean;
   refreshed: boolean;
   status: string | null;
   skips: number;
@@ -11,6 +12,7 @@ type UserStore = {
   userId: string;
   localMediaStream: MediaStream | null;
   actions: {
+    setSolo: (solo: boolean) => void;
     setRefreshed: (refreshed: boolean) => void;
     setStatus: (str: string) => void;
     setSkips: (skips: number) => void;
@@ -23,6 +25,7 @@ type UserStore = {
 };
 
 export const useUserStore = create<UserStore>((set) => ({
+  solo: false,
   refreshed: false,
   status: null,
   skips: 20,
@@ -32,6 +35,7 @@ export const useUserStore = create<UserStore>((set) => ({
   userId: "",
   localMediaStream: null,
   actions: {
+    setSolo: (solo) => set(() => ({ solo })),
     setRefreshed: (refreshed) => set(() => ({ refreshed })),
     setStatus: (status) => set(() => ({ status })),
     setSkips: (skips) => set(() => ({ skips })),
@@ -44,6 +48,8 @@ export const useUserStore = create<UserStore>((set) => ({
   },
 }));
 
+export const useSolo = () => useUserStore((state) => state.solo);
+export const useSetSolo = () => useUserStore((state) => state.actions.setSolo);
 export const useRefreshed = () => useUserStore((state) => state.refreshed);
 export const useSetRefreshed = () =>
   useUserStore((state) => state.actions.setRefreshed);
