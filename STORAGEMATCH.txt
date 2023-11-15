@@ -12,10 +12,16 @@ import {
   useUserId,
 } from "~/stores/useLocalUser";
 import Link from "next/link";
+import {
+  useCaller,
+  useMatchId,
+  useRemoteUserId,
+  useTempPeerId,
+} from "~/stores/useRemoteUser";
 
 const MatchPage = () => {
   const router = useRouter();
-  const matchId = router.query.matchId as string;
+  // const matchId = router.query.matchId as string;
   const userId = useUserId();
   const localVideoRef = useRef<null | HTMLVideoElement>(null);
   const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
@@ -29,6 +35,11 @@ const MatchPage = () => {
   const [matchIsRunning, setMatchIsRunning] = useState(true);
   const [countdown, setCountdown] = useState(90);
   const setRefreshed = useSetRefreshed();
+  const matchId = useMatchId();
+  const remoteUserId = useRemoteUserId();
+  const tempPeerId = useTempPeerId();
+  const caller = useCaller();
+  console.log("caller FROM CHATTING", caller);
 
   //Cleanup up peer stores in zustand
   const cleanup = () => {
@@ -37,9 +48,9 @@ const MatchPage = () => {
     }
   };
   //Match data which decides who calls and who answers
-  const { data } = api.user.getMatchForPage.useQuery({
-    matchId: matchId,
-  });
+  // const { data } = api.user.getMatchForPage.useQuery({
+  //   matchId: matchId,
+  // });
   //Mutation to end Match so that users are unable to join the same match id session
   const endMatch = api.user.endMatch.useMutation();
   //Mutation to update status and skips
@@ -95,29 +106,14 @@ const MatchPage = () => {
   //ending the match as soon as connection is made so no chance
   //of reconnecting to same session once you leave
   useEffect(() => {
-    if (
-      remoteStream?.active &&
-      matchIsRunning &&
-      data?.remoteUserId === userId
-    ) {
+    if (remoteStream?.active && matchIsRunning) {
       endMatch.mutate({
-        matchid: matchId,
+        matchid: matchId ?? "",
       });
       setMatchIsRunning(false);
       setStatus("waiting");
     }
-
-    // setTimeout(() => {
-    //   if (!remoteStream?.active) {
-    //     endMatch.mutate({
-    //       matchid: matchId,
-    //     });
-    //     setMatchIsRunning(false);
-    //     setStatus("waiting");
-    //   }
-    // }, 5000);
   }, [
-    data?.remoteUserId,
     endMatch,
     matchId,
     matchIsRunning,
@@ -139,11 +135,15 @@ const MatchPage = () => {
     }
   }, [localMediaStream]);
 
-  //Defining peer.on("call", ...) the ANSWERING
+  //Defining peer.on("call", ...) the "answering" of the call
   useEffect(() => {
+    console.log("NO PEER!@!@!@!@!@");
     if (peer) {
+      console.log("WE HAVE A PEER IN THE ANSWER");
       peer.on("call", (call) => {
+        console.log("NO LOCAL MEDIA STREAM");
         if (!localMediaStream) return;
+        console.log("ABOUT TO ANSWER CALL");
 
         // Answer the call with local stream
         call.answer(localMediaStream);
@@ -161,17 +161,16 @@ const MatchPage = () => {
         });
       });
     }
-  }, [localMediaStream, peer]);
+  }, [caller, localMediaStream, peer]);
 
-  //if localUserId from getMatchForPage is not the userId, the CALL
+  //if localUserId from getMatchForPage is not the userId, CALL
   useEffect(() => {
-    if (!data || !peer) return;
-    if (data.tempPeerId && data.localUserId !== userId) {
-      console.log("about to call");
-
+    if (!tempPeerId || !peer) return;
+    if (caller) {
       // Call with local stream
       if (!localMediaStream) return;
-      const call = peer.call(data.tempPeerId, localMediaStream);
+      const call = peer.call(tempPeerId, localMediaStream);
+      console.log("about to call");
 
       //Only added to test
       if (call) {
@@ -194,8 +193,9 @@ const MatchPage = () => {
       cleanup();
     };
 
+    //cleanup is wanting me to use useCallback..
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, userId, localMediaStream, peer]);
+  }, [localMediaStream, peer, remoteUserId, tempPeerId, userId]);
 
   //CountDown
   useEffect(() => {

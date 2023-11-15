@@ -64,21 +64,24 @@ export const userRouter = createTRPCRouter({
         where: {
           status: "looking",
           NOT: {
-            userId: input.userId || "",
+            userId: input.userId,
           },
         },
       });
 
-      if (!firstMatch) return null;
+      if (!firstMatch) {
+        return null;
+      }
 
       await ctx.db.user.update({
-        where: { userId: input.userId },
+        where: { userId: firstMatch.userId },
         data: {
           status: "waiting",
         },
       });
+
       await ctx.db.user.update({
-        where: { userId: firstMatch.userId },
+        where: { userId: input.userId },
         data: {
           status: "waiting",
         },
@@ -92,7 +95,30 @@ export const userRouter = createTRPCRouter({
         },
       });
 
-      return match;
+      const potentialMatch = await ctx.db.match.findFirst({
+        where: {
+          status: "running",
+          remoteUserId: input.userId,
+        },
+        select: {
+          id: true,
+          createdAt: true,
+        },
+      });
+
+      if (potentialMatch && potentialMatch.createdAt < match.createdAt) {
+        await ctx.db.match.update({
+          where: {
+            id: match.id,
+          },
+          data: {
+            status: "ended",
+          },
+        });
+        return potentialMatch;
+      } else {
+        return match;
+      }
     }),
   getMatch: publicProcedure
     .input(
@@ -107,6 +133,11 @@ export const userRouter = createTRPCRouter({
         where: {
           remoteUserId: input.userId,
           status: { not: "ended" },
+        },
+        select: {
+          id: true,
+          localUserId: true,
+          tempPeerId: true,
         },
       });
 
@@ -141,6 +172,7 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (!input.matchid) return;
       return await ctx.db.match.update({
         where: { id: input.matchid },
         data: {

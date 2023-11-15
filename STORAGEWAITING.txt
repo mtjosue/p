@@ -7,6 +7,13 @@ import {
   useSetStatus,
   useUserId,
 } from "~/stores/useLocalUser";
+import {
+  useCaller,
+  useSetCaller,
+  useSetMatchId,
+  useSetRemoteUserId,
+  useSetTempPeerId,
+} from "~/stores/useRemoteUser";
 import { api } from "~/utils/api";
 
 const WaitingPage = () => {
@@ -23,6 +30,12 @@ const WaitingPage = () => {
       }
     }
   }, [peer]);
+  const setMatchId = useSetMatchId();
+  const setRemoteUserId = useSetRemoteUserId();
+  const setTempPeerId = useSetTempPeerId();
+  const setCaller = useSetCaller();
+  const caller = useCaller();
+  console.log("caller FROM WAITING", caller);
 
   //Mutation to Search for a user available, if found create a match, if not = null
   const searchOrCreateMatch = api.user.searchMatchOrCreate.useMutation();
@@ -74,16 +87,14 @@ const WaitingPage = () => {
         userId: userId,
         tempId: peerId,
       });
-      setTimeout(() => {
-        setCreated(true);
-      }, 3000);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [created, userId, peerId]);
 
   //If theres data in the searchOrCreateMatch push to chatting
   useEffect(() => {
-    if (searchOrCreateMatch.data) {
+    if (searchOrCreateMatch.data?.id) {
+      setMatchId(searchOrCreateMatch.data.id);
       const matchId = searchOrCreateMatch.data.id; // Access the ID from the mutation result.
 
       // Now you can use the matchId to navigate to the new page.
@@ -91,10 +102,14 @@ const WaitingPage = () => {
         .push(`/chatting/${matchId}`)
         .catch(() => console.log("ERROR IN ROUTER.PUSH"));
     }
-    // if (searchOrCreateMatch.isIdle) {
-    //   setCreated(true);
-    // }
-  }, [searchOrCreateMatch.data, router, searchOrCreateMatch.isIdle]);
+  }, [searchOrCreateMatch.data, router, setMatchId]);
+
+  //After 3 seconds allow execution of getMatch
+  useEffect(() => {
+    setTimeout(() => {
+      setCreated(true);
+    }, 3500);
+  }, []);
 
   //Looking for a match with your id as the remoteUserId
   const getMatch = api.user.getMatch.useQuery(
@@ -109,12 +124,23 @@ const WaitingPage = () => {
   //If you find yourself in match right away
   useEffect(() => {
     if (getMatch.data) {
-      console.log("We returned data from the Getmatch, so it was Successful");
+      setCaller(true);
+      setMatchId(getMatch.data.id);
+      setRemoteUserId(getMatch.data.localUserId);
+      setTempPeerId(getMatch.data.tempPeerId);
       router.push(`/chatting/${getMatch.data.id}`).catch(() => {
         console.log("error");
       });
     }
-  }, [getMatch.data, router, userId]);
+  }, [
+    getMatch.data,
+    router,
+    setCaller,
+    setMatchId,
+    setRemoteUserId,
+    setTempPeerId,
+    userId,
+  ]);
 
   //if you dont, Search 3 times with 5 seconds in between
   //after 15 seconds return to home and set status to "waiting"
@@ -150,6 +176,7 @@ const WaitingPage = () => {
         <Link
           onClick={() => {
             setStatus("waiting");
+            
             userStatusUpdate.mutate({
               userId: userId,
             });

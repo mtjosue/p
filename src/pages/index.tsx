@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import Modal from "~/components/modal";
 import {
   useFirstLoad,
+  useLocalMediaStream,
   useNoSkips,
   useRefreshed,
   useSetFirstLoad,
+  useSetLocalMediaStream,
   useSetNoSkips,
   useSetSkips,
   useSetStatus,
@@ -31,10 +33,11 @@ export default function Home() {
   const [termsAgreed, setTermsAgreed] = useState(true);
   const refreshed = useRefreshed();
   const setStatus = useSetStatus();
+  const localMediaStream = useLocalMediaStream();
+  const setLocalMediaStream = useSetLocalMediaStream();
 
   const userStatusUpdate = api.user.statusUpdate.useMutation();
   const skipsUpdate = api.user.skipsUpdate.useMutation();
-
   const searchUser = api.user.userCheck.useQuery(
     {
       userId: user.user?.id ?? "",
@@ -52,6 +55,26 @@ export default function Home() {
       staleTime: 0,
     },
   );
+
+  //Getting local media stream.
+  const getLocalMediaStream = async () => {
+    const mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+    });
+    setLocalMediaStream(mediaStream);
+  };
+
+  //RETRYING Getting local media stream if you dont have it yet
+  useEffect(() => {
+    if (!localMediaStream) {
+      getLocalMediaStream().catch(() =>
+        console.log(
+          "ERROR IN... useEffect in Waiting executing getLocalMediaStream",
+        ),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localMediaStream]);
 
   //Pay your skips if you refreshed in the match page
   useEffect(() => {
