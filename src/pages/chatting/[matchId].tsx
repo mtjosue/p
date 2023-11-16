@@ -14,7 +14,33 @@ import {
 } from "~/stores/useLocalUser";
 import Link from "next/link";
 import type { DataConnection } from "peerjs";
-import { useReward } from "react-rewards";
+// import { useReward } from "react-rewards";
+
+// const EmojiGenerator = (emojiArr: string[]) => {
+//   const getRandomTranslateX = () => {
+//     // Customize the range and calculation based on your needs
+//     const randomValue = Math.floor(Math.random() * 40) - 20; // Generates a random value between -20 and 20
+//     return `${randomValue}vw`;
+//   };
+
+//   return (
+//     <div>
+//       {emojiArr.map((emoji, idx) => (
+//         <span
+//           key={idx}
+//           style={{
+//             animation: "floatUp 3s ease-in",
+//             transform: `translateY(-100vh) translateX(${getRandomTranslateX()})`,
+//             opacity: 0,
+//           }}
+//           className="animate-floatUp absolute text-4xl"
+//         >
+//           {emoji}
+//         </span>
+//       ))}
+//     </div>
+//   );
+// };
 
 const MatchPage = () => {
   const router = useRouter();
@@ -271,30 +297,12 @@ const MatchPage = () => {
     null,
   );
 
-  const [emojiToggle, setEmojiToggle] = useState(false);
-
-  const emojiConfig = {
-    lifetime: 50,
-    // lifetime: 45,
-    angle: 90, // Set to 270 for upward movement
-    decay: 0.95, // Adjust the decay to control how quickly emojis rise
-    spread: 0, // Increase spread for a wider distribution
-    startVelocity: 15, // Increase startVelocity to make emojis rise faster
-    elementCount: 1, // Adjust the number of emojis
-    elementSize: 50, // Adjust the size of the emojis
-    zIndex: 3,
-    position: "fixed",
-    emoji: ["🔥"],
-    onAnimationComplete: () => {
-      console.log("Emoji animation completed!");
-    },
-  };
-
-  const {
-    reward,
-    //  isAnimating
-  } = useReward("rewardId", "emoji", emojiConfig);
-  // const { reward, isAnimating } = useReward("rewardId", "emoji", emojiConfig);
+  // const [floatEmoji, setFloatEmoji] = useState(false);
+  // const [emojiToggle, setEmojiToggle] = useState(false);
+  const [count, setCount] = useState(0);
+  const [emojiArr, setEmojiArr] = useState<string[]>([]);
+  const [show, setShow] = useState(false);
+  const [remain, setRemain] = useState(2500);
 
   //if you have not called then there is no data connection
   //and we must establish one
@@ -304,24 +312,33 @@ const MatchPage = () => {
         const data2 = data as { type: string; message: string };
         if (data2.message) {
           console.log("DATA2 MANIPULATED", data2.message);
-          setEmojiToggle(true);
+          setEmojiArr((prev) => [...prev, data2.message]);
+          setShow(true);
+          setCount((prev) => prev + 1);
+          setRemain((prev) => prev + 1);
         }
       });
     }
-  }, [peerConnection, reward]);
+  }, [peerConnection]);
 
-  //Emoji togglle
   useEffect(() => {
-    if (emojiToggle) {
-      reward();
-      setEmojiToggle(false);
+    if (show) {
+      const timeoutId = setTimeout(() => {
+        setShow(false);
+      }, remain);
+      return () => clearTimeout(timeoutId);
     }
-  }, [emojiToggle, reward]);
+  }, [emojiArr, remain, show]);
 
   const sendEmoji = async () => {
     if (peerConnection) {
       console.log("We have a DATA CONNECTION");
-      await peerConnection.send({ type: "emoji", message: "😊" });
+      await peerConnection.send({
+        type: "emoji",
+        //  message: "😊"
+        // message: "🔥",
+        message: "🥰",
+      });
     }
   };
 
@@ -467,11 +484,24 @@ const MatchPage = () => {
         ></video>
       </div>
 
-      <span
-        className="fixed left-[25px] top-[200px] h-5 w-5 bg-black"
-        id="rewardId"
-      ></span>
+      {show &&
+        emojiArr.map((emoji, idx) => {
+          return (
+            <span
+              key={idx}
+              className={`animate-floatUp absolute left-[25px] top-[220px] text-5xl ${
+                show ? "" : "hidden"
+              }`}
+            >
+              {emoji}
+            </span>
+          );
+        })}
+
+      <div>{count}</div>
+
       <div>{countdown}</div>
+
       <div>
         <button
           className="border p-2 font-semibold"
