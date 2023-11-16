@@ -67,7 +67,7 @@ const WaitingPage = () => {
 
   //wait before trying to search or create
   useEffect(() => {
-    const random = Math.floor(Math.random() * 3) + 1;
+    const random = Math.floor(Math.random() * 5) + 1;
     setTimeout(() => {
       setWaited(true);
     }, random);
