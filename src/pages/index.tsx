@@ -11,11 +11,7 @@ import {
   useSetLocalMediaStream,
   useSetNoSkips,
   useSetSkips,
-  useSetStatus,
   useSetUserId,
-  useStatus,
-  // useRefreshed,
-  // useUserId,
 } from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
@@ -24,20 +20,15 @@ export default function Home() {
   const firstLoad = useFirstLoad();
   const setFirstLoad = useSetFirstLoad();
   const user = useUser();
-  // const userId = useUserId();
   const setUserId = useSetUserId();
   const setSkips = useSetSkips();
-  const noSkips = useNoSkips();
   const setNoSkips = useSetNoSkips();
-  const status = useStatus();
-  const [termsAgreed, setTermsAgreed] = useState(true);
-  // const refreshed = useRefreshed();
-  const setStatus = useSetStatus();
+  const noSkips = useNoSkips();
   const localMediaStream = useLocalMediaStream();
   const setLocalMediaStream = useSetLocalMediaStream();
+  const [termsAgreed, setTermsAgreed] = useState(true);
 
   const userStatusUpdate = api.user.statusUpdate.useMutation();
-  // const skipsUpdate = api.user.skipsUpdate.useMutation();
   const searchUser = api.user.userCheck.useQuery(
     {
       userId: user.user?.id ?? "",
@@ -73,21 +64,11 @@ export default function Home() {
         ),
       );
     }
+    // getLocalMediaStream is sort of a query like a promise so it triggers endlessly
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localMediaStream]);
 
-  //Pay your skips if you refreshed in the match page
-  // useEffect(() => {
-  //   if (!refreshed) return;
-  //   if (userId && refreshed) {
-  //     skipsUpdate.mutate({
-  //       userId: userId,
-  //     });
-  //   }
-  // }, [refreshed, skipsUpdate, userId]);
-
-  //searchfor yourself as User and set User properties locally
-
+  //Searchfor yourself as User and set User properties locally
   useEffect(() => {
     if (searchUser.data) {
       setUserId(searchUser.data.userId);
@@ -133,20 +114,16 @@ export default function Home() {
   //Set it to 'waiting' in the db
   useEffect(() => {
     if (!searchUser.data) return;
-    if (status === "waiting") return;
-
     if (searchUser.data.status !== "waiting") {
-      setStatus("waiting");
       userStatusUpdate.mutate({
         userId: searchUser.data.userId,
       });
     }
-  }, [searchUser.data, setStatus, status, userStatusUpdate]);
+  }, [searchUser.data, userStatusUpdate]);
 
-  // Set user status to 'looking'
+  //On button click Set user status to 'looking'
   const onBtnClick = async () => {
     if (user.user?.id) {
-      setStatus("looking");
       userStatusUpdate.mutate({
         userId: user.user.id,
         status: true,

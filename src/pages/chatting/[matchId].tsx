@@ -8,7 +8,6 @@ import {
   useSetRefreshed,
   useSetSkips,
   useSetSolo,
-  useSetStatus,
   useSkips,
   useSolo,
   useUserId,
@@ -27,7 +26,6 @@ const MatchPage = () => {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const peer = usePeer();
   const skips = useSkips();
-  const setStatus = useSetStatus();
   const setSkips = useSetSkips();
   const setNoSkips = useSetNoSkips();
   const [matchIsRunning, setMatchIsRunning] = useState(true);
@@ -57,7 +55,7 @@ const MatchPage = () => {
   //Mutation to end Match so that users are unable to join the same match id session
   const endMatch = api.user.endMatch.useMutation();
   //Mutation to update status and skips
-  const userStatusUpdate = api.user.statusUpdate.useMutation();
+  const statusUpdate = api.user.statusUpdate.useMutation();
   //Mutation Skips update
   const skipsUpdate = api.user.skipsUpdate.useMutation();
 
@@ -96,7 +94,7 @@ const MatchPage = () => {
     };
   }, [router]);
 
-  //Pay your skip if you refresh the conversation.
+  //If refreshed there wont be a userId, push to home / setRefreshed(true).
   useEffect(() => {
     if (!userId) {
       setRefreshed(true);
@@ -118,7 +116,6 @@ const MatchPage = () => {
         matchid: matchId,
       });
       setMatchIsRunning(false);
-      setStatus("waiting");
     }
   }, [
     data?.remoteUserId,
@@ -126,7 +123,6 @@ const MatchPage = () => {
     matchId,
     matchIsRunning,
     remoteStream?.active,
-    setStatus,
     userId,
   ]);
 
@@ -141,21 +137,19 @@ const MatchPage = () => {
   useEffect(() => {
     if (solo) {
       setSolo(false);
-      setStatus("looking");
       cleanup();
       endMatch.mutate({
         matchid: matchId,
       });
-      userStatusUpdate.mutate({
+      statusUpdate.mutate({
         userId: userId,
         status: true,
       });
-
       router.push(`/waiting`).catch(() => console.log("ERROR IN ROUTER.PUSH"));
     }
-    //cleanup
+    //cleanup trigger rerenders endlessly
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [endMatch, matchId, router, solo, userId, userStatusUpdate]);
+  }, [endMatch, matchId, router, solo, userId, statusUpdate]);
 
   //If localMediaStream ? set and play video stream
   useEffect(() => {
@@ -170,7 +164,7 @@ const MatchPage = () => {
     }
   }, [localMediaStream]);
 
-  //Defining peer.on("call", ...) the ANSWERING
+  //Defining the ANSWERING if peer
   useEffect(() => {
     if (peer) {
       peer.on("call", (call) => {
@@ -197,7 +191,7 @@ const MatchPage = () => {
     }
   }, [localMediaStream, peer]);
 
-  //if localUserId from getMatchForPage is not the userId, the CALLING
+  //Defining the CALLING if localUserId from getMatchForPage is not the userId
   useEffect(() => {
     if (!data || !peer) return;
     if (data.tempPeerId && data.localUserId !== userId) {
@@ -236,10 +230,6 @@ const MatchPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, userId, localMediaStream, peer]);
 
-  const [peerConnection, setPeerConnection] = useState<null | DataConnection>(
-    null,
-  );
-
   //CountDown
   useEffect(() => {
     if (!remoteStream?.getTracks()[0]) return;
@@ -275,6 +265,14 @@ const MatchPage = () => {
     return () => clearInterval(timer);
   }, []);
 
+  ////////////////////////// NEW CODE //////////////////////////
+
+  const [peerConnection, setPeerConnection] = useState<null | DataConnection>(
+    null,
+  );
+
+  const [emojiToggle, setEmojiToggle] = useState(false);
+
   const emojiConfig = {
     lifetime: 50,
     // lifetime: 45,
@@ -292,7 +290,6 @@ const MatchPage = () => {
     },
   };
 
-  const [emojiToggle, setEmojiToggle] = useState(false);
   const {
     reward,
     //  isAnimating
@@ -313,6 +310,7 @@ const MatchPage = () => {
     }
   }, [peerConnection, reward]);
 
+  //Emoji togglle
   useEffect(() => {
     if (emojiToggle) {
       reward();
@@ -479,9 +477,9 @@ const MatchPage = () => {
           className="border p-2 font-semibold"
           onClick={() => {
             cleanup();
-            setStatus("looking");
+
             if (!remoteStream?.active) {
-              userStatusUpdate.mutate({
+              statusUpdate.mutate({
                 userId: userId,
                 status: true,
               });
@@ -490,7 +488,7 @@ const MatchPage = () => {
                 .catch(() => console.log("ERROR in router.puush of SKIP"));
             }
             if (remoteStream?.active && countdown < 1) {
-              userStatusUpdate.mutate({
+              statusUpdate.mutate({
                 userId: userId,
                 status: true,
               });
