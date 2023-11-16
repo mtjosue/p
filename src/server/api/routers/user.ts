@@ -91,16 +91,6 @@ export const userRouter = createTRPCRouter({
             },
           }),
         ]);
-
-        const match = await ctx.db.match.create({
-          data: {
-            localUserId: input.userId,
-            remoteUserId: firstMatch.userId,
-            tempPeerId: input.tempId,
-          },
-        });
-
-        return match;
       } catch (error) {
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -110,56 +100,18 @@ export const userRouter = createTRPCRouter({
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         console.log("ERROR IN TRYING TO UPDATE BOTH AT THE SAME TIME");
-
-        // await ctx.db.user.update({
-        //   where: { userId: input.userId },
-        //   data: {
-        //     status: "waiting",
-        //   },
-        // });
+        return null;
       }
 
-      //You right here mutherfucker I see you
+      const match = await ctx.db.match.create({
+        data: {
+          localUserId: input.userId,
+          remoteUserId: firstMatch.userId,
+          tempPeerId: input.tempId,
+        },
+      });
 
-      // await ctx.db.user.update({
-      //   where: { userId: firstMatch.userId },
-      //   data: {
-      //     status: "waiting",
-      //   },
-      // });
-
-      // const match = await ctx.db.match.create({
-      //   data: {
-      //     localUserId: input.userId,
-      //     remoteUserId: firstMatch.userId,
-      //     tempPeerId: input.tempId,
-      //   },
-      // });
-
-      // const potentialMatch = await ctx.db.match.findFirst({
-      //   where: {
-      //     status: "running",
-      //     remoteUserId: input.userId,
-      //   },
-      //   select: {
-      //     id: true,
-      //     createdAt: true,
-      //   },
-      // });
-
-      // if (potentialMatch && potentialMatch.createdAt < match.createdAt) {
-      //   await ctx.db.match.update({
-      //     where: {
-      //       id: match.id,
-      //     },
-      //     data: {
-      //       status: "ended",
-      //     },
-      //   });
-      //   return potentialMatch;
-      // } else {
-      //   return match;
-      // }
+      return match;
     }),
   getMatch: publicProcedure
     .input(
