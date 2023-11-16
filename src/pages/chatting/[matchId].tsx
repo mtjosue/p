@@ -293,7 +293,10 @@ const MatchPage = () => {
   };
 
   const [emojiToggle, setEmojiToggle] = useState(false);
-  const { reward, isAnimating } = useReward("rewardId", "emoji", emojiConfig);
+  const {
+    reward,
+    //  isAnimating
+  } = useReward("rewardId", "emoji", emojiConfig);
   // const { reward, isAnimating } = useReward("rewardId", "emoji", emojiConfig);
 
   //if you have not called then there is no data connection

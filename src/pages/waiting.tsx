@@ -63,13 +63,23 @@ const WaitingPage = () => {
     }
   }, [peer, setPeer]);
 
+  const [waited, setWaited] = useState(false);
+
+  //wait before trying to search or create
+  useEffect(() => {
+    const random = Math.floor(Math.random() * 3) + 1;
+    setTimeout(() => {
+      setWaited(true);
+    }, random);
+  }, []);
+
   //If first load then execute searchOrCreateMatch
   useEffect(() => {
     // console.log("peerId : ", peerId);
     // console.log("created : ", created);
 
     if (!peerId || created) return;
-    if (userId && peerId) {
+    if (userId && peerId && waited) {
       searchOrCreateMatch.mutate({
         userId: userId,
         tempId: peerId,
