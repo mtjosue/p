@@ -14,6 +14,8 @@ import {
   useUserId,
 } from "~/stores/useLocalUser";
 import Link from "next/link";
+import type { DataConnection } from "peerjs";
+import { useReward } from "react-rewards";
 
 const MatchPage = () => {
   const router = useRouter();
@@ -42,9 +44,16 @@ const MatchPage = () => {
     }
   };
   //Match data which decides who calls and who answers
-  const { data } = api.user.getMatchForPage.useQuery({
-    matchId: matchId,
-  });
+  const { data } = api.user.getMatchForPage.useQuery(
+    {
+      matchId: matchId,
+    },
+    {
+      refetchOnWindowFocus: false,
+      cacheTime: 0,
+      staleTime: 0,
+    },
+  );
   //Mutation to end Match so that users are unable to join the same match id session
   const endMatch = api.user.endMatch.useMutation();
   //Mutation to update status and skips
@@ -182,10 +191,13 @@ const MatchPage = () => {
           }
         });
       });
+      peer.on("connection", (connection) => {
+        setPeerConnection(connection);
+      });
     }
   }, [localMediaStream, peer]);
 
-  //if localUserId from getMatchForPage is not the userId, the CALL
+  //if localUserId from getMatchForPage is not the userId, the CALLING
   useEffect(() => {
     if (!data || !peer) return;
     if (data.tempPeerId && data.localUserId !== userId) {
@@ -194,6 +206,11 @@ const MatchPage = () => {
       // Call with local stream
       if (!localMediaStream) return;
       const call = peer.call(data.tempPeerId, localMediaStream);
+      // Data connection with peer
+      const conn = peer.connect(data.tempPeerId);
+      //Setting Peer Data Connection as the Caller
+      setPeerConnection(conn);
+      //
 
       //Only added to test
       if (call) {
@@ -218,6 +235,10 @@ const MatchPage = () => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, userId, localMediaStream, peer]);
+
+  const [peerConnection, setPeerConnection] = useState<null | DataConnection>(
+    null,
+  );
 
   //CountDown
   useEffect(() => {
@@ -253,6 +274,55 @@ const MatchPage = () => {
 
     return () => clearInterval(timer);
   }, []);
+
+  const emojiConfig = {
+    lifetime: 50,
+    // lifetime: 45,
+    angle: 90, // Set to 270 for upward movement
+    decay: 0.95, // Adjust the decay to control how quickly emojis rise
+    spread: 0, // Increase spread for a wider distribution
+    startVelocity: 15, // Increase startVelocity to make emojis rise faster
+    elementCount: 1, // Adjust the number of emojis
+    elementSize: 50, // Adjust the size of the emojis
+    zIndex: 3,
+    position: "fixed",
+    emoji: ["🔥"],
+    onAnimationComplete: () => {
+      console.log("Emoji animation completed!");
+    },
+  };
+
+  const [emojiToggle, setEmojiToggle] = useState(false);
+  const { reward, isAnimating } = useReward("rewardId", "emoji", emojiConfig);
+  // const { reward, isAnimating } = useReward("rewardId", "emoji", emojiConfig);
+
+  //if you have not called then there is no data connection
+  //and we must establish one
+  useEffect(() => {
+    if (peerConnection) {
+      peerConnection.on("data", (data) => {
+        const data2 = data as { type: string; message: string };
+        if (data2.message) {
+          console.log("DATA2 MANIPULATED", data2.message);
+          setEmojiToggle(true);
+        }
+      });
+    }
+  }, [peerConnection, reward]);
+
+  useEffect(() => {
+    if (emojiToggle) {
+      reward();
+      setEmojiToggle(false);
+    }
+  }, [emojiToggle, reward]);
+
+  const sendEmoji = async () => {
+    if (peerConnection) {
+      console.log("We have a DATA CONNECTION");
+      await peerConnection.send({ type: "emoji", message: "😊" });
+    }
+  };
 
   // In case users want to auto match with the next person,
   // instead of having to click "Next"
@@ -312,6 +382,7 @@ const MatchPage = () => {
       >
         Return Home
       </Link>
+
       <div className="min-h-60 min-w-60 flex">
         <video
           ref={localVideoRef}
@@ -327,6 +398,7 @@ const MatchPage = () => {
             Loading...
           </div>
         )}
+
         <video
           ref={remoteVideoRef}
           className={`h-[200px] w-[200px] ${
@@ -394,6 +466,10 @@ const MatchPage = () => {
         ></video>
       </div>
 
+      <span
+        className="fixed left-[25px] top-[200px] h-5 w-5 bg-black"
+        id="rewardId"
+      ></span>
       <div>{countdown}</div>
       <div>
         <button
@@ -439,6 +515,17 @@ const MatchPage = () => {
           }}
         >
           Skip
+        </button>
+
+        <button
+          className="border bg-red-400 p-2 font-semibold"
+          onClick={() => {
+            console.log("CLICKED SEND EMOJI");
+
+            sendEmoji().catch(() => console.log("ERROR in sendEmoji"));
+          }}
+        >
+          Send Emoji
         </button>
       </div>
     </div>

@@ -67,58 +67,99 @@ export const userRouter = createTRPCRouter({
             userId: input.userId,
           },
         },
-      });
-
-      if (!firstMatch) {
-        return null;
-      }
-
-      await ctx.db.user.update({
-        where: { userId: firstMatch.userId },
-        data: {
-          status: "waiting",
-        },
-      });
-
-      await ctx.db.user.update({
-        where: { userId: input.userId },
-        data: {
-          status: "waiting",
-        },
-      });
-
-      const match = await ctx.db.match.create({
-        data: {
-          localUserId: input.userId,
-          remoteUserId: firstMatch.userId,
-          tempPeerId: input.tempId,
-        },
-      });
-
-      const potentialMatch = await ctx.db.match.findFirst({
-        where: {
-          status: "running",
-          remoteUserId: input.userId,
-        },
         select: {
-          id: true,
-          createdAt: true,
+          userId: true,
         },
       });
 
-      if (potentialMatch && potentialMatch.createdAt < match.createdAt) {
-        await ctx.db.match.update({
-          where: {
-            id: match.id,
-          },
+      if (!firstMatch) return null;
+
+      try {
+        await ctx.db.$transaction([
+          ctx.db.user.update({
+            where: { userId: input.userId },
+            data: {
+              status: "waiting",
+              // other fields based on the second logic
+            },
+          }),
+          ctx.db.user.update({
+            where: { userId: firstMatch.userId, status: "looking" },
+            data: {
+              status: "waiting",
+              // other fields based on the first logic
+            },
+          }),
+        ]);
+
+        const match = await ctx.db.match.create({
           data: {
-            status: "ended",
+            localUserId: input.userId,
+            remoteUserId: firstMatch.userId,
+            tempPeerId: input.tempId,
           },
         });
-        return potentialMatch;
-      } else {
+
         return match;
+      } catch (error) {
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        console.log("ERROR IN TRYING TO UPDATE BOTH AT THE SAME TIME");
+
+        // await ctx.db.user.update({
+        //   where: { userId: input.userId },
+        //   data: {
+        //     status: "waiting",
+        //   },
+        // });
       }
+
+      //You right here mutherfucker I see you
+
+      // await ctx.db.user.update({
+      //   where: { userId: firstMatch.userId },
+      //   data: {
+      //     status: "waiting",
+      //   },
+      // });
+
+      // const match = await ctx.db.match.create({
+      //   data: {
+      //     localUserId: input.userId,
+      //     remoteUserId: firstMatch.userId,
+      //     tempPeerId: input.tempId,
+      //   },
+      // });
+
+      // const potentialMatch = await ctx.db.match.findFirst({
+      //   where: {
+      //     status: "running",
+      //     remoteUserId: input.userId,
+      //   },
+      //   select: {
+      //     id: true,
+      //     createdAt: true,
+      //   },
+      // });
+
+      // if (potentialMatch && potentialMatch.createdAt < match.createdAt) {
+      //   await ctx.db.match.update({
+      //     where: {
+      //       id: match.id,
+      //     },
+      //     data: {
+      //       status: "ended",
+      //     },
+      //   });
+      //   return potentialMatch;
+      // } else {
+      //   return match;
+      // }
     }),
   getMatch: publicProcedure
     .input(
