@@ -8,8 +8,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <ClerkProvider {...pageProps}>
-      {/* <IoProvider> */}
-      <Component {...pageProps} />;{/* </IoProvider> */}
+      <Component {...pageProps} />
     </ClerkProvider>
   );
 };

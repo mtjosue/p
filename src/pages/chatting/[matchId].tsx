@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  type MouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import {
@@ -14,7 +20,24 @@ import {
 } from "~/stores/useLocalUser";
 import Link from "next/link";
 import type { DataConnection } from "peerjs";
+import {
+  usePhone,
+  useSetPhone,
+  useSetSize,
+  useSize,
+} from "~/stores/useRemoteUser";
+import classNames from "~/lib/classNames";
+import Image from "next/image";
+import { useSpring, animated } from "react-spring";
+import blackAndWhiteImage from "../../../public/pattern.jpg";
+import coloredImage from "../../../public/coloredPattern.jpg";
 // import { useReward } from "react-rewards";
+
+interface TrailPoint {
+  x: number;
+  y: number;
+  opacity: number;
+}
 
 // const EmojiGenerator = (emojiArr: string[]) => {
 //   const getRandomTranslateX = () => {
@@ -57,6 +80,7 @@ const MatchPage = () => {
   const [matchIsRunning, setMatchIsRunning] = useState(true);
   const [countdown, setCountdown] = useState(90);
   const [countdown2, setCountdown2] = useState(8);
+  const [opacity, setOpacity] = useState(0.01);
   const setRefreshed = useSetRefreshed();
   const setSolo = useSetSolo();
   const solo = useSolo();
@@ -321,6 +345,7 @@ const MatchPage = () => {
     }
   }, [peerConnection]);
 
+  //Safeguard for renderingEmojis correctly
   useEffect(() => {
     if (show) {
       const timeoutId = setTimeout(() => {
@@ -342,223 +367,240 @@ const MatchPage = () => {
     }
   };
 
-  // In case users want to auto match with the next person,
-  // instead of having to click "Next"
-  // useEffect(() => {
-  //   const timeOut = setTimeout(() => {
-  //     if (!remoteStream?.active) {
-  //       endMatch.mutate({
-  //         matchid: matchId,
-  //         userId: userId,
-  //         status: "looking",
-  //       });
-  //       router
-  //         .push("/waiting")
-  //         .catch(() => console.log("ERROR in router.puush of SKIP"));
-  //     }
-  //   }, 4000);
-  //   return () => {
-  //     clearTimeout(timeOut);
-  //   };
-  // }, [endMatch, matchId, remoteStream?.active, router, userId]);
+  // const [size, setWindowSize] = useState(0);
+  const phone = usePhone();
+  const setPhone = useSetPhone();
+
+  useEffect(() => {
+    const checkWindowSize = () => {
+      if (window.innerWidth <= 425) {
+        setPhone(true);
+      } else {
+        setPhone(false);
+      }
+    };
+
+    // Attach the event listener to the resize event
+    window.addEventListener("resize", checkWindowSize);
+
+    // Execute the check once on component mount
+    checkWindowSize();
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("resize", checkWindowSize);
+    };
+  }, [setPhone]);
+
+  // console.log("size", phone);
+  // console.log("size", phone);
+  // console.log("size", phone);
+  // console.log("size", phone);
+  // console.log("size", phone);
+
+  //CountDown OPACITY
+  useEffect(() => {
+    if (opacity >= 1) return;
+    const timer = setInterval(() => {
+      setOpacity((prev) => prev + 0.005);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [opacity]);
 
   return (
-    <div className="flex h-full w-screen flex-col items-center justify-center p-8">
-      <h1>HELLO FROM MATCH PAGE</h1>
-      <div></div>
-      <Link
-        href={"/"}
-        onClick={() => {
-          cleanup();
-          if (!remoteStream?.active) {
-            router
-              .push("/")
-              .catch(() => console.log("ERROR in router.puush of SKIP"));
-          }
-          if (remoteStream?.active && countdown < 1) {
-            router
-              .push("/")
-              .catch(() => console.log("ERROR in router.puush of SKIP"));
-          }
-          if (remoteStream?.active && countdown > 0) {
-            skipsUpdate.mutate({
-              userId: userId,
-            });
-            if (skips < 2) {
-              setNoSkips(true);
-              router
-                .push("/")
-                .catch(() => console.log("ERROR in router.puush of SKIP"));
-            } else if (skips > 1) {
-              setSkips(skips - 1);
-              router
-                .push("/")
-                .catch(() => console.log("ERROR in router.puush of SKIP"));
-            }
-          }
-        }}
-      >
-        Return Home
-      </Link>
-
-      <div className="min-h-60 min-w-60 flex">
-        <video
-          ref={localVideoRef}
-          className="h-[200px] w-[200px]"
-          autoPlay={true}
-          playsInline={true}
-          muted={true}
-        ></video>
-        {remoteStream?.active ? (
-          ""
-        ) : (
-          <div className="flex h-[100px] w-[100px] items-center justify-center">
-            Loading...
+    <div className="h-[100vh] w-full bg-repeat">
+      {!phone ? (
+        <div className="flex h-full w-auto flex-col">
+          <div className="flex h-auto w-auto justify-center">
+            <video
+              ref={localVideoRef}
+              className="w-[50vw] object-cover xl:max-w-[40vw]"
+              autoPlay={true}
+              playsInline={true}
+              muted={true}
+            ></video>
+            <video
+              ref={remoteVideoRef}
+              className={classNames(
+                "w-[50vw] object-cover xl:max-w-[40vw]",
+                countdown > 90
+                  ? "blur-[7px]"
+                  : countdown > 85
+                  ? "blur-[6.8px]"
+                  : countdown > 80
+                  ? "blur-[6.6px]"
+                  : countdown > 75
+                  ? "blur-[6.4px]"
+                  : countdown > 70
+                  ? "blur-[6.2px]"
+                  : countdown > 65
+                  ? "blur-[6px]"
+                  : countdown > 60
+                  ? "blur-[5.8px]"
+                  : countdown > 55
+                  ? "blur-[5.6px]"
+                  : countdown > 50
+                  ? "blur-[5.4px]"
+                  : countdown > 45
+                  ? "blur-[5.2px]"
+                  : countdown > 40
+                  ? "blur-[5px]"
+                  : countdown > 38
+                  ? "blur-[4.8px]"
+                  : countdown > 36
+                  ? "blur-[4.6px]"
+                  : countdown > 34
+                  ? "blur-[4.4px]"
+                  : countdown > 32
+                  ? "blur-[4.2px]"
+                  : countdown > 30
+                  ? "blur-[4px]"
+                  : countdown > 28
+                  ? "blur-[3.8px]"
+                  : countdown > 26
+                  ? "blur-[3.6px]"
+                  : countdown > 24
+                  ? "blur-[3.4px]"
+                  : countdown > 22
+                  ? "blur-[3.2px]"
+                  : countdown > 20
+                  ? "blur-[3px]"
+                  : countdown > 18
+                  ? "blur-[2.6px]"
+                  : countdown > 16
+                  ? "blur-[2.2px]"
+                  : countdown > 14
+                  ? "blur-[1.8px]"
+                  : countdown > 12
+                  ? "blur-[1.4px]"
+                  : countdown > 10
+                  ? "blur-[1px]"
+                  : countdown > 8
+                  ? "blur-[0.6px]"
+                  : countdown > 0
+                  ? "blur-[0.3px]"
+                  : "blur-none",
+              )}
+              autoPlay={true}
+              playsInline={true}
+              muted={true}
+            ></video>
           </div>
-        )}
+          <div className="flex h-full w-full">
+            <div className="flex w-1/2 flex-grow items-center justify-around">
+              <button className="max-w-[4rem] rounded-xl bg-black/70 p-5">
+                👍
+              </button>
 
-        <video
-          ref={remoteVideoRef}
-          className={`h-[200px] w-[200px] ${
-            countdown > 90
-              ? "blur-[7px]"
-              : countdown > 85
-              ? "blur-[6.8px]"
-              : countdown > 80
-              ? "blur-[6.6px]"
-              : countdown > 75
-              ? "blur-[6.4px]"
-              : countdown > 70
-              ? "blur-[6.2px]"
-              : countdown > 65
-              ? "blur-[6px]"
-              : countdown > 60
-              ? "blur-[5.8px]"
-              : countdown > 55
-              ? "blur-[5.6px]"
-              : countdown > 50
-              ? "blur-[5.4px]"
-              : countdown > 45
-              ? "blur-[5.2px]"
-              : countdown > 40
-              ? "blur-[5px]"
-              : countdown > 38
-              ? "blur-[4.8px]"
-              : countdown > 36
-              ? "blur-[4.6px]"
-              : countdown > 34
-              ? "blur-[4.4px]"
-              : countdown > 32
-              ? "blur-[4.2px]"
-              : countdown > 30
-              ? "blur-[4px]"
-              : countdown > 28
-              ? "blur-[3.8px]"
-              : countdown > 26
-              ? "blur-[3.6px]"
-              : countdown > 24
-              ? "blur-[3.4px]"
-              : countdown > 22
-              ? "blur-[3.2px]"
-              : countdown > 20
-              ? "blur-[3px]"
-              : countdown > 18
-              ? "blur-[2.6px]"
-              : countdown > 16
-              ? "blur-[2.2px]"
-              : countdown > 14
-              ? "blur-[1.8px]"
-              : countdown > 12
-              ? "blur-[1.4px]"
-              : countdown > 10
-              ? "blur-[1px]"
-              : countdown > 8
-              ? "blur-[0.6px]"
-              : countdown > 0
-              ? "blur-[0.3px]"
-              : "blur-none"
-          }`}
-          autoPlay={true}
-          playsInline={true}
-          muted={true}
-        ></video>
-      </div>
+              <button
+                className="max-w-[4rem] rounded-xl p-5"
+                style={{
+                  background: "linear-gradient(145deg, #767676, #636363)",
+                  boxShadow: "20px 20px 60px #3f3f3f, -20px -20px 60px #9d9d9d",
+                }}
+              >
+                {"\u2764\uFE0F"}
+              </button>
+              <button
+                className="max-w-[4rem] rounded-xl p-5"
+                style={{
+                  background: "linear-gradient(145deg, #767676, #636363)",
+                  boxShadow: "20px 20px 60px #3f3f3f, -20px -20px 60px #9d9d9d",
+                }}
+              >
+                🤣
+              </button>
+              <button
+                className="max-w-[4rem] rounded-xl p-5"
+                style={{
+                  background: "linear-gradient(145deg, #767676, #636363)",
+                  boxShadow: "20px 20px 60px #3f3f3f, -20px -20px 60px #9d9d9d",
+                }}
+              >
+                😯
+              </button>
+              <button
+                className="max-w-[4rem] rounded-xl p-5"
+                style={{
+                  background: "linear-gradient(145deg, #767676, #636363)",
+                  boxShadow: "20px 20px 60px #3f3f3f, -20px -20px 60px #9d9d9d",
+                }}
+              >
+                🔥
+              </button>
+              <button
+                className="max-w-[4rem] rounded-xl p-5"
+                style={{
+                  background: "linear-gradient(145deg, #767676, #636363)",
+                  boxShadow: "20px 20px 60px #3f3f3f, -20px -20px 60px #9d9d9d",
+                }}
+              >
+                👏
+              </button>
+            </div>
+            <div className="flex h-full w-1/2 flex-grow">
+              <div className="flex w-1/3 flex-grow items-center justify-center bg-green-400">
+                Home
+              </div>
+              <div
+                className="flex w-2/3 flex-grow items-center justify-center bg-pink-400"
+                onClick={() => {
+                  cleanup();
 
-      {show &&
-        emojiArr.map((emoji, idx) => {
-          return (
-            <span
-              key={idx}
-              className={`animate-floatUp absolute left-[25px] top-[220px] text-5xl ${
-                show ? "" : "hidden"
-              }`}
-            >
-              {emoji}
-            </span>
-          );
-        })}
-
-      <div>{count}</div>
-
-      <div>{countdown}</div>
-
-      <div>
-        <button
-          className="border p-2 font-semibold"
-          onClick={() => {
-            cleanup();
-
-            if (!remoteStream?.active) {
-              statusUpdate.mutate({
-                userId: userId,
-                status: true,
-              });
-              router
-                .push("/waiting")
-                .catch(() => console.log("ERROR in router.puush of SKIP"));
-            }
-            if (remoteStream?.active && countdown < 1) {
-              statusUpdate.mutate({
-                userId: userId,
-                status: true,
-              });
-              router
-                .push("/waiting")
-                .catch(() => console.log("ERROR in router.puush of SKIP"));
-            }
-            if (remoteStream?.active && countdown > 0) {
-              if (skips < 2) {
-                setNoSkips(true);
-                router
-                  .push("/")
-                  .catch(() => console.log("ERROR in router.puush of SKIP"));
-              } else if (skips > 1) {
-                skipsUpdate.mutate({
-                  userId: userId,
-                  status: true,
-                });
-                setSkips(skips - 1);
-                router
-                  .push("/waiting")
-                  .catch(() => console.log("ERROR in router.puush of SKIP"));
-              }
-            }
-          }}
-        >
-          Skip
-        </button>
-
-        <button
-          className="border bg-red-400 p-2 font-semibold"
-          onClick={() => {
-            console.log("CLICKED SEND EMOJI");
-
-            sendEmoji().catch(() => console.log("ERROR in sendEmoji"));
-          }}
-        >
-          Send Emoji
-        </button>
-      </div>
+                  if (!remoteStream?.active) {
+                    statusUpdate.mutate({
+                      userId: userId,
+                      status: true,
+                    });
+                    router
+                      .push("/waiting")
+                      .catch(() =>
+                        console.log("ERROR in router.puush of SKIP"),
+                      );
+                  }
+                  if (remoteStream?.active && countdown < 1) {
+                    statusUpdate.mutate({
+                      userId: userId,
+                      status: true,
+                    });
+                    router
+                      .push("/waiting")
+                      .catch(() =>
+                        console.log("ERROR in router.puush of SKIP"),
+                      );
+                  }
+                  if (remoteStream?.active && countdown > 0) {
+                    if (skips < 2) {
+                      setNoSkips(true);
+                      router
+                        .push("/")
+                        .catch(() =>
+                          console.log("ERROR in router.puush of SKIP"),
+                        );
+                    } else if (skips > 1) {
+                      skipsUpdate.mutate({
+                        userId: userId,
+                        status: true,
+                      });
+                      setSkips(skips - 1);
+                      router
+                        .push("/waiting")
+                        .catch(() =>
+                          console.log("ERROR in router.puush of SKIP"),
+                        );
+                    }
+                  }
+                }}
+              >
+                Skip
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
     </div>
   );
 };

@@ -191,3 +191,33 @@ const WaitingPage = () => {
 };
 
 export default WaitingPage;
+
+
+
+
+
+
+
+
+
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 1;
+  }
+  37% {
+    transform: translateY(-100vh) translateX(calc(5vw - 10vw * random()));
+    opacity: 0; /* Gradually fade out */
+  }
+  100% {
+    transform: translateY(-100vh) translateX(0);
+    opacity: 0; /* Fully fade out at the end */
+  }
+}
+
+.animate-floatUp {
+  animation: floatUp 3s ease-in;
+  animation-fill-mode: both;
+  transform-origin: center bottom;
+}
