@@ -3,6 +3,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Modal from "~/components/modal";
+import ParticleCanvas from "~/components/particle";
 import {
   useFirstLoad,
   useLocalMediaStream,
@@ -117,6 +118,14 @@ export default function Home() {
     if (searchUser.data.status !== "waiting") {
       userStatusUpdate.mutate({
         userId: searchUser.data.userId,
+        status: null,
+        skips: null,
+        hypeLikes: null,
+        hypeHearts: null,
+        hypeLaughs: null,
+        hypeWoahs: null,
+        hypeFires: null,
+        hypeClaps: null,
       });
     }
   }, [searchUser.data, userStatusUpdate]);
@@ -127,6 +136,13 @@ export default function Home() {
       userStatusUpdate.mutate({
         userId: user.user.id,
         status: true,
+        skips: null,
+        hypeLikes: null,
+        hypeHearts: null,
+        hypeLaughs: null,
+        hypeWoahs: null,
+        hypeFires: null,
+        hypeClaps: null,
       });
     }
     await router.push("/waiting");
@@ -159,6 +175,7 @@ export default function Home() {
               : "Ready"}
           </button>
         )}
+        {/* <ParticleCanvas /> */}
       </main>
     </>
   );

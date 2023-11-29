@@ -1118,7 +1118,7 @@ import {
   useSetPhone,
   useSetSize,
   useSize,
-} from "~/stores/useRemoteUser";
+} from "~/stores/useGeneral";
 import classNames from "~/lib/classNames";
 import Image from "next/image";
 import { useSpring, animated } from "react-spring";
@@ -1524,3 +1524,320 @@ const MatchPage = () => {
 };
 
 export default MatchPage;
+
+/////////////////////////////////////////
+/////////////////////////////////////////
+/////////////////////////////////////////
+/////////////////////////////////////////
+/////////////////////////////////////////
+/////////////////////////////////////////
+/////////////////////////////////////////
+/////////////////////////////////////////
+/////////////////////////////////////////
+
+  const [opacity, setOpacity] = useState(0.01);
+
+  // CountDown OPACITY
+  useEffect(() => {
+    if (opacity >= 1) return;
+    const timer = setInterval(() => {
+      setOpacity((prev) => prev + 0.005);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [opacity]);
+
+  console.log("opacity", opacity);
+
+  return (
+    <div
+      className="relative h-[100vh] w-full bg-repeat"
+      style={{
+        backgroundImage: `url(${blackAndWhiteImage.src})`,
+        backgroundSize: "1230px",
+        backgroundPosition: "-10 -10",
+      }}
+    >
+      {/* <div
+        className="absolute left-0 top-0 z-0 h-[100vh] w-full bg-repeat"
+        style={{
+          backgroundImage: `url(${coloredImage.src})`,
+          backgroundSize: "400px",
+          backgroundPosition: "-10 -10",
+          opacity: opacity,
+        }}
+      ></div> */}
+
+      {!phone ? (
+        <div className="z-1 absolute flex h-full w-auto flex-col">
+          <div className="flex h-auto w-auto justify-center">
+            <video
+              ref={localVideoRef}
+              className="w-[50vw] object-cover"
+              autoPlay={true}
+              playsInline={true}
+              muted={true}
+            />
+            <video
+              ref={remoteVideoRef}
+              className={classNames(
+                "w-[50vw] object-cover",
+                countdown > 90
+                  ? "blur-[7px]"
+                  : countdown > 85
+                  ? "blur-[6.8px]"
+                  : countdown > 80
+                  ? "blur-[6.6px]"
+                  : countdown > 75
+                  ? "blur-[6.4px]"
+                  : countdown > 70
+                  ? "blur-[6.2px]"
+                  : countdown > 65
+                  ? "blur-[6px]"
+                  : countdown > 60
+                  ? "blur-[5.8px]"
+                  : countdown > 55
+                  ? "blur-[5.6px]"
+                  : countdown > 50
+                  ? "blur-[5.4px]"
+                  : countdown > 45
+                  ? "blur-[5.2px]"
+                  : countdown > 40
+                  ? "blur-[5px]"
+                  : countdown > 38
+                  ? "blur-[4.8px]"
+                  : countdown > 36
+                  ? "blur-[4.6px]"
+                  : countdown > 34
+                  ? "blur-[4.4px]"
+                  : countdown > 32
+                  ? "blur-[4.2px]"
+                  : countdown > 30
+                  ? "blur-[4px]"
+                  : countdown > 28
+                  ? "blur-[3.8px]"
+                  : countdown > 26
+                  ? "blur-[3.6px]"
+                  : countdown > 24
+                  ? "blur-[3.4px]"
+                  : countdown > 22
+                  ? "blur-[3.2px]"
+                  : countdown > 20
+                  ? "blur-[3px]"
+                  : countdown > 18
+                  ? "blur-[2.6px]"
+                  : countdown > 16
+                  ? "blur-[2.2px]"
+                  : countdown > 14
+                  ? "blur-[1.8px]"
+                  : countdown > 12
+                  ? "blur-[1.4px]"
+                  : countdown > 10
+                  ? "blur-[1px]"
+                  : countdown > 8
+                  ? "blur-[0.6px]"
+                  : countdown > 0
+                  ? "blur-[0.3px]"
+                  : "blur-none",
+              )}
+              autoPlay={true}
+              playsInline={true}
+              muted={true}
+            />
+          </div>
+          <div className="flex h-full w-full">
+            <div className="m-2 flex w-1/2 flex-grow items-start justify-around rounded-xl border-4 border-black bg-black/95 p-2">
+              <button className="max-w-[4rem] rounded-xl border-2 border-black bg-black/60 p-5 text-2xl">
+                👍
+              </button>
+              <button className="max-w-[4rem] rounded-xl border-2 border-black bg-black/60 p-5 text-2xl">
+                {"\u2764\uFE0F"}
+              </button>
+              <button className="max-w-[4rem] rounded-xl border-2 border-black bg-black/60 p-5 text-2xl">
+                🤣
+              </button>
+              <button className="max-w-[4rem] rounded-xl border-2 border-black bg-black/60 p-5 text-2xl">
+                😯
+              </button>
+              <button className="max-w-[4rem] rounded-xl border-2 border-black bg-black/60 p-5 text-2xl">
+                🔥
+              </button>
+              <button className="max-w-[4rem] rounded-xl border-2 border-black bg-black/60 p-5 text-2xl">
+                👏
+              </button>
+            </div>
+            <div className="flex h-full w-1/2 flex-grow">
+              <div
+                className="flex w-1/3 flex-grow p-2"
+                onClick={() => {
+                  router
+                    .push("/")
+                    .catch(() =>
+                      console.log("ERROR IN GOING BACK HOME BUTTON"),
+                    );
+                }}
+              >
+                <button className="flex flex-grow items-center justify-center rounded-xl border-4 border-black bg-black/95 p-5 text-5xl text-white ">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="h-12 w-12"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex w-2/3 flex-grow p-2">
+                <button
+                  className="flex-grow rounded-xl border-4 border-black bg-black/95 p-5 font-mono text-5xl text-white"
+                  onClick={() => {
+                    cleanup();
+
+                    if (!remoteStream?.active) {
+                      statusUpdate.mutate({
+                        userId: userId,
+                        status: true,
+                      });
+                      router
+                        .push("/waiting")
+                        .catch(() =>
+                          console.log("ERROR in router.puush of SKIP"),
+                        );
+                    }
+                    if (remoteStream?.active && countdown < 1) {
+                      statusUpdate.mutate({
+                        userId: userId,
+                        status: true,
+                      });
+                      router
+                        .push("/waiting")
+                        .catch(() =>
+                          console.log("ERROR in router.puush of SKIP"),
+                        );
+                    }
+                    if (remoteStream?.active && countdown > 0) {
+                      if (skips < 2) {
+                        setNoSkips(true);
+                        router
+                          .push("/")
+                          .catch(() =>
+                            console.log("ERROR in router.puush of SKIP"),
+                          );
+                      } else if (skips > 1) {
+                        skipsUpdate.mutate({
+                          userId: userId,
+                          status: true,
+                        });
+                        setSkips(skips - 1);
+                        router
+                          .push("/waiting")
+                          .catch(() =>
+                            console.log("ERROR in router.puush of SKIP"),
+                          );
+                      }
+                    }
+                  }}
+                >
+                  Skip
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
+    </div>
+  );
+};
+
+
+
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+///////////////////////////////////////////////
+
+
+
+    <div
+                id="reactions"
+                className="flex w-full flex-grow items-start justify-around rounded-xl bg-[#1d1d1d] p-2"
+              >
+                <button className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-5 text-2xl shadow-xl">
+                  👍
+                </button>
+                <button className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-5 text-2xl shadow-xl">
+                  {"\u2764\uFE0F"}
+                </button>
+                <button className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-5 text-2xl shadow-xl">
+                  🤣
+                </button>
+                <button className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-5 text-2xl shadow-xl">
+                  😯
+                </button>
+                <button className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-5 text-2xl shadow-xl">
+                  🔥
+                </button>
+                <button className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-5 text-2xl shadow-xl">
+                  👏
+                </button>
+              </div>
+              <div
+                id="HypeReactions"
+                className="flex w-full flex-grow items-start justify-around rounded-xl bg-[#1d1d1d] p-2"
+              >
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+              </div>
+              <div
+                id="allTimeReactions"
+                className="flex w-full flex-grow items-start justify-around rounded-xl bg-[#1d1d1d] p-2"
+              >
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+                <span className="flex max-w-[4rem] justify-center rounded-xl border-4 border-[#343434] bg-[#1d1d1d]/20 p-2 text-lg shadow-xl">
+                  100
+                </span>
+              </div>
