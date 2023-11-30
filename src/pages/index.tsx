@@ -3,17 +3,16 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Modal from "~/components/modal";
+import ParticleCanvas from "~/components/particle";
 import {
   useFirstLoad,
+  useLocalMediaStream,
   useNoSkips,
-  useRefreshed,
   useSetFirstLoad,
+  useSetLocalMediaStream,
   useSetNoSkips,
   useSetSkips,
-  useSetStatus,
   useSetUserId,
-  useStatus,
-  useUserId,
 } from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
@@ -22,18 +21,15 @@ export default function Home() {
   const firstLoad = useFirstLoad();
   const setFirstLoad = useSetFirstLoad();
   const user = useUser();
-  const userId = useUserId();
   const setUserId = useSetUserId();
   const setSkips = useSetSkips();
-  const noSkips = useNoSkips();
   const setNoSkips = useSetNoSkips();
-  const status = useStatus();
+  const noSkips = useNoSkips();
+  const localMediaStream = useLocalMediaStream();
+  const setLocalMediaStream = useSetLocalMediaStream();
   const [termsAgreed, setTermsAgreed] = useState(true);
-  const refreshed = useRefreshed();
-  const setStatus = useSetStatus();
 
   const userStatusUpdate = api.user.statusUpdate.useMutation();
-  const refresh = api.user.refresh.useMutation();
   const searchUser = api.user.userCheck.useQuery(
     {
       userId: user.user?.id ?? "",
@@ -52,17 +48,28 @@ export default function Home() {
     },
   );
 
-  //Pay your skips if you refreshed in the match page
-  useEffect(() => {
-    if (!refreshed) return;
-    if (userId && refreshed) {
-      refresh.mutate({
-        userId: userId,
-      });
-    }
-  }, [refresh, refreshed, userId]);
+  //Getting local media stream.
+  const getLocalMediaStream = async () => {
+    const mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+    });
+    setLocalMediaStream(mediaStream);
+  };
 
-  //searchfor yourself as User and set User properties locally
+  //RETRYING Getting local media stream if you dont have it yet
+  useEffect(() => {
+    if (!localMediaStream) {
+      getLocalMediaStream().catch(() =>
+        console.log(
+          "ERROR IN... useEffect in Waiting executing getLocalMediaStream",
+        ),
+      );
+    }
+    // getLocalMediaStream is sort of a query like a promise so it triggers endlessly
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localMediaStream]);
+
+  //Searchfor yourself as User and set User properties locally
   useEffect(() => {
     if (searchUser.data) {
       setUserId(searchUser.data.userId);
@@ -108,24 +115,34 @@ export default function Home() {
   //Set it to 'waiting' in the db
   useEffect(() => {
     if (!searchUser.data) return;
-    if (status === "waiting") return;
-
     if (searchUser.data.status !== "waiting") {
-      setStatus("waiting");
       userStatusUpdate.mutate({
         userId: searchUser.data.userId,
-        status: "waiting",
+        status: null,
+        skips: null,
+        hypeLikes: null,
+        hypeHearts: null,
+        hypeLaughs: null,
+        hypeWoahs: null,
+        hypeFires: null,
+        hypeClaps: null,
       });
     }
-  }, [searchUser.data, setStatus, status, userStatusUpdate]);
+  }, [searchUser.data, userStatusUpdate]);
 
-  // Set user status to 'looking'
+  //On button click Set user status to 'looking'
   const onBtnClick = async () => {
     if (user.user?.id) {
-      setStatus("looking");
       userStatusUpdate.mutate({
         userId: user.user.id,
-        status: "looking",
+        status: true,
+        skips: null,
+        hypeLikes: null,
+        hypeHearts: null,
+        hypeLaughs: null,
+        hypeWoahs: null,
+        hypeFires: null,
+        hypeClaps: null,
       });
     }
     await router.push("/waiting");
@@ -158,6 +175,7 @@ export default function Home() {
               : "Ready"}
           </button>
         )}
+        {/* <ParticleCanvas /> */}
       </main>
     </>
   );

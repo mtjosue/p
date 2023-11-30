@@ -1,10 +1,5 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-// import { RtcRole, RtcTokenBuilder } from "agora-token";
-// import { env } from "~/env.mjs";
-
-// const appId = env.NEXT_PUBLIC_AGORA_APP_ID;
-// const appCertificate = env.NEXT_PUBLIC_AGORA_APP_CERT;
 
 export const userRouter = createTRPCRouter({
   userCheck: publicProcedure
@@ -48,34 +43,6 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
-  statusUpdate: publicProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-        status: z.string(),
-        skips: z.number().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (input.skips) {
-        return await ctx.db.user.update({
-          where: { userId: input.userId },
-          data: {
-            status: input.status,
-            skips: {
-              decrement: 1,
-            },
-          },
-        });
-      } else {
-        return await ctx.db.user.update({
-          where: { userId: input.userId },
-          data: {
-            status: input.status,
-          },
-        });
-      }
-    }),
   searchMatchOrCreate: publicProcedure
     .input(
       z.object({
@@ -97,25 +64,40 @@ export const userRouter = createTRPCRouter({
         where: {
           status: "looking",
           NOT: {
-            userId: input.userId || "",
+            userId: input.userId,
           },
+        },
+        select: {
+          userId: true,
         },
       });
 
       if (!firstMatch) return null;
 
-      await ctx.db.user.update({
-        where: { userId: input.userId },
-        data: {
-          status: "waiting",
-        },
-      });
-      await ctx.db.user.update({
-        where: { userId: firstMatch.userId },
-        data: {
-          status: "waiting",
-        },
-      });
+      try {
+        await ctx.db.$transaction([
+          ctx.db.user.update({
+            where: { userId: input.userId },
+            data: {
+              status: "waiting",
+              // other fields based on the second logic
+            },
+          }),
+          ctx.db.user.update({
+            where: { userId: firstMatch.userId, status: "looking" },
+            data: {
+              status: "waiting",
+              // other fields based on the first logic
+            },
+          }),
+        ]);
+      } catch (error) {
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        console.log("ERROR IN TRYING TO UPDATE BOTH AT THE SAME TIME");
+        return null;
+      }
 
       const match = await ctx.db.match.create({
         data: {
@@ -140,6 +122,11 @@ export const userRouter = createTRPCRouter({
         where: {
           remoteUserId: input.userId,
           status: { not: "ended" },
+        },
+        select: {
+          id: true,
+          localUserId: true,
+          tempPeerId: true,
         },
       });
 
@@ -171,19 +158,10 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         matchid: z.string(),
-        userId: z.string(),
-        status: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (input.status) {
-        await ctx.db.user.update({
-          where: { userId: input.userId },
-          data: {
-            status: input.status,
-          },
-        });
-      }
+      if (!input.matchid) return;
       return await ctx.db.match.update({
         where: { id: input.matchid },
         data: {
@@ -191,22 +169,64 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
-  refresh: publicProcedure
+  statusUpdate: publicProcedure
     .input(
       z.object({
-        userId: z.string(),
+        userId: z.string().optional(),
+        status: z.boolean().nullable(),
+        skips: z.boolean().nullable(),
+        hypeLikes: z.number().nullable(),
+        hypeHearts: z.number().nullable(),
+        hypeLaughs: z.number().nullable(),
+        hypeWoahs: z.number().nullable(),
+        hypeFires: z.number().nullable(),
+        hypeClaps: z.number().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      //Check User
       if (!input.userId) return null;
+
+      // Define a mapping between input keys and database fields
+      const hypeReactionMapping = {
+        hypeLikes: "likes",
+        hypeHearts: "hearts",
+        hypeLaughs: "laughs",
+        hypeWoahs: "woahs",
+        hypeFires: "fires",
+        hypeClaps: "claps",
+      };
+
+      // Build the data object for the update
+      const updateData: Record<string, unknown> = {};
+
+      // Update user status
+      if (input.status !== null) {
+        updateData.status = "looking";
+      }
+      // Update user skips
+      if (input.skips !== null) {
+        updateData.skips = { decrement: 1 };
+      }
+
+      Object.keys(hypeReactionMapping).forEach((hypeKey) => {
+        const regularKey =
+          hypeReactionMapping[hypeKey as keyof typeof hypeReactionMapping];
+
+        if (input[hypeKey as keyof typeof hypeReactionMapping] !== null) {
+          // Update hype reaction with the provided value
+          updateData[hypeKey] =
+            input[hypeKey as keyof typeof hypeReactionMapping];
+
+          // Increment regular reaction field by 1
+          updateData[regularKey] = { increment: 1 };
+        }
+      });
+
+      // Perform the update
       return await ctx.db.user.update({
-        where: {
-          userId: input.userId,
-        },
-        data: {
-          skips: { decrement: 1 },
-          status: "waiting",
-        },
+        where: { userId: input.userId },
+        data: updateData,
       });
     }),
 });

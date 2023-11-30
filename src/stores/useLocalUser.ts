@@ -2,80 +2,74 @@ import { create } from "zustand";
 import type { Peer } from "peerjs";
 
 type UserStore = {
+  solo: boolean;
   refreshed: boolean;
   status: string | null;
   skips: number;
-  termsAgreed: boolean | null;
   noSkips: boolean;
   peer: Peer | null;
-  token: string;
   firstLoad: boolean;
-  firstName: string;
   userId: string;
   localMediaStream: MediaStream | null;
   actions: {
-    setFirstName: (str: string) => void;
+    setSolo: (solo: boolean) => void;
+    setRefreshed: (refreshed: boolean) => void;
     setStatus: (str: string) => void;
-    setUserId: (str: string) => void;
-    setFirstLoad: (bol: boolean) => void;
-    setTermsAgreed: (bol: boolean) => void;
-    setToken: (token: string) => void;
-    setPeer: (peer: Peer) => void;
     setSkips: (skips: number) => void;
     setNoSkips: (noSkips: boolean) => void;
-    setRefreshed: (refreshed: boolean) => void;
+    setPeer: (peer: Peer) => void;
+    setFirstLoad: (bol: boolean) => void;
+    setUserId: (str: string) => void;
     setLocalMediaStream: (localMediaStream: MediaStream) => void;
   };
 };
 
 export const useUserStore = create<UserStore>((set) => ({
+  solo: false,
   refreshed: false,
   status: null,
   skips: 20,
-  termsAgreed: null,
   noSkips: false,
   peer: null,
-  token: "",
   firstLoad: true,
-  firstName: "",
   userId: "",
   localMediaStream: null,
   actions: {
-    setFirstName: (firstName) => set(() => ({ firstName })),
-    setStatus: (status) => set(() => ({ status })),
-    setUserId: (userId) => set(() => ({ userId })),
-    setFirstLoad: (firstLoad) => set(() => ({ firstLoad })),
-    setTermsAgreed: (termsAgreed) => set(() => ({ termsAgreed })),
-    setNoSkips: (noSkips) => set(() => ({ noSkips })),
-    setToken: (token) => set(() => ({ token })),
-    setPeer: (peer) => set(() => ({ peer })),
-    setSkips: (skips) => set(() => ({ skips })),
+    setSolo: (solo) => set(() => ({ solo })),
     setRefreshed: (refreshed) => set(() => ({ refreshed })),
+    setStatus: (status) => set(() => ({ status })),
+    setSkips: (skips) => set(() => ({ skips })),
+    setNoSkips: (noSkips) => set(() => ({ noSkips })),
+    setPeer: (peer) => set(() => ({ peer })),
+    setFirstLoad: (firstLoad) => set(() => ({ firstLoad })),
+    setUserId: (userId) => set(() => ({ userId })),
     setLocalMediaStream: (localMediaStream) =>
       set(() => ({ localMediaStream })),
   },
 }));
 
-export const usePeer = () => useUserStore((state) => state.peer);
-export const useSetPeer = () => useUserStore((state) => state.actions.setPeer);
+export const useSolo = () => useUserStore((state) => state.solo);
+export const useSetSolo = () => useUserStore((state) => state.actions.setSolo);
+export const useRefreshed = () => useUserStore((state) => state.refreshed);
+export const useSetRefreshed = () =>
+  useUserStore((state) => state.actions.setRefreshed);
 export const useStatus = () => useUserStore((state) => state.status);
 export const useSetStatus = () =>
   useUserStore((state) => state.actions.setStatus);
 export const useSkips = () => useUserStore((state) => state.skips);
 export const useSetSkips = () =>
   useUserStore((state) => state.actions.setSkips);
-export const useRefreshed = () => useUserStore((state) => state.refreshed);
-export const useSetRefreshed = () =>
-  useUserStore((state) => state.actions.setRefreshed);
 export const useNoSkips = () => useUserStore((state) => state.noSkips);
 export const useSetNoSkips = () =>
   useUserStore((state) => state.actions.setNoSkips);
-export const useUserId = () => useUserStore((state) => state.userId);
-export const useSetUserId = () =>
-  useUserStore((state) => state.actions.setUserId);
+export const usePeer = () => useUserStore((state) => state.peer);
+export const useSetPeer = () => useUserStore((state) => state.actions.setPeer);
 export const useFirstLoad = () => useUserStore((state) => state.firstLoad);
 export const useSetFirstLoad = () =>
   useUserStore((state) => state.actions.setFirstLoad);
+export const useUserId = () => useUserStore((state) => state.userId);
+export const useSetUserId = () =>
+  useUserStore((state) => state.actions.setUserId);
 export const useLocalMediaStream = () =>
   useUserStore((state) => state.localMediaStream);
 export const useSetLocalMediaStream = () =>
