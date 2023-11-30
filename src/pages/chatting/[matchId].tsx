@@ -48,6 +48,7 @@ import classNames from "~/lib/classNames";
 // import coloredImage from "../../../public/coloredPattern.jpg";
 import ParticleCanvas from "~/components/particle";
 import MyParticle from "~/components/myParticle";
+import MobileProgressCanvasButton from "~/components/mobileParticle";
 
 const MatchPage = () => {
   const router = useRouter();
@@ -755,19 +756,9 @@ const MatchPage = () => {
 
           <div className="absolute bottom-0 flex w-full flex-grow flex-col">
             <div className="flex flex-grow flex-col items-end">
-              <div className="flex w-[46.2%] justify-end">
+              <div className="mb-2 mr-2 flex min-h-[14.5rem] min-w-[3.5rem] flex-col items-center justify-evenly rounded-xl bg-[#121212]/40">
                 <button
-                  className="w-1/3 border p-2 font-semibold"
-                  onClick={() => {
-                    router
-                      .push("/")
-                      .catch(() => console.log("ERROR in GO HOME button"));
-                  }}
-                >
-                  Home
-                </button>
-                <button
-                  className="w-2/3 border p-2 font-semibold"
+                  className="flex flex-col items-center rounded-xl bg-[#1d1d1d]/30 p-2.5 text-3xl font-semibold text-white/30"
                   onClick={() => {
                     cleanup();
 
@@ -807,7 +798,33 @@ const MatchPage = () => {
                     }
                   }}
                 >
-                  Skip
+                  <span>S</span>
+                  <span>K</span>
+                  <span>I</span>
+                  <span>P</span>
+                </button>
+                <button
+                  className="rounded-xl bg-[#1d1d1d]/30 p-1.5 font-semibold text-white/30"
+                  onClick={() => {
+                    router
+                      .push("/")
+                      .catch(() => console.log("ERROR in GO HOME button"));
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={3}
+                    stroke="currentColor"
+                    className="h-8 w-8"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                    />
+                  </svg>
                 </button>
               </div>
               <div className="flex justify-end">
@@ -820,9 +837,71 @@ const MatchPage = () => {
                 ></video>
               </div>
             </div>
-            <button className="flex-grow border bg-red-400 p-2 font-semibold">
+            <div className="flex bg-[#121212]/40 p-2">
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="👍"
+                  color="147bd1"
+                  curCount={sentLike}
+                  resCount={resLike}
+                  addToCurCount={addSentLike}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="heart"
+                  color="d1156b"
+                  curCount={sentHeart}
+                  resCount={resHeart}
+                  addToCurCount={addSentHeart}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="🤣"
+                  color="f7ea48"
+                  curCount={sentLaugh}
+                  resCount={resLaugh}
+                  addToCurCount={addSentLaugh}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="😯"
+                  color="ff7f41"
+                  curCount={sentWoah}
+                  resCount={resWoah}
+                  addToCurCount={addSentWoah}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="🔥"
+                  color="e03c31"
+                  curCount={sentFire}
+                  resCount={resFire}
+                  addToCurCount={addSentFire}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="👏"
+                  color="753bbd"
+                  curCount={sentClap}
+                  resCount={resClap}
+                  addToCurCount={addSentClap}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+            </div>
+            {/* <button className="flex-grow border bg-red-400 p-2 font-semibold">
               Send Emoji
-            </button>
+            </button> */}
           </div>
         </div>
       ) : (
