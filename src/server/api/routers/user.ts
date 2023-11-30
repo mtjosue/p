@@ -181,6 +181,7 @@ export const userRouter = createTRPCRouter({
         hypeWoahs: z.number().nullable(),
         hypeFires: z.number().nullable(),
         hypeClaps: z.number().nullable(),
+        // report: z.string().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

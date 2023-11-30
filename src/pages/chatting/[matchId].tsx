@@ -48,6 +48,7 @@ import classNames from "~/lib/classNames";
 // import coloredImage from "../../../public/coloredPattern.jpg";
 import ParticleCanvas from "~/components/particle";
 import MyParticle from "~/components/myParticle";
+import MobileProgressCanvasButton from "~/components/mobileParticle";
 
 const MatchPage = () => {
   const router = useRouter();
@@ -429,6 +430,7 @@ const MatchPage = () => {
       hypeWoahs: resWoah < 1 ? null : resWoah,
       hypeFires: resFire < 1 ? null : resFire,
       hypeClaps: resClap < 1 ? null : resClap,
+      // report:
     };
   };
 
@@ -754,20 +756,10 @@ const MatchPage = () => {
           />
 
           <div className="absolute bottom-0 flex w-full flex-grow flex-col">
-            <div className="flex flex-grow flex-col items-end">
-              <div className="flex w-[46.2%] justify-end">
+            <div className="mr-2 flex flex-grow flex-col items-end">
+              <div className="mb-2 flex min-h-[14.5rem] min-w-[3.5rem] flex-col items-center justify-around rounded-xl">
                 <button
-                  className="w-1/3 border p-2 font-semibold"
-                  onClick={() => {
-                    router
-                      .push("/")
-                      .catch(() => console.log("ERROR in GO HOME button"));
-                  }}
-                >
-                  Home
-                </button>
-                <button
-                  className="w-2/3 border p-2 font-semibold"
+                  className="flex flex-col items-center rounded-xl bg-[#1d1d1d]/40 p-2.5 text-3xl font-semibold text-white/30"
                   onClick={() => {
                     cleanup();
 
@@ -807,10 +799,36 @@ const MatchPage = () => {
                     }
                   }}
                 >
-                  Skip
+                  <span>S</span>
+                  <span>K</span>
+                  <span>I</span>
+                  <span>P</span>
+                </button>
+                <button
+                  className="rounded-xl bg-[#1d1d1d]/40 p-2 font-semibold text-white/30"
+                  onClick={() => {
+                    router
+                      .push("/")
+                      .catch(() => console.log("ERROR in GO HOME button"));
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={3}
+                    stroke="currentColor"
+                    className="h-8 w-8"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                    />
+                  </svg>
                 </button>
               </div>
-              <div className="flex justify-end">
+              <div className="m flex justify-end overflow-hidden rounded-xl">
                 <video
                   ref={localVideoRef}
                   className="w-[180px]"
@@ -820,9 +838,68 @@ const MatchPage = () => {
                 ></video>
               </div>
             </div>
-            <button className="flex-grow border bg-red-400 p-2 font-semibold">
-              Send Emoji
-            </button>
+            <div className="flex p-2">
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="👍"
+                  color="20, 123, 209"
+                  curCount={sentLike}
+                  resCount={resLike}
+                  addToCurCount={addSentLike}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="heart"
+                  color="209, 21, 107"
+                  curCount={sentHeart}
+                  resCount={resHeart}
+                  addToCurCount={addSentHeart}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="🤣"
+                  color="247, 234, 72"
+                  curCount={sentLaugh}
+                  resCount={resLaugh}
+                  addToCurCount={addSentLaugh}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="😯"
+                  color="255, 127, 65"
+                  curCount={sentWoah}
+                  resCount={resWoah}
+                  addToCurCount={addSentWoah}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="🔥"
+                  color="224, 60, 49"
+                  curCount={sentFire}
+                  resCount={resFire}
+                  addToCurCount={addSentFire}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+              <div className="grid grid-cols-1">
+                <MobileProgressCanvasButton
+                  emote="👏"
+                  color="117, 59, 189"
+                  curCount={sentClap}
+                  resCount={resClap}
+                  addToCurCount={addSentClap}
+                  sendEmoji={sendEmoji}
+                />
+              </div>
+            </div>
           </div>
         </div>
       ) : (
