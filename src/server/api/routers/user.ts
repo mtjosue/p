@@ -169,37 +169,6 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
-  // skipsUpdate: publicProcedure
-  //   .input(
-  //     z.object({
-  //       userId: z.string(),
-  //       status: z.boolean().optional(),
-  //     }),
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     if (!input.userId) return null;
-  //     if (!input.status) {
-  //       return await ctx.db.user.update({
-  //         where: {
-  //           userId: input.userId,
-  //         },
-  //         data: {
-  //           skips: { decrement: 1 },
-  //         },
-  //       });
-  //     }
-  //     if (input.status) {
-  //       return await ctx.db.user.update({
-  //         where: {
-  //           userId: input.userId,
-  //         },
-  //         data: {
-  //           skips: { decrement: 1 },
-  //           status: "looking",
-  //         },
-  //       });
-  //     }
-  //   }),
   statusUpdate: publicProcedure
     .input(
       z.object({
