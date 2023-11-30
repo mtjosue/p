@@ -430,6 +430,7 @@ const MatchPage = () => {
       hypeWoahs: resWoah < 1 ? null : resWoah,
       hypeFires: resFire < 1 ? null : resFire,
       hypeClaps: resClap < 1 ? null : resClap,
+      // report:
     };
   };
 
@@ -755,10 +756,10 @@ const MatchPage = () => {
           />
 
           <div className="absolute bottom-0 flex w-full flex-grow flex-col">
-            <div className="flex flex-grow flex-col items-end">
-              <div className="mb-2 mr-2 flex min-h-[14.5rem] min-w-[3.5rem] flex-col items-center justify-evenly rounded-xl bg-[#121212]/40">
+            <div className="mr-2 flex flex-grow flex-col items-end">
+              <div className="mb-2 flex min-h-[14.5rem] min-w-[3.5rem] flex-col items-center justify-around rounded-xl">
                 <button
-                  className="flex flex-col items-center rounded-xl bg-[#1d1d1d]/30 p-2.5 text-3xl font-semibold text-white/30"
+                  className="flex flex-col items-center rounded-xl bg-[#1d1d1d]/40 p-2.5 text-3xl font-semibold text-white/30"
                   onClick={() => {
                     cleanup();
 
@@ -804,7 +805,7 @@ const MatchPage = () => {
                   <span>P</span>
                 </button>
                 <button
-                  className="rounded-xl bg-[#1d1d1d]/30 p-1.5 font-semibold text-white/30"
+                  className="rounded-xl bg-[#1d1d1d]/40 p-2 font-semibold text-white/30"
                   onClick={() => {
                     router
                       .push("/")
@@ -827,7 +828,7 @@ const MatchPage = () => {
                   </svg>
                 </button>
               </div>
-              <div className="flex justify-end">
+              <div className="m flex justify-end overflow-hidden rounded-xl">
                 <video
                   ref={localVideoRef}
                   className="w-[180px]"
@@ -837,11 +838,11 @@ const MatchPage = () => {
                 ></video>
               </div>
             </div>
-            <div className="flex bg-[#121212]/40 p-2">
+            <div className="flex p-2">
               <div className="grid grid-cols-1">
                 <MobileProgressCanvasButton
                   emote="👍"
-                  color="147bd1"
+                  color="20, 123, 209"
                   curCount={sentLike}
                   resCount={resLike}
                   addToCurCount={addSentLike}
@@ -851,7 +852,7 @@ const MatchPage = () => {
               <div className="grid grid-cols-1">
                 <MobileProgressCanvasButton
                   emote="heart"
-                  color="d1156b"
+                  color="209, 21, 107"
                   curCount={sentHeart}
                   resCount={resHeart}
                   addToCurCount={addSentHeart}
@@ -861,7 +862,7 @@ const MatchPage = () => {
               <div className="grid grid-cols-1">
                 <MobileProgressCanvasButton
                   emote="🤣"
-                  color="f7ea48"
+                  color="247, 234, 72"
                   curCount={sentLaugh}
                   resCount={resLaugh}
                   addToCurCount={addSentLaugh}
@@ -871,7 +872,7 @@ const MatchPage = () => {
               <div className="grid grid-cols-1">
                 <MobileProgressCanvasButton
                   emote="😯"
-                  color="ff7f41"
+                  color="255, 127, 65"
                   curCount={sentWoah}
                   resCount={resWoah}
                   addToCurCount={addSentWoah}
@@ -881,7 +882,7 @@ const MatchPage = () => {
               <div className="grid grid-cols-1">
                 <MobileProgressCanvasButton
                   emote="🔥"
-                  color="e03c31"
+                  color="224, 60, 49"
                   curCount={sentFire}
                   resCount={resFire}
                   addToCurCount={addSentFire}
@@ -891,7 +892,7 @@ const MatchPage = () => {
               <div className="grid grid-cols-1">
                 <MobileProgressCanvasButton
                   emote="👏"
-                  color="753bbd"
+                  color="117, 59, 189"
                   curCount={sentClap}
                   resCount={resClap}
                   addToCurCount={addSentClap}
@@ -899,9 +900,6 @@ const MatchPage = () => {
                 />
               </div>
             </div>
-            {/* <button className="flex-grow border bg-red-400 p-2 font-semibold">
-              Send Emoji
-            </button> */}
           </div>
         </div>
       ) : (

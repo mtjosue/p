@@ -64,22 +64,25 @@ const MobileProgressCanvasButton: React.FC<ProgressCanvasButtonProps> = ({
       return;
     }
 
-    ctx.fillStyle = `#${color}`; // Set the color of the line
+    ctx.fillStyle = `rgba(${color}, 0.8)`; // Set the color of the line
+
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-    ctx.fillRect(0, canvas.height - curCount, canvas.width, curCount); // Draw the progress bar
+    ctx.fillRect(0, canvas.height - resCount, canvas.width, resCount); // Draw the progress bar
   };
 
   useEffect(() => {
-    drawLine(); // Initial drawing of the progress bar
+    if (resCount) {
+      drawLine(); // Initial drawing of the progress bar
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [resCount]);
 
   const [hoverState, setHoverState] = useState(false);
 
   return (
     <button
       className={classNames(
-        "relative min-h-[6rem] max-w-[5rem] overflow-hidden rounded-xl border-4 border-[#343434] text-2xl shadow-lg",
+        "relative min-h-[6rem] max-w-[5rem] overflow-hidden rounded-xl border-4 border-[#343434]/90 bg-[#1d1d1d]/30 text-2xl shadow-lg",
         color === "147bd1" ? "hover:border-[#147bd1]/30" : "",
         color === "d1156b" ? "hover:border-[#d1156b]/30" : "",
         color === "f7ea48" ? "hover:border-[#f7ea48]/30" : "",
