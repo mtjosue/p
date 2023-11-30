@@ -133,6 +133,14 @@ const WaitingPage = () => {
       } else {
         statusUpdate.mutate({
           userId: userId,
+          status: null,
+          skips: null,
+          hypeLikes: null,
+          hypeHearts: null,
+          hypeLaughs: null,
+          hypeWoahs: null,
+          hypeFires: null,
+          hypeClaps: null,
         });
         router
           .push("/")
@@ -152,6 +160,14 @@ const WaitingPage = () => {
           onClick={() => {
             statusUpdate.mutate({
               userId: userId,
+              status: null,
+              skips: null,
+              hypeLikes: null,
+              hypeHearts: null,
+              hypeLaughs: null,
+              hypeWoahs: null,
+              hypeFires: null,
+              hypeClaps: null,
             });
           }}
           href={"/"}

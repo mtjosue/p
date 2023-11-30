@@ -21,6 +21,18 @@ model User {
   localMatches  Match[]  @relation("LocalMatches")
   remoteMatches Match[]  @relation("RemoteMatches")
   skips         Int      @default(20)
+  likes         Int      @default(0)
+  hypeLikes     Int      @default(0)
+  hearts        Int      @default(0)
+  hypeHearts    Int      @default(0)
+  laughs        Int      @default(0)
+  hypeLaughs    Int      @default(0)
+  woahs         Int      @default(0)
+  hypeWoahs     Int      @default(0)
+  fires         Int      @default(0)
+  hypeFires     Int      @default(0)
+  claps         Int      @default(0)
+  hypeClaps     Int      @default(0)
 
   @@index([id])
 }

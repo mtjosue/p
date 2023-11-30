@@ -1,10 +1,4 @@
-import React, {
-  type MouseEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import {
@@ -18,52 +12,42 @@ import {
   useSolo,
   useUserId,
 } from "~/stores/useLocalUser";
-import Link from "next/link";
 import type { DataConnection } from "peerjs";
 import {
+  useAddSentClap,
+  useAddSentFire,
+  useAddSentHeart,
+  useAddSentLaugh,
+  useAddSentLike,
+  useAddSentWoah,
+  useSentClap,
+  useSentFire,
+  useSentHeart,
+  useSentLaugh,
+  useSentLike,
+  useSentWoah,
   usePhone,
+  useResetReactions,
   useSetPhone,
-  useSetSize,
-  useSize,
-} from "~/stores/useRemoteUser";
+  useResLike,
+  useAddResLike,
+  useResHeart,
+  useAddResHeart,
+  useResLaugh,
+  useAddResLaugh,
+  useResWoah,
+  useAddResWoah,
+  useResFire,
+  useAddResFire,
+  useResClap,
+  useAddResClap,
+} from "~/stores/useGeneral";
 import classNames from "~/lib/classNames";
-import Image from "next/image";
-import { useSpring, animated } from "react-spring";
-import blackAndWhiteImage from "../../../public/pattern.jpg";
-import coloredImage from "../../../public/coloredPattern.jpg";
-// import { useReward } from "react-rewards";
-
-interface TrailPoint {
-  x: number;
-  y: number;
-  opacity: number;
-}
-
-// const EmojiGenerator = (emojiArr: string[]) => {
-//   const getRandomTranslateX = () => {
-//     // Customize the range and calculation based on your needs
-//     const randomValue = Math.floor(Math.random() * 40) - 20; // Generates a random value between -20 and 20
-//     return `${randomValue}vw`;
-//   };
-
-//   return (
-//     <div>
-//       {emojiArr.map((emoji, idx) => (
-//         <span
-//           key={idx}
-//           style={{
-//             animation: "floatUp 3s ease-in",
-//             transform: `translateY(-100vh) translateX(${getRandomTranslateX()})`,
-//             opacity: 0,
-//           }}
-//           className="animate-floatUp absolute text-4xl"
-//         >
-//           {emoji}
-//         </span>
-//       ))}
-//     </div>
-//   );
-// };
+// import Image from "next/image";
+// import blackAndWhiteImage from "../../../public/pattern.jpg";
+// import coloredImage from "../../../public/coloredPattern.jpg";
+import ParticleCanvas from "~/components/particle";
+import MyParticle from "~/components/myParticle";
 
 const MatchPage = () => {
   const router = useRouter();
@@ -80,10 +64,11 @@ const MatchPage = () => {
   const [matchIsRunning, setMatchIsRunning] = useState(true);
   const [countdown, setCountdown] = useState(90);
   const [countdown2, setCountdown2] = useState(8);
-  const [opacity, setOpacity] = useState(0.01);
   const setRefreshed = useSetRefreshed();
   const setSolo = useSetSolo();
   const solo = useSolo();
+  const [dolo, setDolo] = useState(false);
+  const resetReactions = useResetReactions();
 
   //Cleanup up peer stores in zustand
   const cleanup = () => {
@@ -91,6 +76,7 @@ const MatchPage = () => {
       peer.destroy();
     }
   };
+
   //Match data which decides who calls and who answers
   const { data } = api.user.getMatchForPage.useQuery(
     {
@@ -102,12 +88,12 @@ const MatchPage = () => {
       staleTime: 0,
     },
   );
+
   //Mutation to end Match so that users are unable to join the same match id session
   const endMatch = api.user.endMatch.useMutation();
-  //Mutation to update status and skips
+
+  //Mutation to update status and everything else
   const statusUpdate = api.user.statusUpdate.useMutation();
-  //Mutation Skips update
-  const skipsUpdate = api.user.skipsUpdate.useMutation();
 
   //EMP = Element Manipulation Prevention.
   useEffect(() => {
@@ -141,8 +127,9 @@ const MatchPage = () => {
     // Clean up the event listener when the component unmounts
     return () => {
       window.removeEventListener("resize", checkWindowSize);
+      resetReactions();
     };
-  }, [router]);
+  }, [resetReactions, router]);
 
   //If refreshed there wont be a userId, push to home / setRefreshed(true).
   useEffect(() => {
@@ -187,15 +174,11 @@ const MatchPage = () => {
   useEffect(() => {
     if (solo) {
       setSolo(false);
+      setDolo(true);
       cleanup();
       endMatch.mutate({
         matchid: matchId,
       });
-      statusUpdate.mutate({
-        userId: userId,
-        status: true,
-      });
-      router.push(`/waiting`).catch(() => console.log("ERROR IN ROUTER.PUSH"));
     }
     //cleanup trigger rerenders endlessly
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -315,37 +298,84 @@ const MatchPage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  ////////////////////////// NEW CODE //////////////////////////
-
   const [peerConnection, setPeerConnection] = useState<null | DataConnection>(
     null,
   );
-
-  // const [floatEmoji, setFloatEmoji] = useState(false);
-  // const [emojiToggle, setEmojiToggle] = useState(false);
-  const [count, setCount] = useState(0);
-  const [emojiArr, setEmojiArr] = useState<string[]>([]);
   const [show, setShow] = useState(false);
   const [remain, setRemain] = useState(2500);
+
+  const sentLike = useSentLike();
+  const addSentLike = useAddSentLike();
+  const sentHeart = useSentHeart();
+  const addSentHeart = useAddSentHeart();
+  const sentLaugh = useSentLaugh();
+  const addSentLaugh = useAddSentLaugh();
+  const sentWoah = useSentWoah();
+  const addSentWoah = useAddSentWoah();
+  const sentFire = useSentFire();
+  const addSentFire = useAddSentFire();
+  const sentClap = useSentClap();
+  const addSentClap = useAddSentClap();
+  const resLike = useResLike();
+  const addResLike = useAddResLike();
+  const resHeart = useResHeart();
+  const addResHeart = useAddResHeart();
+  const resLaugh = useResLaugh();
+  const addResLaugh = useAddResLaugh();
+  const resWoah = useResWoah();
+  const addResWoah = useAddResWoah();
+  const resFire = useResFire();
+  const addResFire = useAddResFire();
+  const resClap = useResClap();
+  const addResClap = useAddResClap();
 
   //if you have not called then there is no data connection
   //and we must establish one
   useEffect(() => {
     if (peerConnection) {
       peerConnection.on("data", (data) => {
-        const data2 = data as { type: string; message: string };
-        if (data2.message) {
-          console.log("DATA2 MANIPULATED", data2.message);
-          setEmojiArr((prev) => [...prev, data2.message]);
-          setShow(true);
-          setCount((prev) => prev + 1);
-          setRemain((prev) => prev + 1);
+        const data2 = data as { type: number };
+        if (data2.type) {
+          console.log("DATA2 MANIPULATED", data2.type);
+          if (data2.type === 1) {
+            console.log("ACTIVATING!");
+            addResLike();
+          }
+          if (data2.type === 2) {
+            console.log("ACTIVATING!");
+            addResHeart();
+          }
+          if (data2.type === 3) {
+            console.log("ACTIVATING!");
+            addResLaugh();
+          }
+          if (data2.type === 4) {
+            console.log("ACTIVATING!");
+            addResWoah();
+          }
+          if (data2.type === 5) {
+            console.log("ACTIVATING!");
+            addResFire();
+          }
+          if (data2.type === 6) {
+            console.log("ACTIVATING!");
+            addResClap();
+          }
         }
+        setShow(true);
+        setRemain((prev) => prev + 1);
       });
     }
-  }, [peerConnection]);
+  }, [
+    addResClap,
+    addResFire,
+    addResHeart,
+    addResLaugh,
+    addResLike,
+    addResWoah,
+    peerConnection,
+  ]);
 
-  //Safeguard for renderingEmojis correctly
   useEffect(() => {
     if (show) {
       const timeoutId = setTimeout(() => {
@@ -353,21 +383,17 @@ const MatchPage = () => {
       }, remain);
       return () => clearTimeout(timeoutId);
     }
-  }, [emojiArr, remain, show]);
+  }, [remain, show]);
 
-  const sendEmoji = async () => {
+  const sendEmoji = async (num: number) => {
     if (peerConnection) {
       console.log("We have a DATA CONNECTION");
       await peerConnection.send({
-        type: "emoji",
-        //  message: "😊"
-        // message: "🔥",
-        message: "🥰",
+        type: num,
       });
     }
   };
 
-  // const [size, setWindowSize] = useState(0);
   const phone = usePhone();
   const setPhone = useSetPhone();
 
@@ -392,38 +418,42 @@ const MatchPage = () => {
     };
   }, [setPhone]);
 
-  // console.log("size", phone);
-  // console.log("size", phone);
-  // console.log("size", phone);
-  // console.log("size", phone);
-  // console.log("size", phone);
-
-  //CountDown OPACITY
-  useEffect(() => {
-    if (opacity >= 1) return;
-    const timer = setInterval(() => {
-      setOpacity((prev) => prev + 0.005);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [opacity]);
+  const makeDataObject = (skipa?: boolean | null, stats?: boolean) => {
+    return {
+      userId: userId ?? null,
+      skips: skipa ?? null,
+      status: stats ?? null,
+      hypeLikes: resLike < 1 ? null : resLike,
+      hypeHearts: resHeart < 1 ? null : resHeart,
+      hypeLaughs: resLaugh < 1 ? null : resLaugh,
+      hypeWoahs: resWoah < 1 ? null : resWoah,
+      hypeFires: resFire < 1 ? null : resFire,
+      hypeClaps: resClap < 1 ? null : resClap,
+    };
+  };
 
   return (
-    <div className="h-[100vh] w-full bg-repeat">
+    <div className="h-[100vh] w-full bg-[#121212]">
       {!phone ? (
         <div className="flex h-full w-auto flex-col">
-          <div className="flex h-auto w-auto justify-center">
+          <div className="flex justify-center overflow-hidden">
             <video
               ref={localVideoRef}
-              className="w-[50vw] object-cover xl:max-w-[40vw]"
+              className="w-[50vw] object-cover"
               autoPlay={true}
               playsInline={true}
               muted={true}
-            ></video>
+            />
+            {dolo && (
+              <div className="flex w-full items-center justify-center text-white">
+                Your Pixelmate was lost to the wind...
+              </div>
+            )}
             <video
               ref={remoteVideoRef}
               className={classNames(
-                "w-[50vw] object-cover xl:max-w-[40vw]",
+                dolo ? "hidden" : "",
+                "w-[50vw] object-cover",
                 countdown > 90
                   ? "blur-[7px]"
                   : countdown > 85
@@ -485,117 +515,314 @@ const MatchPage = () => {
               autoPlay={true}
               playsInline={true}
               muted={true}
-            ></video>
+            />
           </div>
-          <div className="flex h-full w-full">
-            <div className="flex w-1/2 flex-grow items-center justify-around">
-              <button className="max-w-[4rem] rounded-xl bg-black/70 p-5">
-                👍
-              </button>
-
-              <button
-                className="max-w-[4rem] rounded-xl p-5"
-                style={{
-                  background: "linear-gradient(145deg, #767676, #636363)",
-                  boxShadow: "20px 20px 60px #3f3f3f, -20px -20px 60px #9d9d9d",
-                }}
+          <div className="flex w-full flex-grow gap-x-3 bg-[#121212] p-3">
+            <div
+              id="reactions"
+              className="flex w-1/2 flex-grow flex-col gap-y-3 rounded-xl bg-[#1d1d1d] p-3 lg:flex-row"
+            >
+              <div
+                id="topRow"
+                // className="flex max-h-[10rem] w-full flex-grow flex-wrap justify-around gap-x-6 gap-y-3 md:gap-x-12 lg:flex-row lg:gap-x-20 xl:gap-x-6"
+                className="flex w-full flex-grow justify-around gap-x-1 gap-y-3"
               >
-                {"\u2764\uFE0F"}
-              </button>
-              <button
-                className="max-w-[4rem] rounded-xl p-5"
-                style={{
-                  background: "linear-gradient(145deg, #767676, #636363)",
-                  boxShadow: "20px 20px 60px #3f3f3f, -20px -20px 60px #9d9d9d",
-                }}
-              >
-                🤣
-              </button>
-              <button
-                className="max-w-[4rem] rounded-xl p-5"
-                style={{
-                  background: "linear-gradient(145deg, #767676, #636363)",
-                  boxShadow: "20px 20px 60px #3f3f3f, -20px -20px 60px #9d9d9d",
-                }}
-              >
-                😯
-              </button>
-              <button
-                className="max-w-[4rem] rounded-xl p-5"
-                style={{
-                  background: "linear-gradient(145deg, #767676, #636363)",
-                  boxShadow: "20px 20px 60px #3f3f3f, -20px -20px 60px #9d9d9d",
-                }}
-              >
-                🔥
-              </button>
-              <button
-                className="max-w-[4rem] rounded-xl p-5"
-                style={{
-                  background: "linear-gradient(145deg, #767676, #636363)",
-                  boxShadow: "20px 20px 60px #3f3f3f, -20px -20px 60px #9d9d9d",
-                }}
-              >
-                👏
-              </button>
-            </div>
-            <div className="flex h-full w-1/2 flex-grow">
-              <div className="flex w-1/3 flex-grow items-center justify-center bg-green-400">
-                Home
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="👍"
+                    color="147bd1"
+                    curCount={sentLike}
+                    addToCurCount={addSentLike}
+                    sendEmoji={sendEmoji}
+                  />
+                  <MyParticle color="147bd1" curCount={resLike} />
+                </div>
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="heart"
+                    color="d1156b"
+                    curCount={sentHeart}
+                    addToCurCount={addSentHeart}
+                    sendEmoji={sendEmoji}
+                  />
+                  <MyParticle color="d1156b" curCount={resHeart} />
+                </div>
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="🤣"
+                    color="f7ea48"
+                    curCount={sentLaugh}
+                    addToCurCount={addSentLaugh}
+                    sendEmoji={sendEmoji}
+                  />
+                  <MyParticle color="f7ea48" curCount={resLaugh} />
+                </div>
               </div>
               <div
-                className="flex w-2/3 flex-grow items-center justify-center bg-pink-400"
-                onClick={() => {
-                  cleanup();
+                id="botRow"
+                className="flex w-full flex-grow justify-around gap-x-1 gap-y-3"
+              >
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="😯"
+                    color="ff7f41"
+                    curCount={sentWoah}
+                    addToCurCount={addSentWoah}
+                    sendEmoji={sendEmoji}
+                  />
+                  <MyParticle color="ff7f41" curCount={resWoah} />
+                </div>
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="🔥"
+                    color="e03c31"
+                    curCount={sentFire}
+                    addToCurCount={addSentFire}
+                    sendEmoji={sendEmoji}
+                  />
 
-                  if (!remoteStream?.active) {
-                    statusUpdate.mutate({
-                      userId: userId,
-                      status: true,
-                    });
-                    router
-                      .push("/waiting")
-                      .catch(() =>
-                        console.log("ERROR in router.puush of SKIP"),
-                      );
-                  }
+                  <MyParticle color="e03c31" curCount={resFire} />
+                </div>
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="👏"
+                    color="753bbd"
+                    curCount={sentClap}
+                    addToCurCount={addSentClap}
+                    sendEmoji={sendEmoji}
+                  />
+                  <MyParticle color="753bbd" curCount={resClap} />
+                </div>
+              </div>
+            </div>
+            <div
+              id="homeAndSkip"
+              className="flex h-full flex-grow flex-col gap-x-3 gap-y-3 sm:w-1/2 sm:flex-row"
+            >
+              <div
+                className="flex w-full flex-grow sm:w-1/3"
+                onClick={() => {
+                  resetReactions();
+
                   if (remoteStream?.active && countdown < 1) {
-                    statusUpdate.mutate({
-                      userId: userId,
-                      status: true,
-                    });
-                    router
-                      .push("/waiting")
-                      .catch(() =>
-                        console.log("ERROR in router.puush of SKIP"),
-                      );
+                    statusUpdate.mutate(makeDataObject());
                   }
                   if (remoteStream?.active && countdown > 0) {
                     if (skips < 2) {
                       setNoSkips(true);
-                      router
-                        .push("/")
-                        .catch(() =>
-                          console.log("ERROR in router.puush of SKIP"),
-                        );
                     } else if (skips > 1) {
-                      skipsUpdate.mutate({
-                        userId: userId,
-                        status: true,
-                      });
+                      statusUpdate.mutate(makeDataObject(true));
                       setSkips(skips - 1);
+                    }
+                  }
+                  router
+                    .push("/")
+                    .catch(() =>
+                      console.log("ERROR IN GOING BACK HOME BUTTON"),
+                    );
+                }}
+              >
+                <button className="flex flex-grow items-center justify-center rounded-xl bg-[#1d1d1d] p-5 text-5xl text-[#e1e1e1] shadow-md">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="h-12 w-12"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex w-full flex-grow sm:w-2/3">
+                <button
+                  className="flex-grow rounded-xl bg-[#1d1d1d] p-3 font-mono text-5xl text-[#e1e1e1] shadow-md"
+                  onClick={() => {
+                    cleanup();
+
+                    resetReactions();
+
+                    if (
+                      !remoteStream?.active ||
+                      (remoteStream?.active && countdown < 1)
+                    ) {
+                      statusUpdate.mutate(makeDataObject(null, true));
+                    }
+
+                    if (remoteStream?.active && countdown > 0) {
+                      if (skips < 2) {
+                        setNoSkips(true);
+                        router
+                          .push("/")
+                          .catch(() =>
+                            console.log("ERROR in router.puush of SKIP"),
+                          );
+                      } else if (skips > 1) {
+                        statusUpdate.mutate(makeDataObject(true, true));
+                        setSkips(skips - 1);
+                      }
+                    }
+
+                    router
+                      .push("/waiting")
+                      .catch(() =>
+                        console.log("ERROR in router.puush of SKIP"),
+                      );
+                  }}
+                >
+                  Skip
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
+      {phone ? (
+        <div className="h-auto w-auto">
+          <video
+            ref={remoteVideoRef}
+            className={classNames(
+              "h-[100vh] w-[100vw] object-cover",
+              countdown > 90
+                ? "blur-[7px]"
+                : countdown > 85
+                ? "blur-[6.8px]"
+                : countdown > 80
+                ? "blur-[6.6px]"
+                : countdown > 75
+                ? "blur-[6.4px]"
+                : countdown > 70
+                ? "blur-[6.2px]"
+                : countdown > 65
+                ? "blur-[6px]"
+                : countdown > 60
+                ? "blur-[5.8px]"
+                : countdown > 55
+                ? "blur-[5.6px]"
+                : countdown > 50
+                ? "blur-[5.4px]"
+                : countdown > 45
+                ? "blur-[5.2px]"
+                : countdown > 40
+                ? "blur-[5px]"
+                : countdown > 38
+                ? "blur-[4.8px]"
+                : countdown > 36
+                ? "blur-[4.6px]"
+                : countdown > 34
+                ? "blur-[4.4px]"
+                : countdown > 32
+                ? "blur-[4.2px]"
+                : countdown > 30
+                ? "blur-[4px]"
+                : countdown > 28
+                ? "blur-[3.8px]"
+                : countdown > 26
+                ? "blur-[3.6px]"
+                : countdown > 24
+                ? "blur-[3.4px]"
+                : countdown > 22
+                ? "blur-[3.2px]"
+                : countdown > 20
+                ? "blur-[3px]"
+                : countdown > 18
+                ? "blur-[2.6px]"
+                : countdown > 16
+                ? "blur-[2.2px]"
+                : countdown > 14
+                ? "blur-[1.8px]"
+                : countdown > 12
+                ? "blur-[1.4px]"
+                : countdown > 10
+                ? "blur-[1px]"
+                : countdown > 8
+                ? "blur-[0.6px]"
+                : countdown > 0
+                ? "blur-[0.3px]"
+                : "blur-none",
+            )}
+            autoPlay={true}
+            playsInline={true}
+            muted={true}
+          />
+
+          <div className="absolute bottom-0 flex w-full flex-grow flex-col">
+            <div className="flex flex-grow flex-col items-end">
+              <div className="flex w-[46.2%] justify-end">
+                <button
+                  className="w-1/3 border p-2 font-semibold"
+                  onClick={() => {
+                    router
+                      .push("/")
+                      .catch(() => console.log("ERROR in GO HOME button"));
+                  }}
+                >
+                  Home
+                </button>
+                <button
+                  className="w-2/3 border p-2 font-semibold"
+                  onClick={() => {
+                    cleanup();
+
+                    if (!remoteStream?.active) {
+                      statusUpdate.mutate(makeDataObject(null, true));
                       router
                         .push("/waiting")
                         .catch(() =>
                           console.log("ERROR in router.puush of SKIP"),
                         );
                     }
-                  }
-                }}
-              >
-                Skip
+                    if (remoteStream?.active && countdown < 1) {
+                      statusUpdate.mutate(makeDataObject(null, true));
+                      router
+                        .push("/waiting")
+                        .catch(() =>
+                          console.log("ERROR in router.puush of SKIP"),
+                        );
+                    }
+                    if (remoteStream?.active && countdown > 0) {
+                      if (skips < 2) {
+                        setNoSkips(true);
+                        router
+                          .push("/")
+                          .catch(() =>
+                            console.log("ERROR in router.puush of SKIP"),
+                          );
+                      } else if (skips > 1) {
+                        statusUpdate.mutate(makeDataObject(true, true));
+                        setSkips(skips - 1);
+                        router
+                          .push("/waiting")
+                          .catch(() =>
+                            console.log("ERROR in router.puush of SKIP"),
+                          );
+                      }
+                    }
+                  }}
+                >
+                  Skip
+                </button>
+              </div>
+              <div className="flex justify-end">
+                <video
+                  ref={localVideoRef}
+                  className="w-[180px]"
+                  autoPlay={true}
+                  playsInline={true}
+                  muted={true}
+                ></video>
               </div>
             </div>
+            <button className="flex-grow border bg-red-400 p-2 font-semibold">
+              Send Emoji
+            </button>
           </div>
         </div>
       ) : (

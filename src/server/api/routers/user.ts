@@ -95,10 +95,6 @@ export const userRouter = createTRPCRouter({
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         console.log("ERROR IN TRYING TO UPDATE BOTH AT THE SAME TIME");
         return null;
       }
@@ -173,60 +169,64 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
-  skipsUpdate: publicProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-        status: z.boolean().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!input.userId) return null;
-      if (!input.status) {
-        return await ctx.db.user.update({
-          where: {
-            userId: input.userId,
-          },
-          data: {
-            skips: { decrement: 1 },
-          },
-        });
-      }
-      if (input.status) {
-        return await ctx.db.user.update({
-          where: {
-            userId: input.userId,
-          },
-          data: {
-            skips: { decrement: 1 },
-            status: "looking",
-          },
-        });
-      }
-    }),
   statusUpdate: publicProcedure
     .input(
       z.object({
-        userId: z.string(),
-        status: z.boolean().optional(),
+        userId: z.string().optional(),
+        status: z.boolean().nullable(),
+        skips: z.boolean().nullable(),
+        hypeLikes: z.number().nullable(),
+        hypeHearts: z.number().nullable(),
+        hypeLaughs: z.number().nullable(),
+        hypeWoahs: z.number().nullable(),
+        hypeFires: z.number().nullable(),
+        hypeClaps: z.number().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!input.status) {
-        return await ctx.db.user.update({
-          where: { userId: input.userId },
-          data: {
-            status: "waiting",
-          },
-        });
+      //Check User
+      if (!input.userId) return null;
+
+      // Define a mapping between input keys and database fields
+      const hypeReactionMapping = {
+        hypeLikes: "likes",
+        hypeHearts: "hearts",
+        hypeLaughs: "laughs",
+        hypeWoahs: "woahs",
+        hypeFires: "fires",
+        hypeClaps: "claps",
+      };
+
+      // Build the data object for the update
+      const updateData: Record<string, unknown> = {};
+
+      // Update user status
+      if (input.status !== null) {
+        updateData.status = "looking";
       }
-      if (input.status) {
-        return await ctx.db.user.update({
-          where: { userId: input.userId },
-          data: {
-            status: "looking",
-          },
-        });
+      // Update user skips
+      if (input.skips !== null) {
+        updateData.skips = { decrement: 1 };
       }
+
+      Object.keys(hypeReactionMapping).forEach((hypeKey) => {
+        const regularKey =
+          hypeReactionMapping[hypeKey as keyof typeof hypeReactionMapping];
+
+        if (input[hypeKey as keyof typeof hypeReactionMapping] !== null) {
+          // Update hype reaction with the provided value
+          updateData[hypeKey] =
+            input[hypeKey as keyof typeof hypeReactionMapping];
+
+          // Increment regular reaction field by 1
+          updateData[regularKey] = { increment: 1 };
+        }
+      });
+
+      // Perform the update
+      return await ctx.db.user.update({
+        where: { userId: input.userId },
+        data: updateData,
+      });
     }),
 });
