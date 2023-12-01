@@ -3,11 +3,14 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Modal from "~/components/modal";
-import ParticleCanvas from "~/components/particle";
 import {
+  useAddReport,
+  useBanned,
   useFirstLoad,
   useLocalMediaStream,
   useNoSkips,
+  useReports,
+  useSetBanned,
   useSetFirstLoad,
   useSetLocalMediaStream,
   useSetNoSkips,
@@ -28,6 +31,16 @@ export default function Home() {
   const localMediaStream = useLocalMediaStream();
   const setLocalMediaStream = useSetLocalMediaStream();
   const [termsAgreed, setTermsAgreed] = useState(true);
+  const banned = useBanned();
+  const setBanned = useSetBanned();
+  const reports = useReports();
+  const addReport = useAddReport();
+
+  useEffect(() => {
+    if (reports >= 7) {
+      setBanned(true);
+    }
+  }, [reports, setBanned]);
 
   const userStatusUpdate = api.user.statusUpdate.useMutation();
   const searchUser = api.user.userCheck.useQuery(
@@ -81,9 +94,17 @@ export default function Home() {
       } else if (searchUser.data.skips > 1) {
         setSkips(searchUser.data.skips);
       }
+      addReport(searchUser.data.reports as number);
       setFirstLoad(false);
     }
-  }, [searchUser.data, setFirstLoad, setNoSkips, setSkips, setUserId]);
+  }, [
+    addReport,
+    searchUser.data,
+    setFirstLoad,
+    setNoSkips,
+    setSkips,
+    setUserId,
+  ]);
 
   //If we're not actively searching and we have gotten back nothing
   //Open Terms of agreement to create new user
@@ -164,14 +185,14 @@ export default function Home() {
         {user.isSignedIn && !termsAgreed && <Modal />}
         {user.isSignedIn && (
           <button
-            disabled={noSkips}
+            disabled={noSkips || banned}
             onClick={onBtnClick}
             className={`mt-10 rounded-sm ${
               noSkips ? "bg-slate-500" : "bg-sky-500"
             } px-3 py-2`}
           >
-            {noSkips
-              ? "You've exhausted your daily allowance, come back tomorrow!"
+            {noSkips || banned
+              ? "Done for today ^.^, come back tomorrow!"
               : "Ready"}
           </button>
         )}

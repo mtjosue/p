@@ -2,10 +2,15 @@ import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import {
+  useAddReport,
   useLocalMediaStream,
   usePeer,
+  useRemoteUserId,
+  useReports,
+  useSetBanned,
   useSetNoSkips,
   useSetRefreshed,
+  useSetRemoteUserId,
   useSetSkips,
   useSetSolo,
   useSkips,
@@ -43,17 +48,17 @@ import {
   useAddResClap,
 } from "~/stores/useGeneral";
 import classNames from "~/lib/classNames";
-// import Image from "next/image";
-// import blackAndWhiteImage from "../../../public/pattern.jpg";
-// import coloredImage from "../../../public/coloredPattern.jpg";
 import ParticleCanvas from "~/components/particle";
 import MyParticle from "~/components/myParticle";
 import MobileProgressCanvasButton from "~/components/mobileParticle";
+import ReportModal from "~/components/reportModal";
 
 const MatchPage = () => {
   const router = useRouter();
   const matchId = router.query.matchId as string;
   const userId = useUserId();
+  const remoteUserId = useRemoteUserId();
+  const setRemoteUserId = useSetRemoteUserId();
   const localVideoRef = useRef<null | HTMLVideoElement>(null);
   const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
   const localMediaStream = useLocalMediaStream();
@@ -70,11 +75,28 @@ const MatchPage = () => {
   const solo = useSolo();
   const [dolo, setDolo] = useState(false);
   const resetReactions = useResetReactions();
+  const [reportModal, toggleReport] = useState(false);
+  const reports = useReports();
+  const addReport = useAddReport();
+  const setBanned = useSetBanned();
+
+  //Reports? Banned.
+  useEffect(() => {
+    if (reports >= 7) {
+      setBanned(true);
+      router
+        .push("/")
+        .catch(() => console.log("Error in pushing because banned"));
+    }
+  }, [reports, router, setBanned]);
 
   //Cleanup up peer stores in zustand
   const cleanup = () => {
     if (peer) {
       peer.destroy();
+    }
+    if (remoteUserId) {
+      setRemoteUserId(null);
     }
   };
 
@@ -95,6 +117,21 @@ const MatchPage = () => {
 
   //Mutation to update status and everything else
   const statusUpdate = api.user.statusUpdate.useMutation();
+
+  //Saving remoteUserId in case we need to report
+  useEffect(() => {
+    if (remoteUserId) return;
+    if (data) {
+      if (data.localUserId === userId && !remoteUserId) {
+        console.log("DATALOCAL AND LOCAL ARE THE SAME");
+        setRemoteUserId(data.remoteUserId);
+      }
+      if (data.remoteUserId === userId && !remoteUserId) {
+        console.log("DATA REMOTE AND LOCAL ARE THE SAME");
+        setRemoteUserId(data.localUserId);
+      }
+    }
+  }, [remoteUserId, data, userId, setRemoteUserId]);
 
   //EMP = Element Manipulation Prevention.
   useEffect(() => {
@@ -335,8 +372,8 @@ const MatchPage = () => {
   useEffect(() => {
     if (peerConnection) {
       peerConnection.on("data", (data) => {
-        const data2 = data as { type: number };
-        if (data2.type) {
+        const data2 = data as { cat: boolean; type: number };
+        if (data2.cat) {
           console.log("DATA2 MANIPULATED", data2.type);
           if (data2.type === 1) {
             console.log("ACTIVATING!");
@@ -363,11 +400,26 @@ const MatchPage = () => {
             addResClap();
           }
         }
+        if (!data2.cat) {
+          if (data2.type === 1) {
+            // addReport
+            addReport(1);
+          }
+          if (data2.type === 2) {
+            // addReport
+            addReport(2);
+          }
+          if (data2.type === 3) {
+            // addReport
+            addReport(3);
+          }
+        }
         setShow(true);
         setRemain((prev) => prev + 1);
       });
     }
   }, [
+    addReport,
     addResClap,
     addResFire,
     addResHeart,
@@ -390,6 +442,17 @@ const MatchPage = () => {
     if (peerConnection) {
       console.log("We have a DATA CONNECTION");
       await peerConnection.send({
+        cat: true,
+        type: num,
+      });
+    }
+  };
+
+  const sendReport = async (num: number) => {
+    if (peerConnection) {
+      console.log("We have a DATA CONNECTION");
+      await peerConnection.send({
+        cat: false,
         type: num,
       });
     }
@@ -430,14 +493,31 @@ const MatchPage = () => {
       hypeWoahs: resWoah < 1 ? null : resWoah,
       hypeFires: resFire < 1 ? null : resFire,
       hypeClaps: resClap < 1 ? null : resClap,
-      // report:
     };
   };
 
   return (
     <div className="h-[100vh] w-full bg-[#121212]">
+      {reportModal && (
+        <ReportModal
+          toggle={reportModal}
+          toggler={toggleReport}
+          dataObject={makeDataObject(null, true)}
+          sendReport={sendReport}
+        />
+      )}
       {!phone ? (
-        <div className="flex h-full w-auto flex-col">
+        <div className="relative flex h-full w-auto flex-col">
+          <button
+            onClick={() => {
+              console.log("hello");
+              toggleReport(true);
+              // report.mutate({})
+            }}
+            className="absolute right-0 top-0 z-50 m-3 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600/60"
+          >
+            !
+          </button>
           <div className="flex justify-center overflow-hidden">
             <video
               ref={localVideoRef}
@@ -526,7 +606,6 @@ const MatchPage = () => {
             >
               <div
                 id="topRow"
-                // className="flex max-h-[10rem] w-full flex-grow flex-wrap justify-around gap-x-6 gap-y-3 md:gap-x-12 lg:flex-row lg:gap-x-20 xl:gap-x-6"
                 className="flex w-full flex-grow justify-around gap-x-1 gap-y-3"
               >
                 <div className="grid grid-cols-1 gap-y-2">
@@ -754,6 +833,17 @@ const MatchPage = () => {
             playsInline={true}
             muted={true}
           />
+
+          <button
+            onClick={() => {
+              console.log("hello");
+              toggleReport(true);
+              // report.mutate({})
+            }}
+            className="absolute right-0 top-0 m-3 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600/60"
+          >
+            !
+          </button>
 
           <div className="absolute bottom-0 flex w-full flex-grow flex-col">
             <div className="mr-2 flex flex-grow flex-col items-end">

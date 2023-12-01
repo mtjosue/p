@@ -33,6 +33,7 @@ model User {
   hypeFires     Int      @default(0)
   claps         Int      @default(0)
   hypeClaps     Int      @default(0)
+  reports       Int      @default(0)
 
   @@index([id])
 }

@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
-import { usePeer, useSetPeer, useUserId } from "~/stores/useLocalUser";
+import {
+  usePeer,
+  useReports,
+  useSetBanned,
+  useSetPeer,
+  useUserId,
+} from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
 const WaitingPage = () => {
@@ -18,6 +24,17 @@ const WaitingPage = () => {
       }
     }
   }, [peer]);
+  const reports = useReports();
+  const setBanned = useSetBanned();
+
+  useEffect(() => {
+    if (reports >= 7) {
+      setBanned(true);
+      router
+        .push("/")
+        .catch(() => console.log("Error in pushing because banned"));
+    }
+  }, [reports, router, setBanned]);
 
   //Mutation to Search for a user available, if found create a match, if not = null
   const searchOrCreateMatch = api.user.searchMatchOrCreate.useMutation();

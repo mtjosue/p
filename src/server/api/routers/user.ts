@@ -19,6 +19,7 @@ export const userRouter = createTRPCRouter({
           termsAgreed: true,
           skips: true,
           status: true,
+          reports: true,
         },
       });
       return userFound;
@@ -148,8 +149,6 @@ export const userRouter = createTRPCRouter({
           tempPeerId: true,
           remoteUserId: true,
           localUserId: true,
-          // sourceUser: true,
-          // sinkUserId: true,
         },
       });
       return match;
@@ -228,6 +227,21 @@ export const userRouter = createTRPCRouter({
       return await ctx.db.user.update({
         where: { userId: input.userId },
         data: updateData,
+      });
+    }),
+  report: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        report: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db.user.update({
+        where: { userId: input.userId },
+        data: {
+          reports: { increment: input.report },
+        },
       });
     }),
 });
