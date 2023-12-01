@@ -921,7 +921,7 @@ const MatchPage = () => {
                 <video
                   ref={localVideoRef}
                   // className="w-[180px]"
-                  className="w-[140px]"
+                  className="h-[100px] w-[140px]"
                   autoPlay={true}
                   playsInline={true}
                   muted={true}
