@@ -90,7 +90,7 @@ const MatchPage = () => {
     }
   }, [reports, router, setBanned]);
 
-  //Cleanup up peer stores in zustand
+  //Cleanup up peer stores in zustand && RemoteUserId
   const cleanup = () => {
     if (peer) {
       peer.destroy();
@@ -512,9 +512,8 @@ const MatchPage = () => {
             onClick={() => {
               console.log("hello");
               toggleReport(true);
-              // report.mutate({})
             }}
-            className="absolute right-0 top-0 z-50 m-3 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600/60"
+            className="absolute right-0 top-0 z-10 m-3 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600"
           >
             !
           </button>
@@ -840,7 +839,7 @@ const MatchPage = () => {
               toggleReport(true);
               // report.mutate({})
             }}
-            className="absolute right-0 top-0 m-3 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600/60"
+            className="absolute right-0 top-0 m-3 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600"
           >
             !
           </button>
@@ -849,7 +848,7 @@ const MatchPage = () => {
             <div className="mr-2 flex flex-grow flex-col items-end">
               <div className="mb-2 flex min-h-[14.5rem] min-w-[3.5rem] flex-col items-center justify-around rounded-xl">
                 <button
-                  className="flex flex-col items-center rounded-xl bg-[#1d1d1d]/40 p-2.5 text-3xl font-semibold text-white/30"
+                  className="flex flex-col items-center rounded-xl border-2 border-white/20 bg-[#1d1d1d]/40 p-2.5 text-3xl font-semibold text-white/30"
                   onClick={() => {
                     cleanup();
 
@@ -895,7 +894,7 @@ const MatchPage = () => {
                   <span>P</span>
                 </button>
                 <button
-                  className="rounded-xl bg-[#1d1d1d]/40 p-2 font-semibold text-white/30"
+                  className="rounded-xl border-2 border-white/20 bg-[#1d1d1d]/40 p-2 font-semibold text-white/30"
                   onClick={() => {
                     router
                       .push("/")
@@ -908,7 +907,7 @@ const MatchPage = () => {
                     viewBox="0 0 24 24"
                     strokeWidth={3}
                     stroke="currentColor"
-                    className="h-8 w-8"
+                    className="h-[30px] w-[30px]"
                   >
                     <path
                       strokeLinecap="round"
@@ -921,7 +920,8 @@ const MatchPage = () => {
               <div className="m flex justify-end overflow-hidden rounded-xl">
                 <video
                   ref={localVideoRef}
-                  className="w-[180px]"
+                  // className="w-[180px]"
+                  className="w-[140px]"
                   autoPlay={true}
                   playsInline={true}
                   muted={true}

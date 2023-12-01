@@ -79,7 +79,7 @@ export default function ReportModal({
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               {/* <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-[#121212] px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6"> */}
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-[#121212] text-left shadow-xl transition-all sm:h-[90vh] sm:w-full sm:max-w-md">
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-[#121212] text-left shadow-xl transition-all sm:h-[95vh] sm:w-full sm:max-w-md">
                 <div className="h-full p-3">
                   <button
                     onClick={() => toggler(false)}
@@ -100,30 +100,16 @@ export default function ReportModal({
                       />
                     </svg>
                   </button>
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-white">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="h-12 w-12"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="mt-3 h-full text-center sm:mt-5">
+
+                  <div className="mt-1.5 h-full text-center">
                     <Dialog.Title
                       as="h3"
-                      className="text-lg font-semibold leading-6 text-white"
+                      className="text-xl font-semibold leading-6 text-white"
                     >
-                      Reports are taken seriously, are you sure?
+                      Reports are taken seriously,
+                      <br /> are you sure you want to proceed?
                     </Dialog.Title>
-                    <div className="mt-3 flex h-full flex-col justify-between md:justify-evenly">
+                    <div className="mt-1.5 flex h-full flex-col gap-y-3 md:gap-y-4">
                       {reportTypes.map((report, idx) => {
                         return (
                           <button
