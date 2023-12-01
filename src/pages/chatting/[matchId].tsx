@@ -917,11 +917,11 @@ const MatchPage = () => {
                   </svg>
                 </button>
               </div>
-              <div className="m flex justify-end overflow-hidden rounded-xl">
+              <div className="flex w-full justify-end overflow-hidden rounded-xl">
                 <video
                   ref={localVideoRef}
                   // className="w-[180px]"
-                  className="h-[100px] w-[140px]"
+                  className="h-[100px] w-[180px]"
                   autoPlay={true}
                   playsInline={true}
                   muted={true}
