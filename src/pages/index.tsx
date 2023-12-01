@@ -94,7 +94,10 @@ export default function Home() {
       } else if (searchUser.data.skips > 1) {
         setSkips(searchUser.data.skips);
       }
-      addReport(searchUser.data.reports as number);
+      if (typeof searchUser.data.reports === "number") {
+        const num = searchUser.data.reports as unknown as number;
+        addReport(num);
+      }
       setFirstLoad(false);
     }
   }, [
