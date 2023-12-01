@@ -917,7 +917,7 @@ const MatchPage = () => {
                   </svg>
                 </button>
               </div>
-              <div className="flex justify-end">
+              <div className="-mr-2 flex justify-end">
                 <video
                   ref={localVideoRef}
                   // className="w-[180px]"
