@@ -82,7 +82,7 @@ const MobileProgressCanvasButton: React.FC<ProgressCanvasButtonProps> = ({
   return (
     <button
       className={classNames(
-        "relative min-h-[6rem] max-w-[5rem] overflow-hidden rounded-xl border-4 border-[#343434]/90 bg-[#1d1d1d]/30 text-2xl shadow-lg",
+        "relative min-h-[5.8rem] max-w-[5rem] overflow-hidden rounded-xl border-2 border-[#343434]/90 bg-[#1d1d1d]/30 text-2xl shadow-lg",
         color === "147bd1" ? "hover:border-[#147bd1]/30" : "",
         color === "d1156b" ? "hover:border-[#d1156b]/30" : "",
         color === "f7ea48" ? "hover:border-[#f7ea48]/30" : "",

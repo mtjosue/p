@@ -1,7 +1,16 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
-import { usePeer, useSetPeer, useUserId } from "~/stores/useLocalUser";
+import {
+  useDecReport,
+  useLastReport,
+  usePeer,
+  useReports,
+  useSetBanned,
+  useSetLastReport,
+  useSetPeer,
+  useUserId,
+} from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
 const WaitingPage = () => {
@@ -18,6 +27,51 @@ const WaitingPage = () => {
       }
     }
   }, [peer]);
+  const reports = useReports();
+  const setBanned = useSetBanned();
+  const lastReport = useLastReport();
+  const setLastReport = useSetLastReport();
+  const decReport = useDecReport();
+
+  const dismiss = api.user.dismiss.useMutation();
+
+  useEffect(() => {
+    if (reports >= 7) {
+      setBanned(true);
+      router
+        .push("/")
+        .catch(() => console.log("Error in pushing because banned"));
+    }
+    const now = new Date();
+    console.log("NOW : ", new Date().getTime());
+    if (
+      lastReport &&
+      typeof lastReport === "object" &&
+      lastReport instanceof Date
+    ) {
+      console.log("Went through!");
+      const minutesDifference =
+        (now.getTime() - lastReport.getTime()) / (1000 * 60);
+
+      if (minutesDifference >= 8 && reports > 0 && reports < 7) {
+        // It has been less than 8 minutes since the last report
+        console.log("MORE THAN 8 minutes WOHOOOO");
+        decReport();
+        dismiss.mutate({ userId: userId });
+        setLastReport(new Date());
+      }
+    }
+  }, [
+    decReport,
+    dismiss,
+    lastReport,
+    reports,
+    router,
+    setBanned,
+    setLastReport,
+    userId,
+    waited,
+  ]);
 
   //Mutation to Search for a user available, if found create a match, if not = null
   const searchOrCreateMatch = api.user.searchMatchOrCreate.useMutation();
