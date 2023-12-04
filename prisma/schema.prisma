@@ -34,6 +34,7 @@ model User {
   claps         Int      @default(0)
   hypeClaps     Int      @default(0)
   reports       Int      @default(0)
+  lastReport    DateTime @default(now())
 
   @@index([id])
 }

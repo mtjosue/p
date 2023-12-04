@@ -8,6 +8,7 @@ import {
   useRemoteUserId,
   useReports,
   useSetBanned,
+  useSetLastReport,
   useSetNoSkips,
   useSetRefreshed,
   useSetRemoteUserId,
@@ -67,7 +68,6 @@ const MatchPage = () => {
   const skips = useSkips();
   const setSkips = useSetSkips();
   const setNoSkips = useSetNoSkips();
-  const [matchIsRunning, setMatchIsRunning] = useState(true);
   const [countdown, setCountdown] = useState(90);
   const [countdown2, setCountdown2] = useState(8);
   const setRefreshed = useSetRefreshed();
@@ -79,6 +79,7 @@ const MatchPage = () => {
   const reports = useReports();
   const addReport = useAddReport();
   const setBanned = useSetBanned();
+  const setLastReport = useSetLastReport();
 
   //Reports? Banned.
   useEffect(() => {
@@ -111,9 +112,6 @@ const MatchPage = () => {
       staleTime: 0,
     },
   );
-
-  //Mutation to end Match so that users are unable to join the same match id session
-  const endMatch = api.user.endMatch.useMutation();
 
   //Mutation to update status and everything else
   const statusUpdate = api.user.statusUpdate.useMutation();
@@ -179,28 +177,6 @@ const MatchPage = () => {
     }
   }, [router, setRefreshed, userId]);
 
-  //ending the match as soon as connection is made so no chance
-  //of reconnecting to same session once you leave
-  useEffect(() => {
-    if (
-      remoteStream?.active &&
-      matchIsRunning &&
-      data?.remoteUserId === userId
-    ) {
-      endMatch.mutate({
-        matchid: matchId,
-      });
-      setMatchIsRunning(false);
-    }
-  }, [
-    data?.remoteUserId,
-    endMatch,
-    matchId,
-    matchIsRunning,
-    remoteStream?.active,
-    userId,
-  ]);
-
   //If remote user never joins after 7 seconds turn solo on.
   useEffect(() => {
     if (countdown2 === 1 && !remoteStream?.active) {
@@ -208,32 +184,37 @@ const MatchPage = () => {
     }
   }, [countdown2, remoteStream?.active, setSolo]);
 
-  //If solo is on turn end match return to "looking" in "waiting" page
+  //If solo is on turn dolo on, I know I know should be refactored
   useEffect(() => {
     if (solo) {
       setSolo(false);
       setDolo(true);
       cleanup();
-      endMatch.mutate({
-        matchid: matchId,
-      });
     }
     //cleanup trigger rerenders endlessly
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [endMatch, matchId, router, solo, userId, statusUpdate]);
+  }, [matchId, router, solo, userId, statusUpdate]);
+
+  //When local video play does not work the first time
+  const [repeat, setRepeat] = useState(true);
 
   //If localMediaStream ? set and play video stream
   useEffect(() => {
     if (!localMediaStream) return;
 
-    // Display local stream
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = localMediaStream;
-      localVideoRef.current
-        .play()
-        .catch((e: Error) => console.log("Error in local play", e));
+    if (repeat) {
+      setRepeat(false);
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localMediaStream;
+        localVideoRef.current.play().catch((e: Error) => {
+          console.log("Error in local playAHHHH", e);
+          setTimeout(() => {
+            setRepeat(true);
+          }, 100);
+        });
+      }
     }
-  }, [localMediaStream]);
+  }, [localMediaStream, repeat]);
 
   //Defining the ANSWERING if peer
   useEffect(() => {
@@ -374,44 +355,37 @@ const MatchPage = () => {
       peerConnection.on("data", (data) => {
         const data2 = data as { cat: boolean; type: number };
         if (data2.cat) {
-          console.log("DATA2 MANIPULATED", data2.type);
           if (data2.type === 1) {
-            console.log("ACTIVATING!");
             addResLike();
           }
           if (data2.type === 2) {
-            console.log("ACTIVATING!");
             addResHeart();
           }
           if (data2.type === 3) {
-            console.log("ACTIVATING!");
             addResLaugh();
           }
           if (data2.type === 4) {
-            console.log("ACTIVATING!");
             addResWoah();
           }
           if (data2.type === 5) {
-            console.log("ACTIVATING!");
             addResFire();
           }
           if (data2.type === 6) {
-            console.log("ACTIVATING!");
             addResClap();
           }
         }
         if (!data2.cat) {
           if (data2.type === 1) {
-            // addReport
             addReport(1);
+            setLastReport(new Date());
           }
           if (data2.type === 2) {
-            // addReport
             addReport(2);
+            setLastReport(new Date());
           }
           if (data2.type === 3) {
-            // addReport
             addReport(3);
+            setLastReport(new Date());
           }
         }
         setShow(true);
@@ -427,6 +401,7 @@ const MatchPage = () => {
     addResLike,
     addResWoah,
     peerConnection,
+    setLastReport,
   ]);
 
   useEffect(() => {
@@ -461,6 +436,7 @@ const MatchPage = () => {
   const phone = usePhone();
   const setPhone = useSetPhone();
 
+  //Check window size
   useEffect(() => {
     const checkWindowSize = () => {
       if (window.innerWidth <= 425) {
@@ -513,7 +489,7 @@ const MatchPage = () => {
               console.log("hello");
               toggleReport(true);
             }}
-            className="absolute right-0 top-0 z-10 m-3 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600"
+            className="absolute right-0 top-0 z-10 m-1 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600"
           >
             !
           </button>
@@ -837,18 +813,17 @@ const MatchPage = () => {
             onClick={() => {
               console.log("hello");
               toggleReport(true);
-              // report.mutate({})
             }}
-            className="absolute right-0 top-0 m-3 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600"
+            className="absolute right-0 top-0 m-1 rounded-full border-2 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600"
           >
             !
           </button>
 
           <div className="absolute bottom-0 flex w-full flex-grow flex-col">
-            <div className="mr-2 flex flex-grow flex-col items-end">
-              <div className="mb-2 flex min-h-[14.5rem] min-w-[3.5rem] flex-col items-center justify-around rounded-xl">
+            <div className="flex flex-grow flex-col items-end justify-end">
+              <div className="flex flex-col items-center justify-around gap-y-3 rounded-xl">
                 <button
-                  className="flex flex-col items-center rounded-xl border-2 border-white/20 bg-[#1d1d1d]/40 p-2.5 text-3xl font-semibold text-white/30"
+                  className=" flex flex-col items-center rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-3 text-3xl font-semibold text-white/30"
                   onClick={() => {
                     cleanup();
 
@@ -894,7 +869,7 @@ const MatchPage = () => {
                   <span>P</span>
                 </button>
                 <button
-                  className="rounded-xl border-2 border-white/20 bg-[#1d1d1d]/40 p-2 font-semibold text-white/30"
+                  className="rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-[9px] font-semibold text-white/30"
                   onClick={() => {
                     router
                       .push("/")
@@ -917,10 +892,9 @@ const MatchPage = () => {
                   </svg>
                 </button>
               </div>
-              <div className="-mr-2 flex justify-end">
+              <div className="flex justify-end rounded-xl">
                 <video
                   ref={localVideoRef}
-                  // className="w-[180px]"
                   className="h-[100px] w-[100px] rounded-xl"
                   autoPlay={true}
                   playsInline={true}
@@ -928,7 +902,7 @@ const MatchPage = () => {
                 ></video>
               </div>
             </div>
-            <div className="flex p-2">
+            <div className="flex p-1">
               <div className="grid grid-cols-1">
                 <MobileProgressCanvasButton
                   emote="👍"

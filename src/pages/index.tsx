@@ -12,6 +12,7 @@ import {
   useReports,
   useSetBanned,
   useSetFirstLoad,
+  useSetLastReport,
   useSetLocalMediaStream,
   useSetNoSkips,
   useSetSkips,
@@ -35,6 +36,7 @@ export default function Home() {
   const setBanned = useSetBanned();
   const reports = useReports();
   const addReport = useAddReport();
+  const setLastReport = useSetLastReport();
 
   useEffect(() => {
     if (reports >= 7) {
@@ -98,12 +100,17 @@ export default function Home() {
         const num = searchUser.data.reports as unknown as number;
         addReport(num);
       }
+      if (searchUser.data.lastReport) {
+        const lastOne = searchUser.data.lastReport;
+        setLastReport(lastOne);
+      }
       setFirstLoad(false);
     }
   }, [
     addReport,
     searchUser.data,
     setFirstLoad,
+    setLastReport,
     setNoSkips,
     setSkips,
     setUserId,

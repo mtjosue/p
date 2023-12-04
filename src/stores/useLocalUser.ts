@@ -13,9 +13,12 @@ type UserStore = {
   remoteUserId: string | null;
   localMediaStream: MediaStream | null;
   reports: number;
+  lastReport: Date | null;
   banned: boolean;
   actions: {
+    setLastReport: (time: null | Date) => void;
     addReport: (report: number) => void;
+    decReport: () => void;
     setBanned: (bol: boolean) => void;
     setSolo: (solo: boolean) => void;
     setRefreshed: (refreshed: boolean) => void;
@@ -33,6 +36,7 @@ type UserStore = {
 export const useUserStore = create<UserStore>((set) => ({
   banned: false,
   reports: 0,
+  lastReport: null,
   solo: false,
   refreshed: false,
   status: null,
@@ -44,7 +48,9 @@ export const useUserStore = create<UserStore>((set) => ({
   remoteUserId: null,
   localMediaStream: null,
   actions: {
+    setLastReport: (time) => set(() => ({ lastReport: time })),
     addReport: (report) => set((prev) => ({ reports: prev.reports + report })),
+    decReport: () => set((prev) => ({ reports: prev.reports - 1 })),
     setBanned: (banned) => set(() => ({ banned })),
     setSolo: (solo) => set(() => ({ solo })),
     setRefreshed: (refreshed) => set(() => ({ refreshed })),
@@ -60,9 +66,14 @@ export const useUserStore = create<UserStore>((set) => ({
   },
 }));
 
+export const useLastReport = () => useUserStore((state) => state.lastReport);
+export const useSetLastReport = () =>
+  useUserStore((state) => state.actions.setLastReport);
 export const useReports = () => useUserStore((state) => state.reports);
 export const useAddReport = () =>
   useUserStore((state) => state.actions.addReport);
+export const useDecReport = () =>
+  useUserStore((state) => state.actions.decReport);
 export const useSolo = () => useUserStore((state) => state.solo);
 export const useSetSolo = () => useUserStore((state) => state.actions.setSolo);
 export const useRefreshed = () => useUserStore((state) => state.refreshed);
