@@ -81,7 +81,39 @@ const MatchPage = () => {
   const setBanned = useSetBanned();
   const setLastReport = useSetLastReport();
 
+  //EMP = Element Manipulation Prevention.
+  // useEffect(() => {
+  //   const checkWindowSize = () => {
+  //     // You can perform additional actions here based on the window dimensions
+  //     // For example, redirecting the user or logging the event
+  //     if (
+  //       window.outerHeight - window.innerHeight > 100 ||
+  //       window.outerWidth - window.innerWidth > 10
+  //     ) {
+  //       console.log("DEVELOPER TOOLS OPEN");
+  //       // Execute your code here, e.g., redirect to the home screen
+  //       router.push("/").catch(() => console.log("failed to push to home"));
+  //     } else {
+  //       console.log("DEVELOPER TOOLS CLOSED");
+  //       // Developer tools are closed, you can decide what action to take
+  //     }
+  //   };
+
+  //   // Attach the event listener to the resize event
+  //   window.addEventListener("resize", checkWindowSize);
+
+  //   // Execute the check once on component mount
+  //   checkWindowSize();
+
+  //   // Clean up the event listener when the component unmounts
+  //   return () => {
+  //     window.removeEventListener("resize", checkWindowSize);
+  //     resetReactions();
+  //   };
+  // }, [resetReactions, router]);
+
   //Reports? Banned.
+
   useEffect(() => {
     if (reports >= 7) {
       setBanned(true);
@@ -131,37 +163,6 @@ const MatchPage = () => {
     }
   }, [remoteUserId, data, userId, setRemoteUserId]);
 
-  //EMP = Element Manipulation Prevention.
-  useEffect(() => {
-    const checkWindowSize = () => {
-      // You can perform additional actions here based on the window dimensions
-      // For example, redirecting the user or logging the event
-      if (
-        window.outerHeight - window.innerHeight > 100 ||
-        window.outerWidth - window.innerWidth > 10
-      ) {
-        console.log("DEVELOPER TOOLS OPEN");
-        // Execute your code here, e.g., redirect to the home screen
-        router.push("/").catch(() => console.log("failed to push to home"));
-      } else {
-        console.log("DEVELOPER TOOLS CLOSED");
-        // Developer tools are closed, you can decide what action to take
-      }
-    };
-
-    // Attach the event listener to the resize event
-    window.addEventListener("resize", checkWindowSize);
-
-    // Execute the check once on component mount
-    checkWindowSize();
-
-    // Clean up the event listener when the component unmounts
-    return () => {
-      window.removeEventListener("resize", checkWindowSize);
-      resetReactions();
-    };
-  }, [resetReactions, router]);
-
   //If refreshed there wont be a userId, push to home / setRefreshed(true).
   useEffect(() => {
     if (!userId) {
@@ -192,24 +193,6 @@ const MatchPage = () => {
 
   //When local video play does not work the first time
   const [repeat, setRepeat] = useState(true);
-
-  //If localMediaStream ? set and play video stream
-  useEffect(() => {
-    if (!localMediaStream) return;
-
-    if (repeat) {
-      setRepeat(false);
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = localMediaStream;
-        localVideoRef.current.play().catch((e: Error) => {
-          console.log("Error in local playAHHHH", e);
-          setTimeout(() => {
-            setRepeat(true);
-          }, 100);
-        });
-      }
-    }
-  }, [localMediaStream, repeat]);
 
   //Defining the ANSWERING if peer
   useEffect(() => {
@@ -452,6 +435,26 @@ const MatchPage = () => {
       window.removeEventListener("resize", checkWindowSize);
     };
   }, [setPhone]);
+
+  //If localMediaStream ? set and play video stream
+  useEffect(() => {
+    if (!localMediaStream) return;
+
+    if (repeat) {
+      setRepeat(false);
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localMediaStream;
+        localVideoRef.current.play().catch((e: Error) => {
+          console.log("Error in local playAHHHH", e);
+          if (phone) {
+            setTimeout(() => {
+              setRepeat(true);
+            }, 1);
+          }
+        });
+      }
+    }
+  }, [localMediaStream, phone, repeat]);
 
   const makeDataObject = (skipa?: boolean | null, stats?: boolean) => {
     return {
