@@ -2,7 +2,6 @@ import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { api } from "~/utils/api";
 import { useUser } from "@clerk/nextjs";
-// import { CheckIcon } from "@heroicons/react/24/outline";
 
 export default function Modal() {
   const [open, setOpen] = useState(true);
