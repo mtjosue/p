@@ -1,5 +1,4 @@
 import { type AppType } from "next/app";
-// import { IoProvider } from "socket.io-react-hook";
 import { api } from "~/utils/api";
 
 import "~/styles/globals.css";

@@ -251,7 +251,6 @@ const MatchPage = () => {
       const conn = peer.connect(data.tempPeerId);
       //Setting Peer Data Connection as the Caller
       setPeerConnection(conn);
-      //
 
       //Only added to test
       if (call) {
