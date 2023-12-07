@@ -187,7 +187,7 @@ const WaitingPage = () => {
       } else {
         statusUpdate.mutate({
           userId: userId,
-          status: null,
+          status: false,
           skips: null,
           hypeLikes: null,
           hypeHearts: null,
@@ -207,27 +207,45 @@ const WaitingPage = () => {
   }, [getMatch, router, userId, statusUpdate]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-      <div className="text-white">
-        <h2>Waiting for Users to Connect With...</h2>
-        <Link
-          onClick={() => {
-            statusUpdate.mutate({
-              userId: userId,
-              status: null,
-              skips: null,
-              hypeLikes: null,
-              hypeHearts: null,
-              hypeLaughs: null,
-              hypeWoahs: null,
-              hypeFires: null,
-              hypeClaps: null,
-            });
-          }}
-          href={"/"}
-        >
-          RETURN HOME
-        </Link>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-[#121212]">
+      <div className="flex flex-col gap-y-3">
+        <div className="rounded-xl border-2 border-zinc-700 bg-[#1d1d1d] p-3 font-mono text-white ">
+          <h2>Waiting for Users to Connect With...</h2>
+        </div>
+        <div className="flex w-full justify-end">
+          <Link
+            className="max-w-fit rounded-xl border-2 border-zinc-700 bg-[#1d1d1d] p-3 font-mono text-white"
+            onClick={() => {
+              statusUpdate.mutate({
+                userId: userId,
+                status: false,
+                skips: null,
+                hypeLikes: null,
+                hypeHearts: null,
+                hypeLaughs: null,
+                hypeWoahs: null,
+                hypeFires: null,
+                hypeClaps: null,
+              });
+            }}
+            href={"/"}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={3}
+              stroke="currentColor"
+              className="h-8 w-8"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+              />
+            </svg>
+          </Link>
+        </div>
       </div>
     </main>
   );

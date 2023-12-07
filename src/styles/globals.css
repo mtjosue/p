@@ -50,3 +50,12 @@
 /* ///////////////////////////////////// */
 /* ///////////////////////////////////// */
 /* ///////////////////////////////////// */
+/* Hide the scrollbar for Chrome, Safari, and Edge */
+.board::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide the scrollbar for Firefox */
+.board {
+  scrollbar-width: thin;
+}

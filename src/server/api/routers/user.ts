@@ -117,7 +117,7 @@ export const userRouter = createTRPCRouter({
           });
         };
         endFunc().catch(() => console.log("Error in Ending match in sync"));
-      }, 9000);
+      }, 6000);
 
       return match;
     }),
@@ -212,8 +212,10 @@ export const userRouter = createTRPCRouter({
       const updateData: Record<string, unknown> = {};
 
       // Update user status
-      if (input.status !== null) {
+      if (input.status) {
         updateData.status = "looking";
+      } else if (input.status === false && input.status !== null) {
+        updateData.status = "waiting";
       }
       // Update user skips
       if (input.skips !== null) {
@@ -273,4 +275,200 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
+  queryLikesBoard: publicProcedure.query(async ({ ctx }) => {
+    const topHypeLikes = await ctx.db.user.findMany({
+      take: 20,
+      orderBy: {
+        hypeLikes: "desc",
+      },
+      where: {
+        hypeLikes: { gt: 0 },
+      },
+      select: {
+        userId: true,
+        name: true,
+        hypeLikes: true,
+      },
+    });
+    return topHypeLikes;
+  }),
+  queryHeartsBoard: publicProcedure.query(async ({ ctx }) => {
+    const topHypeHearts = await ctx.db.user.findMany({
+      take: 20,
+      orderBy: {
+        hypeHearts: "desc",
+      },
+      where: {
+        hypeHearts: { gt: 0 },
+      },
+      select: {
+        userId: true,
+        name: true,
+        hypeHearts: true,
+      },
+    });
+    return topHypeHearts;
+  }),
+  queryLaughsBoard: publicProcedure.query(async ({ ctx }) => {
+    const topHypeLaughs = await ctx.db.user.findMany({
+      take: 20,
+      orderBy: {
+        hypeLaughs: "desc",
+      },
+      where: {
+        hypeLaughs: { gt: 0 },
+      },
+      select: {
+        userId: true,
+        name: true,
+        hypeLaughs: true,
+      },
+    });
+    return topHypeLaughs;
+  }),
+  queryWoahsBoard: publicProcedure.query(async ({ ctx }) => {
+    const topHypeWoahs = await ctx.db.user.findMany({
+      take: 20,
+      orderBy: {
+        hypeWoahs: "desc",
+      },
+      where: {
+        hypeWoahs: { gt: 0 },
+      },
+      select: {
+        userId: true,
+        name: true,
+        hypeWoahs: true,
+      },
+    });
+    return topHypeWoahs;
+  }),
+  queryFiresBoard: publicProcedure.query(async ({ ctx }) => {
+    const topHypeFires = await ctx.db.user.findMany({
+      take: 20,
+      orderBy: {
+        hypeFires: "desc",
+      },
+      where: {
+        hypeFires: { gt: 0 },
+      },
+      select: {
+        userId: true,
+        name: true,
+        hypeFires: true,
+      },
+    });
+    return topHypeFires;
+  }),
+  queryClapsBoard: publicProcedure.query(async ({ ctx }) => {
+    const topHypeClaps = await ctx.db.user.findMany({
+      take: 20,
+      orderBy: {
+        hypeClaps: "desc",
+      },
+      where: {
+        hypeClaps: { gt: 0 },
+      },
+      select: {
+        userId: true,
+        name: true,
+        hypeClaps: true,
+      },
+    });
+    return topHypeClaps;
+  }),
+  // queryAllBoards: publicProcedure.query(async ({ ctx }) => {
+  //   const topHypeLikes = await ctx.db.user.findMany({
+  //     take: 20,
+  //     orderBy: {
+  //       hypeLikes: "desc",
+  //     },
+  //     where: {
+  //       hypeLikes: { gt: 0 },
+  //     },
+  //     select: {
+  //       userId: true,
+  //       name: true,
+  //       hypeLikes: true,
+  //     },
+  //   });
+  //   const topHypeHearts = await ctx.db.user.findMany({
+  //     take: 20,
+  //     orderBy: {
+  //       hypeHearts: "desc",
+  //     },
+  //     where: {
+  //       hypeHearts: { gt: 0 },
+  //     },
+  //     select: {
+  //       userId: true,
+  //       name: true,
+  //       hypeHearts: true,
+  //     },
+  //   });
+  //   const topHypeLaughs = await ctx.db.user.findMany({
+  //     take: 20,
+  //     orderBy: {
+  //       hypeLaughs: "desc",
+  //     },
+  //     where: {
+  //       hypeLaughs: { gt: 0 },
+  //     },
+  //     select: {
+  //       userId: true,
+  //       name: true,
+  //       hypeLaughs: true,
+  //     },
+  //   });
+  //   const topHypeWoahs = await ctx.db.user.findMany({
+  //     take: 20,
+  //     orderBy: {
+  //       hypeWoahs: "desc",
+  //     },
+  //     where: {
+  //       hypeWoahs: { gt: 0 },
+  //     },
+  //     select: {
+  //       userId: true,
+  //       name: true,
+  //       hypeWoahs: true,
+  //     },
+  //   });
+  //   const topHypeFires = await ctx.db.user.findMany({
+  //     take: 20,
+  //     orderBy: {
+  //       hypeFires: "desc",
+  //     },
+  //     where: {
+  //       hypeFires: { gt: 0 },
+  //     },
+  //     select: {
+  //       userId: true,
+  //       name: true,
+  //       hypeFires: true,
+  //     },
+  //   });
+  //   const topHypeClaps = await ctx.db.user.findMany({
+  //     take: 20,
+  //     orderBy: {
+  //       hypeClaps: "desc",
+  //     },
+  //     where: {
+  //       hypeClaps: { gt: 0 },
+  //     },
+  //     select: {
+  //       userId: true,
+  //       name: true,
+  //       hypeClaps: true,
+  //     },
+  //   });
+  //   return [
+  //     topHypeLikes,
+  //     topHypeHearts,
+  //     topHypeLaughs,
+  //     topHypeWoahs,
+  //     topHypeFires,
+  //     topHypeClaps,
+  //   ];
+  // }),
 });
