@@ -214,7 +214,7 @@ export const userRouter = createTRPCRouter({
       // Update user status
       if (input.status) {
         updateData.status = "looking";
-      } else if (input.status === false && input.status !== null) {
+      } else if (input.status !== null && input.status === false) {
         updateData.status = "waiting";
       }
       // Update user skips

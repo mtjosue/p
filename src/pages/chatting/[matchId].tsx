@@ -134,11 +134,6 @@ const MatchPage = () => {
   //EMP = Element Manipulation Prevention.
   useEffect(() => {
     const checkWindowSize = () => {
-      // console.log("window.innerHeight", window.innerHeight);
-      // console.log("window.outerHeight", window.outerHeight);
-      // console.log("window.innerWidth", window.innerWidth);
-      // console.log("window.outerWidth", window.outerWidth);
-
       // You can perform additional actions here based on the window dimensions
       // For example, redirecting the user or logging the event
       if (
@@ -320,8 +315,6 @@ const MatchPage = () => {
   const [peerConnection, setPeerConnection] = useState<null | DataConnection>(
     null,
   );
-  const [show, setShow] = useState(false);
-  const [remain, setRemain] = useState(2500);
 
   const sentLike = useSentLike();
   const addSentLike = useAddSentLike();
@@ -347,6 +340,8 @@ const MatchPage = () => {
   const addResFire = useAddResFire();
   const resClap = useResClap();
   const addResClap = useAddResClap();
+  const [emojiArr] = useState<string[]>([]);
+  const [sentEmojiArr] = useState<string[]>([]);
 
   //if you have not called then there is no data connection
   //and we must establish one
@@ -357,21 +352,27 @@ const MatchPage = () => {
         if (data2.cat) {
           if (data2.type === 1) {
             addResLike();
+            emojiArr.push("👍");
           }
           if (data2.type === 2) {
             addResHeart();
+            emojiArr.push("heart");
           }
           if (data2.type === 3) {
             addResLaugh();
+            emojiArr.push("🤣");
           }
           if (data2.type === 4) {
             addResWoah();
+            emojiArr.push("😯");
           }
           if (data2.type === 5) {
             addResFire();
+            emojiArr.push("🔥");
           }
           if (data2.type === 6) {
             addResClap();
+            emojiArr.push("👏");
           }
         }
         if (!data2.cat) {
@@ -388,8 +389,6 @@ const MatchPage = () => {
             setLastReport(new Date());
           }
         }
-        setShow(true);
-        setRemain((prev) => prev + 1);
       });
     }
   }, [
@@ -400,18 +399,19 @@ const MatchPage = () => {
     addResLaugh,
     addResLike,
     addResWoah,
+    emojiArr,
     peerConnection,
     setLastReport,
   ]);
 
   useEffect(() => {
-    if (show) {
-      const timeoutId = setTimeout(() => {
-        setShow(false);
-      }, remain);
-      return () => clearTimeout(timeoutId);
+    if (emojiArr.length > 1) {
+      emojiArr.shift();
     }
-  }, [remain, show]);
+    if (sentEmojiArr.length > 1) {
+      sentEmojiArr.shift();
+    }
+  }, [emojiArr, sentEmojiArr]);
 
   const sendEmoji = async (num: number) => {
     if (peerConnection) {
@@ -473,7 +473,7 @@ const MatchPage = () => {
   };
 
   return (
-    <div className="h-[100vh] w-full bg-[#121212]">
+    <div className="h-[100vh] w-full overflow-hidden bg-[#121212]">
       {reportModal && (
         <ReportModal
           toggle={reportModal}
@@ -493,7 +493,18 @@ const MatchPage = () => {
           >
             !
           </button>
-          <div className="flex justify-center overflow-hidden">
+          {emojiArr?.map((emoji, idx) => {
+            return (
+              <span
+                key={idx}
+                className={`animate-floatDown lg:animate-floatDown2 absolute left-0 top-0 z-20 text-6xl`}
+              >
+                {emoji === "heart" ? "\u2764\uFE0F" : emoji}
+              </span>
+            );
+          })}
+
+          <div className="relative flex justify-center overflow-hidden">
             <video
               ref={localVideoRef}
               className="w-[50vw] object-cover"
@@ -573,6 +584,16 @@ const MatchPage = () => {
               playsInline={true}
               muted={true}
             />
+            {sentEmojiArr?.map((emoji, idx) => {
+              return (
+                <span
+                  key={idx}
+                  className={`animate-floatUp lg:animate-floatUp absolute bottom-0 left-[50vw] z-20 text-6xl`}
+                >
+                  {emoji === "heart" ? "\u2764\uFE0F" : emoji}
+                </span>
+              );
+            })}
           </div>
           <div className="flex w-full flex-grow gap-x-3 bg-[#121212] p-3">
             <div
@@ -590,6 +611,7 @@ const MatchPage = () => {
                     curCount={sentLike}
                     addToCurCount={addSentLike}
                     sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
                   />
                   <MyParticle color="147bd1" curCount={resLike} />
                 </div>
@@ -600,6 +622,7 @@ const MatchPage = () => {
                     curCount={sentHeart}
                     addToCurCount={addSentHeart}
                     sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
                   />
                   <MyParticle color="d1156b" curCount={resHeart} />
                 </div>
@@ -610,6 +633,7 @@ const MatchPage = () => {
                     curCount={sentLaugh}
                     addToCurCount={addSentLaugh}
                     sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
                   />
                   <MyParticle color="f7ea48" curCount={resLaugh} />
                 </div>
@@ -625,6 +649,7 @@ const MatchPage = () => {
                     curCount={sentWoah}
                     addToCurCount={addSentWoah}
                     sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
                   />
                   <MyParticle color="ff7f41" curCount={resWoah} />
                 </div>
@@ -635,8 +660,8 @@ const MatchPage = () => {
                     curCount={sentFire}
                     addToCurCount={addSentFire}
                     sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
                   />
-
                   <MyParticle color="e03c31" curCount={resFire} />
                 </div>
                 <div className="grid grid-cols-1 gap-y-2">
@@ -646,6 +671,7 @@ const MatchPage = () => {
                     curCount={sentClap}
                     addToCurCount={addSentClap}
                     sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
                   />
                   <MyParticle color="753bbd" curCount={resClap} />
                 </div>
@@ -809,6 +835,28 @@ const MatchPage = () => {
             muted={true}
           />
 
+          {emojiArr?.map((emoji, idx) => {
+            return (
+              <span
+                key={idx}
+                className={`animate-floatDown lg:animate-floatDown2 absolute left-0 top-[1vh] z-20 text-6xl`}
+              >
+                {emoji === "heart" ? "\u2764\uFE0F" : emoji}
+              </span>
+            );
+          })}
+
+          {sentEmojiArr?.map((emoji, idx) => {
+            return (
+              <span
+                key={idx}
+                className={`animate-floatUp lg:animate-floatUp absolute bottom-24 left-0 z-30 text-6xl`}
+              >
+                {emoji === "heart" ? "\u2764\uFE0F" : emoji}
+              </span>
+            );
+          })}
+
           <button
             onClick={() => {
               console.log("hello");
@@ -911,6 +959,7 @@ const MatchPage = () => {
                   resCount={resLike}
                   addToCurCount={addSentLike}
                   sendEmoji={sendEmoji}
+                  sentEmojiArr={sentEmojiArr}
                 />
               </div>
               <div className="grid grid-cols-1">
@@ -921,6 +970,7 @@ const MatchPage = () => {
                   resCount={resHeart}
                   addToCurCount={addSentHeart}
                   sendEmoji={sendEmoji}
+                  sentEmojiArr={sentEmojiArr}
                 />
               </div>
               <div className="grid grid-cols-1">
@@ -931,6 +981,7 @@ const MatchPage = () => {
                   resCount={resLaugh}
                   addToCurCount={addSentLaugh}
                   sendEmoji={sendEmoji}
+                  sentEmojiArr={sentEmojiArr}
                 />
               </div>
               <div className="grid grid-cols-1">
@@ -941,6 +992,7 @@ const MatchPage = () => {
                   resCount={resWoah}
                   addToCurCount={addSentWoah}
                   sendEmoji={sendEmoji}
+                  sentEmojiArr={sentEmojiArr}
                 />
               </div>
               <div className="grid grid-cols-1">
@@ -951,6 +1003,7 @@ const MatchPage = () => {
                   resCount={resFire}
                   addToCurCount={addSentFire}
                   sendEmoji={sendEmoji}
+                  sentEmojiArr={sentEmojiArr}
                 />
               </div>
               <div className="grid grid-cols-1">
@@ -961,6 +1014,7 @@ const MatchPage = () => {
                   resCount={resClap}
                   addToCurCount={addSentClap}
                   sendEmoji={sendEmoji}
+                  sentEmojiArr={sentEmojiArr}
                 />
               </div>
             </div>

@@ -8,6 +8,7 @@ interface ProgressCanvasButtonProps {
   resCount: number;
   addToCurCount: () => void;
   sendEmoji?: (type: number) => Promise<void>;
+  sentEmojiArr?: string[];
 }
 
 const MobileProgressCanvasButton: React.FC<ProgressCanvasButtonProps> = ({
@@ -17,6 +18,7 @@ const MobileProgressCanvasButton: React.FC<ProgressCanvasButtonProps> = ({
   addToCurCount,
   sendEmoji,
   resCount,
+  sentEmojiArr,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -25,26 +27,27 @@ const MobileProgressCanvasButton: React.FC<ProgressCanvasButtonProps> = ({
     if (!sendEmoji) return;
     console.log("emote", emote);
     if (emote === "👍") {
+      sentEmojiArr?.push("👍");
       sendEmoji(1).catch(() => console.log("Suck it."));
     }
     if (emote === "heart") {
-      console.log("HELLO????");
+      sentEmojiArr?.push("heart");
       sendEmoji(2).catch(() => console.log("Suck it."));
     }
     if (emote === "🤣") {
-      console.log("HELLO????");
+      sentEmojiArr?.push("🤣");
       sendEmoji(3).catch(() => console.log("Suck it."));
     }
     if (emote === "😯") {
-      console.log("HELLO????");
+      sentEmojiArr?.push("😯");
       sendEmoji(4).catch(() => console.log("Suck it."));
     }
     if (emote === "🔥") {
-      console.log("HELLO????");
+      sentEmojiArr?.push("🔥");
       sendEmoji(5).catch(() => console.log("Suck it."));
     }
     if (emote === "👏") {
-      console.log("HELLO????");
+      sentEmojiArr?.push("👏");
       sendEmoji(6).catch(() => console.log("Suck it."));
     }
   };

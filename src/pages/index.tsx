@@ -180,7 +180,7 @@ export default function Home() {
     await router.push("/waiting");
   };
 
-  const [selected, select] = useState("👍");
+  const [selected, select] = useState("");
 
   return (
     <>
@@ -192,7 +192,7 @@ export default function Home() {
       {/* <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]"> */}
       <main className="flex min-h-screen w-full flex-col items-center justify-center gap-y-3 bg-[#121212]">
         <Leaderboard select={select} selected={selected} />
-        <div className="flex min-h-[5rem] min-w-[75%] justify-between rounded-xl bg-[#1d1d1d] py-3 pl-6 pr-6 text-white lg:min-w-[35%]">
+        <div className="flex min-h-[5rem] min-w-[75%] justify-between rounded-xl bg-[#1d1d1d] py-3 pl-6 pr-[1.12rem] text-white lg:min-w-[35%]">
           {user.isSignedIn && !termsAgreed && <Modal />}
           <div className="flex items-center text-white">
             <h2 className="font-mono">Hey {user.user?.firstName}!</h2>

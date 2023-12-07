@@ -12,7 +12,7 @@ import second from "../../public/icons8-second-place-ribbon-64.png";
 import third from "../../public/icons8-third-place-ribbon-64.png";
 import likesBg from "../../public/likesBg.jpg";
 import heartsBg from "../../public/heartsBg1.jpg";
-import laughsBg from "../../public/laughsBg1.jpg";
+import laughsBg from "../../public/laughsBg3.jpg";
 import woahsBg from "../../public/woahsBg.jpg";
 import firesBg from "../../public/firesBg.jpg";
 import clapsBg from "../../public/clapsBg.jpg";
@@ -175,12 +175,12 @@ const Leaderboard = ({
                   <span
                     className={classNames(
                       "-ml-3 flex w-3/5 justify-center rounded-lg px-6 font-mono text-lg font-bold",
-                      inputIdx === 0 ?? "ring-2 ring-[#147bd1]/60",
-                      inputIdx === 1 ?? "ring-2 ring-[#d1156b]/60",
-                      inputIdx === 2 ?? "ring-2 ring-[#c5bd50]/60",
-                      inputIdx === 3 ?? "ring-2 ring-[#ff7f41]/60",
-                      inputIdx === 4 ?? "ring-2 ring-[#e03c31]/60",
-                      inputIdx === 5 ?? "ring-2 ring-[#753bbd]/60",
+                      inputIdx === 0 ? "ring-2 ring-[#147bd1]/60" : "",
+                      inputIdx === 1 ? "ring-2 ring-[#d1156b]/60" : "",
+                      inputIdx === 2 ? "ring-2 ring-[#c5bd50]/60" : "",
+                      inputIdx === 3 ? "ring-2 ring-[#ff7f41]/60" : "",
+                      inputIdx === 4 ? "ring-2 ring-[#e03c31]/60" : "",
+                      inputIdx === 5 ? "ring-2 ring-[#753bbd]/60" : "",
                     )}
                     style={{
                       backgroundImage: `${
@@ -219,7 +219,7 @@ const Leaderboard = ({
                   "my-1 flex w-full items-center gap-x-3 rounded-xl",
                 )}
               >
-                <div className="z-20 ml-[0.45rem] flex h-[35px] min-w-fit items-center justify-center rounded-lg border-2 border-zinc-600 bg-zinc-700 px-2 font-mono">
+                <div className="z-20 ml-[0.45rem] flex h-[35px] min-w-fit items-center justify-center rounded-lg border-2 border-zinc-600 bg-zinc-700 px-2 font-mono lg:ml-2.5">
                   {idx + 1}
                 </div>
                 <span
@@ -234,12 +234,12 @@ const Leaderboard = ({
                   <span
                     className={classNames(
                       "-ml-3 flex w-3/5 justify-center rounded-lg px-6 font-mono text-lg font-bold",
-                      inputIdx === 0 ?? "ring-2 ring-[#147bd1]/60",
-                      inputIdx === 1 ?? "ring-2 ring-[#d1156b]/60",
-                      inputIdx === 2 ?? "ring-2 ring-[#c5bd50]/60",
-                      inputIdx === 3 ?? "ring-2 ring-[#ff7f41]/60",
-                      inputIdx === 4 ?? "ring-2 ring-[#e03c31]/60",
-                      inputIdx === 5 ?? "ring-2 ring-[#753bbd]/60",
+                      inputIdx === 0 ? "ring-2 ring-[#147bd1]/60" : "",
+                      inputIdx === 1 ? "ring-2 ring-[#d1156b]/60" : "",
+                      inputIdx === 2 ? "ring-2 ring-[#c5bd50]/60" : "",
+                      inputIdx === 3 ? "ring-2 ring-[#ff7f41]/60" : "",
+                      inputIdx === 4 ? "ring-2 ring-[#e03c31]/60" : "",
+                      inputIdx === 5 ? "ring-2 ring-[#753bbd]/60" : "",
                     )}
                     style={{
                       backgroundImage: `${
