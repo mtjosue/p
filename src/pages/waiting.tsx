@@ -97,7 +97,6 @@ const WaitingPage = () => {
           if (!unmount) {
             const newPeer = new Peer();
             newPeer.on("open", () => {
-              // console.log("My peer ID is : ", id);
               setPeer(newPeer);
             });
           }
@@ -122,9 +121,6 @@ const WaitingPage = () => {
 
   //If first load and waited then execute searchOrCreateMatch
   useEffect(() => {
-    // console.log("peerId : ", peerId);
-    // console.log("created : ", created);
-
     if (!peerId || created) return;
     if (userId && peerId && waited) {
       searchOrCreateMatch.mutate({
