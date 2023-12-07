@@ -199,7 +199,8 @@ export default function Home() {
           </div>
           {user.isSignedIn && (
             <button
-              disabled={noSkips || banned || !searchUser.data}
+              disabled={noSkips || banned}
+              //test
               onClick={onBtnClick}
               className={`rounded-lg ${
                 noSkips
