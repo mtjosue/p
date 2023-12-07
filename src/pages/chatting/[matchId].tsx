@@ -142,7 +142,7 @@ const MatchPage = () => {
       ) {
         console.log("DEVELOPER TOOLS OPEN");
         // Execute your code here, e.g., redirect to the home screen
-        // router.push("/").catch(() => console.log("failed to push to home"));
+        router.push("/").catch(() => console.log("failed to push to home"));
       } else {
         console.log("DEVELOPER TOOLS CLOSED");
         // Developer tools are closed, you can decide what action to take
@@ -251,7 +251,6 @@ const MatchPage = () => {
       const conn = peer.connect(data.tempPeerId);
       //Setting Peer Data Connection as the Caller
       setPeerConnection(conn);
-      //
 
       //Only added to test
       if (call) {
@@ -267,8 +266,6 @@ const MatchPage = () => {
           }
         });
       }
-
-      // console.log("just tried to call");
     }
     return () => {
       cleanup();
@@ -415,7 +412,6 @@ const MatchPage = () => {
 
   const sendEmoji = async (num: number) => {
     if (peerConnection) {
-      console.log("We have a DATA CONNECTION");
       await peerConnection.send({
         cat: true,
         type: num,
@@ -425,7 +421,6 @@ const MatchPage = () => {
 
   const sendReport = async (num: number) => {
     if (peerConnection) {
-      console.log("We have a DATA CONNECTION");
       await peerConnection.send({
         cat: false,
         type: num,
@@ -871,7 +866,7 @@ const MatchPage = () => {
             <div className="flex flex-grow flex-col items-end justify-end">
               <div className="flex flex-col items-center justify-around gap-y-3 rounded-xl">
                 <button
-                  className=" flex flex-col items-center rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-3 text-3xl font-semibold text-white/30"
+                  className="flex flex-col items-center rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-3 font-mono text-3xl font-semibold text-white/30"
                   onClick={() => {
                     cleanup();
 
