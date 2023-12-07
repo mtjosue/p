@@ -1,3 +1,76 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 1;
+  }
+  37% {
+    transform: translateY(-150vh) translateX(calc(5vw - 10vw * random()));
+    opacity: 0; /* Gradually fade out */
+  }
+  100% {
+    transform: translateY(-200vh) translateX(0);
+    opacity: 0; /* Fully fade out at the end */
+  }
+}
+
+.animate-floatUp {
+  animation: floatUp 3s ease-in;
+  animation-fill-mode: both;
+  transform-origin: center bottom;
+}
+
+@keyframes floatDown {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 1;
+  }
+  37% {
+    transform: translateY(150vh) translateX(calc(5vw - 10vw * random()));
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(200vh) translateX(0);
+    opacity: 0;
+  }
+}
+
+.animate-floatDown {
+  animation: floatDown 3s ease-in;
+  animation-fill-mode: both;
+  transform-origin: center bottom;
+}
+
+@keyframes floatDown2 {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 1;
+  }
+  37% {
+    transform: translateY(100vh) translateX(calc(5vw - 10vw * random()));
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(300vh) translateX(0);
+    opacity: 0;
+  }
+}
+
+.animate-floatDown2 {
+  animation: floatDown2 4s ease-in;
+  animation-fill-mode: both;
+  transform-origin: center bottom;
+}
+
+/* Hide the scrollbar for Chrome, Safari, and Edge */
+.board::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide the scrollbar for Firefox */
+.board {
+  scrollbar-width: thin;
+}

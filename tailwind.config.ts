@@ -8,6 +8,14 @@ export default {
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
       },
+      screens: {
+        xs: "480px", // Custom 'xs' breakpoint
+        sm: "640px",
+        md: "768px",
+        lg: "1024px",
+        xl: "1280px",
+        "2xl": "1499px",
+      },
     },
   },
   plugins: [],
