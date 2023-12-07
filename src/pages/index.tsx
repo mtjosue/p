@@ -181,7 +181,6 @@ export default function Home() {
   };
 
   const [selected, select] = useState("");
-  //wtfffff
 
   return (
     <>
@@ -204,6 +203,7 @@ export default function Home() {
           {user.isSignedIn && (
             <button
               disabled={noSkips || banned}
+              //test
               onClick={onBtnClick}
               className={`rounded-lg ${
                 noSkips
