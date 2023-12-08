@@ -106,9 +106,8 @@ export const userRouter = createTRPCRouter({
 
       setTimeout(() => {
         const endFunc = async () => {
-          await ctx.db.match.update({
+          await ctx.db.match.delete({
             where: { id: match.id },
-            data: { status: "ended" },
           });
         };
         endFunc().catch(() => console.log("Error in Ending match in sync"));
@@ -158,24 +157,6 @@ export const userRouter = createTRPCRouter({
         },
       });
       return match;
-    }),
-  endMatch: publicProcedure
-    .input(
-      z.object({
-        matchid: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!input.matchid) return;
-      // return await ctx.db.match.update({
-      //   where: { id: input.matchid },
-      //   data: {
-      //     status: "ended",
-      //   },
-      // });
-      return await ctx.db.match.delete({
-        where: { id: input.matchid },
-      });
     }),
   statusUpdate: publicProcedure
     .input(
