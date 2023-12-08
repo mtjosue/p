@@ -231,8 +231,9 @@ export const userRouter = createTRPCRouter({
 
         if (input[hypeKey as keyof typeof hypeReactionMapping] !== null) {
           // Update hype reaction with the provided value
-          updateData[hypeKey] =
-            input[hypeKey as keyof typeof hypeReactionMapping];
+          updateData[hypeKey] = {
+            increment: input[hypeKey as keyof typeof hypeReactionMapping],
+          };
 
           // Increment regular reaction field by 1
           updateData[regularKey] = { increment: 1 };
