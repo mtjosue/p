@@ -838,11 +838,14 @@ const MatchPage = () => {
         ""
       )}
       {phone ? (
-        <div className="h-full w-auto">
+        <div className="w-auto">
           <video
             ref={remoteVideoRef}
+            style={{
+              minHeight: `${height}px`,
+            }}
             className={classNames(
-              "h-[100vh] w-[100vw] object-cover",
+              "w-[100vw] object-cover",
               countdown > 90
                 ? "blur-[7px]"
                 : countdown > 85
