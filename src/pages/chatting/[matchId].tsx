@@ -424,7 +424,7 @@ const MatchPage = () => {
   useEffect(() => {
     if (!remoteStream) return;
 
-    if (repeatRemote) {
+    if (repeatRemote && !remoteStream.active) {
       setRepeatRemote(false);
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = remoteStream;

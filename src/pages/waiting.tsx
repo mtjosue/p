@@ -43,13 +43,13 @@ const WaitingPage = () => {
         .catch(() => console.log("Error in pushing because banned"));
     }
     const now = new Date();
-    console.log("NOW : ", new Date().getTime());
+    // console.log("NOW : ", new Date().getTime());
     if (
       lastReport &&
       typeof lastReport === "object" &&
       lastReport instanceof Date
     ) {
-      console.log("Went through!");
+      // console.log("Went through!");
       const minutesDifference =
         (now.getTime() - lastReport.getTime()) / (1000 * 60);
 
