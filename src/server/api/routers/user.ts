@@ -172,11 +172,14 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       if (!input.matchid) return;
-      return await ctx.db.match.update({
+      // return await ctx.db.match.update({
+      //   where: { id: input.matchid },
+      //   data: {
+      //     status: "ended",
+      //   },
+      // });
+      return await ctx.db.match.delete({
         where: { id: input.matchid },
-        data: {
-          status: "ended",
-        },
       });
     }),
   statusUpdate: publicProcedure

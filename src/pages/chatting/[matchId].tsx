@@ -417,7 +417,7 @@ const MatchPage = () => {
   //Check window size
   useEffect(() => {
     const checkWindowSize = () => {
-      if (window.innerWidth <= 425) {
+      if (window.innerWidth <= 435) {
         setPhone(true);
       } else {
         setPhone(false);
@@ -456,7 +456,7 @@ const MatchPage = () => {
     }
   }, [localMediaStream, phone, repeat]);
 
-  const makeDataObject = (skipa?: boolean | null, stats?: boolean) => {
+  const makeDataObject = (skipa?: boolean | null, stats?: boolean | null) => {
     return {
       userId: userId ?? null,
       skips: skipa ?? null,
@@ -682,25 +682,35 @@ const MatchPage = () => {
               <div
                 className="flex w-full flex-grow sm:w-1/3"
                 onClick={() => {
-                  cleanup();
-                  resetReactions();
-
-                  if (remoteStream?.active && countdown < 1) {
-                    statusUpdate.mutate(makeDataObject());
+                  if (
+                    !remoteStream?.active ||
+                    (remoteStream.active && countdown < 1)
+                  ) {
+                    statusUpdate.mutate(makeDataObject(null, null));
+                    cleanup();
+                    resetReactions();
+                    router
+                      .push("/")
+                      .catch(() => console.log("ERROR in GO HOME button"));
                   }
+
                   if (remoteStream?.active && countdown > 0) {
                     if (skips < 2) {
+                      statusUpdate.mutate(makeDataObject(null, null));
                       setNoSkips(true);
-                    } else if (skips > 1) {
-                      statusUpdate.mutate(makeDataObject(true));
+                      cleanup();
+                      resetReactions();
+                    }
+                    if (skips >= 2) {
+                      statusUpdate.mutate(makeDataObject(true, null));
                       setSkips(skips - 1);
+                      cleanup();
+                      resetReactions();
                     }
                   }
                   router
                     .push("/")
-                    .catch(() =>
-                      console.log("ERROR IN GOING BACK HOME BUTTON"),
-                    );
+                    .catch(() => console.log("ERROR in GO HOME button"));
                 }}
               >
                 <button className="flex flex-grow items-center justify-center rounded-xl bg-[#1d1d1d] p-5 text-5xl text-[#e1e1e1] shadow-md">
@@ -724,27 +734,32 @@ const MatchPage = () => {
                 <button
                   className="flex-grow rounded-xl bg-[#1d1d1d] p-3 font-mono text-5xl text-[#e1e1e1] shadow-md"
                   onClick={() => {
-                    cleanup();
-                    resetReactions();
-
                     if (
                       !remoteStream?.active ||
                       (remoteStream?.active && countdown < 1)
                     ) {
                       statusUpdate.mutate(makeDataObject(null, true));
+                      cleanup();
+                      resetReactions();
                     }
 
                     if (remoteStream?.active && countdown > 0) {
                       if (skips < 2) {
+                        statusUpdate.mutate(makeDataObject(null, null));
                         setNoSkips(true);
+                        cleanup();
+                        resetReactions();
                         router
                           .push("/")
                           .catch(() =>
                             console.log("ERROR in router.puush of SKIP"),
                           );
-                      } else if (skips > 1) {
+                      }
+                      if (skips >= 2) {
                         statusUpdate.mutate(makeDataObject(true, true));
                         setSkips(skips - 1);
+                        cleanup();
+                        resetReactions();
                       }
                     }
 
@@ -871,43 +886,40 @@ const MatchPage = () => {
                 <button
                   className="flex flex-col items-center rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-3 font-mono text-3xl font-semibold text-white/30"
                   onClick={() => {
-                    cleanup();
-                    resetReactions();
+                    if (
+                      !remoteStream?.active ||
+                      (remoteStream?.active && countdown < 1)
+                    ) {
+                      statusUpdate.mutate(makeDataObject(null, true));
+                      cleanup();
+                      resetReactions();
+                    }
 
-                    if (!remoteStream?.active) {
-                      statusUpdate.mutate(makeDataObject(null, true));
-                      router
-                        .push("/waiting")
-                        .catch(() =>
-                          console.log("ERROR in router.puush of SKIP"),
-                        );
-                    }
-                    if (remoteStream?.active && countdown < 1) {
-                      statusUpdate.mutate(makeDataObject(null, true));
-                      router
-                        .push("/waiting")
-                        .catch(() =>
-                          console.log("ERROR in router.puush of SKIP"),
-                        );
-                    }
                     if (remoteStream?.active && countdown > 0) {
                       if (skips < 2) {
+                        statusUpdate.mutate(makeDataObject(null, true));
                         setNoSkips(true);
+                        cleanup();
+                        resetReactions();
                         router
                           .push("/")
                           .catch(() =>
                             console.log("ERROR in router.puush of SKIP"),
                           );
-                      } else if (skips > 1) {
+                      }
+                      if (skips >= 2) {
                         statusUpdate.mutate(makeDataObject(true, true));
                         setSkips(skips - 1);
-                        router
-                          .push("/waiting")
-                          .catch(() =>
-                            console.log("ERROR in router.puush of SKIP"),
-                          );
+                        cleanup();
+                        resetReactions();
                       }
                     }
+
+                    router
+                      .push("/waiting")
+                      .catch(() =>
+                        console.log("ERROR in router.puush of SKIP"),
+                      );
                   }}
                 >
                   <span>S</span>
@@ -918,8 +930,32 @@ const MatchPage = () => {
                 <button
                   className="rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-[9px] font-semibold text-white/30"
                   onClick={() => {
-                    cleanup();
-                    resetReactions();
+                    if (
+                      !remoteStream?.active ||
+                      (remoteStream.active && countdown < 1)
+                    ) {
+                      statusUpdate.mutate(makeDataObject(null, null));
+                      cleanup();
+                      resetReactions();
+                      router
+                        .push("/")
+                        .catch(() => console.log("ERROR in GO HOME button"));
+                    }
+
+                    if (remoteStream?.active && countdown > 0) {
+                      if (skips < 2) {
+                        statusUpdate.mutate(makeDataObject(null, null));
+                        setNoSkips(true);
+                        cleanup();
+                        resetReactions();
+                      }
+                      if (skips >= 2) {
+                        statusUpdate.mutate(makeDataObject(true, null));
+                        setSkips(skips - 1);
+                        cleanup();
+                        resetReactions();
+                      }
+                    }
                     router
                       .push("/")
                       .catch(() => console.log("ERROR in GO HOME button"));
