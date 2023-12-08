@@ -446,11 +446,11 @@ const MatchPage = () => {
         localVideoRef.current.srcObject = localMediaStream;
         localVideoRef.current.play().catch((e: Error) => {
           console.log("Error in local playAHHHH", e);
-          if (phone) {
-            setTimeout(() => {
-              setRepeat(true);
-            }, 1);
-          }
+          // if (phone) {
+          setTimeout(() => {
+            setRepeat(true);
+          }, 1);
+          // }
         });
       }
     }
