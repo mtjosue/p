@@ -486,8 +486,33 @@ const MatchPage = () => {
     };
   };
 
+  const [height, setHeight] = useState<number>(1);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setHeight(window.innerHeight);
+      console.log("window.innerHeight", window.innerHeight);
+    };
+
+    // Initial adjustment
+    handleResize();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", handleResize);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
-    <div className="h-screen w-full overflow-hidden bg-[#121212]">
+    <div
+      className="w-full overflow-hidden bg-[#121212]"
+      style={{
+        minHeight: `${height}px`,
+      }}
+    >
       {reportModal && (
         <ReportModal
           toggle={reportModal}
@@ -497,7 +522,12 @@ const MatchPage = () => {
         />
       )}
       {!phone ? (
-        <div className="relative flex h-full w-auto flex-col">
+        <div
+          className="relative flex w-auto flex-col"
+          style={{
+            minHeight: `${height}px`,
+          }}
+        >
           <button
             onClick={() => {
               console.log("hello");
@@ -527,7 +557,7 @@ const MatchPage = () => {
               muted={true}
             />
             {dolo && (
-              <div className="flex w-full items-center justify-center text-white">
+              <div className="flex w-full items-center justify-center font-mono text-white">
                 Your Pixelmate was lost to the wind...
               </div>
             )}
@@ -693,7 +723,7 @@ const MatchPage = () => {
             </div>
             <div
               id="homeAndSkip"
-              className="flex h-full flex-grow flex-col gap-x-3 gap-y-3 sm:w-1/2 sm:flex-row"
+              className="flex flex-grow flex-col gap-x-3 gap-y-3 sm:w-1/2 sm:flex-row"
             >
               <div
                 className="flex w-full flex-grow sm:w-1/3"

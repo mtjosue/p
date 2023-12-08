@@ -202,8 +202,33 @@ const WaitingPage = () => {
     };
   }, [getMatch, router, userId, statusUpdate]);
 
+  const [height, setHeight] = useState<number>(1);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setHeight(window.innerHeight);
+      console.log("window.innerHeight", window.innerHeight);
+    };
+
+    // Initial adjustment
+    handleResize();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", handleResize);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-[#121212]">
+    <main
+      className="flex flex-col items-center justify-center bg-[#121212]"
+      style={{
+        minHeight: `${height}px`,
+      }}
+    >
       <div className="flex flex-col gap-y-3 px-3">
         <div className="rounded-xl border-2 border-zinc-700 bg-[#1d1d1d] p-3 font-mono text-white ">
           <h2>Waiting for Users to Connect With...</h2>

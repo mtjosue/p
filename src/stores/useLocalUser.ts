@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Peer } from "peerjs";
 
 type UserStore = {
+  // height: number;
   solo: boolean;
   refreshed: boolean;
   status: string | null;
@@ -16,6 +17,7 @@ type UserStore = {
   lastReport: Date | null;
   banned: boolean;
   actions: {
+    // setHeight: (num: number) => void;
     setLastReport: (time: null | Date) => void;
     addReport: (report: number) => void;
     decReport: () => void;
@@ -34,6 +36,7 @@ type UserStore = {
 };
 
 export const useUserStore = create<UserStore>((set) => ({
+  // height: 1,
   banned: false,
   reports: 0,
   lastReport: null,
@@ -48,6 +51,7 @@ export const useUserStore = create<UserStore>((set) => ({
   remoteUserId: null,
   localMediaStream: null,
   actions: {
+    // setHeight: (height) => set(() => ({ height })),
     setLastReport: (time) => set(() => ({ lastReport: time })),
     addReport: (report) => set((prev) => ({ reports: prev.reports + report })),
     decReport: () => set((prev) => ({ reports: prev.reports - 1 })),
@@ -66,6 +70,9 @@ export const useUserStore = create<UserStore>((set) => ({
   },
 }));
 
+// export const useHeight = () => useUserStore((state) => state.height);
+// export const useSetHeight = () =>
+//   useUserStore((state) => state.actions.setHeight);
 export const useLastReport = () => useUserStore((state) => state.lastReport);
 export const useSetLastReport = () =>
   useUserStore((state) => state.actions.setLastReport);
