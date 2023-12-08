@@ -566,7 +566,7 @@ const MatchPage = () => {
               ref={remoteVideoRef}
               className={classNames(
                 dolo ? "hidden" : "",
-                "max-h-min w-[50vw] object-cover",
+                "max-h-min w-[80vw] object-cover",
                 countdown > 90
                   ? "blur-[7px]"
                   : countdown > 85
