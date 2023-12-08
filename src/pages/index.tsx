@@ -242,10 +242,11 @@ export default function Home() {
         <Leaderboard select={select} selected={selected} />
         <div className="flex min-h-[5rem] min-w-[92%] justify-between rounded-xl bg-[#1d1d1d] py-3 pl-3 pr-3 text-sm text-white md:text-xl lg:min-w-[35%]">
           {user.isSignedIn && !termsAgreed && <Modal />}
-          <div className="flex items-center">
+          <div className="flex items-center gap-x-3">
             <h2 className="font-mono">
-              Hey <br />
-              {user.user?.firstName}!
+              Hey
+              {user.user?.firstName ? <br /> : ""}
+              {user.user?.firstName ? "" : ""}!
             </h2>
             <span className="font-mono">
               {!user.isSignedIn && <SignInButton />}
