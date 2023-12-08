@@ -188,6 +188,9 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen w-full flex-col items-center justify-center gap-y-3 bg-[#121212]">
+        <div className="flex min-w-[75%] justify-between rounded-xl bg-[#1d1d1d] px-6 py-3 font-mono text-3xl text-white lg:min-w-[35%]">
+          Leaderboards :
+        </div>
         <Leaderboard select={select} selected={selected} />
         <div className="flex min-h-[5rem] min-w-[75%] justify-between rounded-xl bg-[#1d1d1d] py-3 pl-6 pr-[1.12rem] text-white lg:min-w-[35%]">
           {user.isSignedIn && !termsAgreed && <Modal />}

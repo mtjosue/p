@@ -682,6 +682,7 @@ const MatchPage = () => {
               <div
                 className="flex w-full flex-grow sm:w-1/3"
                 onClick={() => {
+                  cleanup();
                   resetReactions();
 
                   if (remoteStream?.active && countdown < 1) {
@@ -724,7 +725,6 @@ const MatchPage = () => {
                   className="flex-grow rounded-xl bg-[#1d1d1d] p-3 font-mono text-5xl text-[#e1e1e1] shadow-md"
                   onClick={() => {
                     cleanup();
-
                     resetReactions();
 
                     if (
@@ -872,6 +872,7 @@ const MatchPage = () => {
                   className="flex flex-col items-center rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-3 font-mono text-3xl font-semibold text-white/30"
                   onClick={() => {
                     cleanup();
+                    resetReactions();
 
                     if (!remoteStream?.active) {
                       statusUpdate.mutate(makeDataObject(null, true));
@@ -917,6 +918,8 @@ const MatchPage = () => {
                 <button
                   className="rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-[9px] font-semibold text-white/30"
                   onClick={() => {
+                    cleanup();
+                    resetReactions();
                     router
                       .push("/")
                       .catch(() => console.log("ERROR in GO HOME button"));
