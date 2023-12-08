@@ -808,7 +808,7 @@ const MatchPage = () => {
         ""
       )}
       {phone ? (
-        <div className="h-auto w-auto">
+        <div className="h-full w-auto">
           <video
             ref={remoteVideoRef}
             className={classNames(
