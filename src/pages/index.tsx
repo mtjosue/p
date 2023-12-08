@@ -71,7 +71,7 @@ export default function Home() {
   useEffect(() => {
     if (!searchUser.data) return;
     const then = searchUser.data
-      ? new Date(searchUser.data.lastReplenish as Date)
+      ? new Date(searchUser.data.lastReplenish as unknown as Date)
       : null;
     const now = new Date();
 
