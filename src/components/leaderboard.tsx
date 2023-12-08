@@ -286,7 +286,7 @@ const Leaderboard = ({
                 select(moji.moji);
               }}
               className={classNames(
-                "rounded-lg py-2 pl-1.5 pr-2.5 text-2xl md:p-2 md:text-4xl",
+                "rounded-lg p-2 text-2xl md:text-4xl",
                 moji.moji === "👍"
                   ? selected === "👍"
                     ? "ring-2 ring-[#147bd1]"
