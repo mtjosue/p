@@ -549,7 +549,7 @@ const MatchPage = () => {
             );
           })}
 
-          <div className="relative flex max-h-[80vh] justify-center overflow-hidden">
+          <div className="relative flex max-h-[70vh] justify-center overflow-hidden">
             <video
               ref={localVideoRef}
               className="w-[50vw] object-cover"
