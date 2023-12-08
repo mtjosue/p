@@ -1,5 +1,4 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
-import { Span } from "next/dist/trace";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
