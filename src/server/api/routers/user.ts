@@ -34,9 +34,6 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // simulate a slow db call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       return ctx.db.user.create({
         data: {
           name: input.name,
@@ -94,8 +91,6 @@ export const userRouter = createTRPCRouter({
           }),
         ]);
       } catch (error) {
-        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         console.log("ERROR IN TRYING TO UPDATE BOTH AT THE SAME TIME");
         return null;
