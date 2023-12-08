@@ -236,7 +236,7 @@ export default function Home() {
           minHeight: `${height}px`,
         }}
       >
-        <div className="flex min-w-[92%] justify-between rounded-xl bg-[#1d1d1d] py-3 pl-3 font-mono text-xl text-white lg:min-w-[35%]">
+        <div className="flex min-w-[92%] justify-between rounded-xl bg-[#1d1d1d] py-3 pl-3 font-mono text-xl text-white md:text-2xl lg:min-w-[35%]">
           Leaderboards :
         </div>
         <Leaderboard select={select} selected={selected} />
