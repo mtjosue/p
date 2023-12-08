@@ -487,7 +487,7 @@ const MatchPage = () => {
   };
 
   return (
-    <div className="h-[100vh] w-full overflow-hidden bg-[#121212]">
+    <div className="h-screen w-full overflow-hidden bg-[#121212]">
       {reportModal && (
         <ReportModal
           toggle={reportModal}
