@@ -246,7 +246,7 @@ export default function Home() {
             <h2 className="font-mono">
               Hey
               {user.user?.firstName ? <br /> : ""}
-              {user.user?.firstName ? "" : ""}!
+              {user.user?.firstName ? user.user?.firstName : ""}!
             </h2>
             <span className="font-mono">
               {!user.isSignedIn && <SignInButton />}
