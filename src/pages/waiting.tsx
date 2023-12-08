@@ -160,7 +160,7 @@ const WaitingPage = () => {
   //If you find yourself in match right away push to chatting
   useEffect(() => {
     if (getMatch.data) {
-      console.log("We returned data from the Getmatch, so it was Successful");
+      // console.log("We returned data from the Getmatch, so it was Successful");
       router.push(`/chatting/${getMatch.data.id}`).catch(() => {
         console.log("error");
       });

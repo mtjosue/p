@@ -69,7 +69,7 @@ const MatchPage = () => {
   const setSkips = useSetSkips();
   const setNoSkips = useSetNoSkips();
   const [countdown, setCountdown] = useState(90);
-  const [countdown2, setCountdown2] = useState(8);
+  const [countdown2, setCountdown2] = useState(7);
   const setRefreshed = useSetRefreshed();
   const setSolo = useSetSolo();
   const solo = useSolo();
@@ -117,6 +117,11 @@ const MatchPage = () => {
   //Mutation to update status and everything else
   const statusUpdate = api.user.statusUpdate.useMutation();
 
+  const [end, setEnd] = useState(false);
+  const [ended, setEnded] = useState(false);
+  //Mutation to end match
+  const endMatch = api.user.endMatch.useMutation();
+
   //Saving remoteUserId in case we need to report
   useEffect(() => {
     if (remoteUserId) return;
@@ -140,7 +145,7 @@ const MatchPage = () => {
     }
   }, [router, setRefreshed, userId]);
 
-  //If remote user never joins after 7 seconds turn solo on.
+  //If remote user never joins after 6 seconds turn solo on.
   useEffect(() => {
     if (countdown2 === 1 && !remoteStream?.active) {
       setSolo(true);
@@ -152,6 +157,7 @@ const MatchPage = () => {
     if (solo) {
       setSolo(false);
       setDolo(true);
+      setEnd(true);
     }
   }, [setSolo, solo]);
 
@@ -192,7 +198,7 @@ const MatchPage = () => {
     if (!data || !peer) return;
     if (data.tempPeerId && data.localUserId !== userId) {
       console.log("about to call");
-
+      setEnd(true);
       // Call with local stream
       if (!localMediaStream) return;
       const call = peer.call(data.tempPeerId, localMediaStream);
@@ -334,6 +340,9 @@ const MatchPage = () => {
             addReport(3);
             setLastReport(new Date());
           }
+          if (data2.type === 4) {
+            setEnded(true);
+          }
         }
       });
     }
@@ -349,6 +358,31 @@ const MatchPage = () => {
     peerConnection,
     setLastReport,
   ]);
+
+  //if end is true
+  useEffect(() => {
+    if (end && !ended) {
+      setEnd(false);
+      setEnded(true);
+      endMatch.mutate({
+        matchId: matchId,
+      });
+    }
+  }, [end, endMatch, ended, matchId]);
+
+  useEffect(() => {
+    if (end) {
+      if (peerConnection) {
+        const a = async () => {
+          await peerConnection.send({
+            cat: false,
+            type: 4,
+          });
+        };
+        a().catch(() => console.log("Error in ending match"));
+      }
+    }
+  }, [end, peerConnection]);
 
   useEffect(() => {
     if (emojiArr.length > 1) {
@@ -664,6 +698,12 @@ const MatchPage = () => {
               <div
                 className="flex w-full flex-grow sm:w-1/3"
                 onClick={() => {
+                  if (!ended) {
+                    endMatch.mutate({
+                      matchId: matchId,
+                    });
+                    setEnded(true);
+                  }
                   if (
                     !remoteStream?.active ||
                     (remoteStream.active && countdown < 1)
@@ -716,6 +756,12 @@ const MatchPage = () => {
                 <button
                   className="flex-grow rounded-xl bg-[#1d1d1d] p-3 font-mono text-5xl text-[#e1e1e1] shadow-md"
                   onClick={() => {
+                    if (!ended) {
+                      endMatch.mutate({
+                        matchId: matchId,
+                      });
+                      setEnded(true);
+                    }
                     if (
                       !remoteStream?.active ||
                       (remoteStream?.active && countdown < 1)
@@ -868,6 +914,12 @@ const MatchPage = () => {
                 <button
                   className="flex flex-col items-center rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-3 font-mono text-3xl font-semibold text-white/30"
                   onClick={() => {
+                    if (!ended) {
+                      endMatch.mutate({
+                        matchId: matchId,
+                      });
+                      setEnded(true);
+                    }
                     if (
                       !remoteStream?.active ||
                       (remoteStream?.active && countdown < 1)
@@ -912,6 +964,12 @@ const MatchPage = () => {
                 <button
                   className="rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-[9px] font-semibold text-white/30"
                   onClick={() => {
+                    if (!ended) {
+                      endMatch.mutate({
+                        matchId: matchId,
+                      });
+                      setEnded(true);
+                    }
                     if (
                       !remoteStream?.active ||
                       (remoteStream.active && countdown < 1)
@@ -959,10 +1017,10 @@ const MatchPage = () => {
                   </svg>
                 </button>
               </div>
-              <div className="flex justify-end rounded-xl">
+              <div className="mt-1 flex justify-end rounded-xl">
                 <video
                   ref={localVideoRef}
-                  className="h-[100px] w-[100px] rounded-xl"
+                  className="w-[100px] rounded-xl"
                   autoPlay={true}
                   playsInline={true}
                   muted={true}

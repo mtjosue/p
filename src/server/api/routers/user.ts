@@ -21,6 +21,7 @@ export const userRouter = createTRPCRouter({
           status: true,
           reports: true,
           lastReport: true,
+          lastReplenish: true,
         },
       });
       return userFound;
@@ -104,20 +105,18 @@ export const userRouter = createTRPCRouter({
         },
       });
 
-      setTimeout(() => {
-        const endFunc = async () => {
-          // await ctx.db.match.delete({
-          //   where: { id: match.id },
-          // });
-          await ctx.db.match.update({
-            where: { id: match.id },
-            data: { status: "ended" },
-          });
-        };
-        endFunc().catch(() => console.log("Error in Ending match in sync"));
-      }, 6000);
-
       return match;
+    }),
+  endMatch: publicProcedure
+    .input(
+      z.object({
+        matchId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db.match.delete({
+        where: { id: input.matchId },
+      });
     }),
   getMatch: publicProcedure
     .input(
@@ -224,6 +223,21 @@ export const userRouter = createTRPCRouter({
       return await ctx.db.user.update({
         where: { userId: input.userId },
         data: updateData,
+      });
+    }),
+  replenish: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db.user.update({
+        where: { userId: input.userId },
+        data: {
+          skips: 20,
+          lastReplenish: new Date(),
+        },
       });
     }),
   report: publicProcedure

@@ -18,6 +18,7 @@ import {
   useSetNoSkips,
   useSetSkips,
   useSetUserId,
+  useUserId,
 } from "~/stores/useLocalUser";
 import { api } from "~/utils/api";
 
@@ -26,6 +27,7 @@ export default function Home() {
   const firstLoad = useFirstLoad();
   const setFirstLoad = useSetFirstLoad();
   const user = useUser();
+  const userId = useUserId();
   const setUserId = useSetUserId();
   const setSkips = useSetSkips();
   const setNoSkips = useSetNoSkips();
@@ -45,6 +47,7 @@ export default function Home() {
     }
   }, [reports, setBanned]);
 
+  const replenish = api.user.replenish.useMutation();
   const userStatusUpdate = api.user.statusUpdate.useMutation();
   const searchUser = api.user.userCheck.useQuery(
     {
@@ -63,6 +66,24 @@ export default function Home() {
       staleTime: 0,
     },
   );
+
+  //Replenish
+  useEffect(() => {
+    if (!searchUser.data) return;
+    const then = searchUser.data
+      ? new Date(searchUser.data.lastReplenish as Date)
+      : null;
+    const now = new Date();
+
+    if (
+      then &&
+      (now.getDate() !== then.getDate() ||
+        now.getMonth() !== then.getMonth() ||
+        now.getFullYear() !== then.getFullYear())
+    ) {
+      replenish.mutate({ userId: userId });
+    }
+  }, [replenish, searchUser.data, userId]);
 
   //Getting local media stream.
   const getLocalMediaStream = async () => {
@@ -188,15 +209,18 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen w-full flex-col items-center justify-center gap-y-3 bg-[#121212]">
-        <div className="flex min-w-[75%] justify-between rounded-xl bg-[#1d1d1d] px-6 py-3 font-mono text-3xl text-white lg:min-w-[35%]">
+        <div className="flex min-w-[92%] justify-between rounded-xl bg-[#1d1d1d] py-3 pl-3 font-mono text-xl text-white lg:min-w-[35%]">
           Leaderboards :
         </div>
         <Leaderboard select={select} selected={selected} />
-        <div className="flex min-h-[5rem] min-w-[75%] justify-between rounded-xl bg-[#1d1d1d] py-3 pl-6 pr-[1.12rem] text-white lg:min-w-[35%]">
+        <div className="flex min-h-[5rem] min-w-[92%] justify-between rounded-xl bg-[#1d1d1d] py-3 pl-3 pr-3 text-sm text-white md:text-xl lg:min-w-[35%]">
           {user.isSignedIn && !termsAgreed && <Modal />}
-          <div className="flex items-center text-white">
-            <h2 className="font-mono">Hey {user.user?.firstName}!</h2>
-            <span className="ml-2 font-mono">
+          <div className="flex items-center">
+            <h2 className="font-mono">
+              Hey <br />
+              {user.user?.firstName}!
+            </h2>
+            <span className="font-mono">
               {!user.isSignedIn && <SignInButton />}
             </span>
           </div>
@@ -205,19 +229,19 @@ export default function Home() {
               disabled={noSkips || banned}
               //test
               onClick={onBtnClick}
-              className={`rounded-lg ${
+              className={`${
                 noSkips
                   ? "bg-slate-500"
                   : "bg-[#147bd1]/70 ring-2 ring-[#147bd1]"
-              } px-6 py-2 font-mono text-xl`}
+              } max-w-[11.5rem] rounded-lg px-2 py-2 font-mono md:max-w-[16rem]`}
             >
               {noSkips || banned
-                ? "Done for today ^.^, come back tomorrow!"
+                ? "Done for today :3 come back tomorrow!"
                 : "Ready"}
             </button>
           )}
         </div>
-        <div className="flex min-w-[75%] justify-between rounded-xl text-white lg:min-w-[35%]">
+        <div className="flex min-w-[92%] justify-between rounded-xl text-white lg:min-w-[35%]">
           {!!user.isSignedIn && (
             <div className="rounded-lg border-2 border-zinc-800 px-3 font-mono text-zinc-700">
               <SignOutButton />
