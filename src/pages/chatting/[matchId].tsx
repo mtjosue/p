@@ -549,7 +549,7 @@ const MatchPage = () => {
             );
           })}
 
-          <div className="relative flex max-h-[50vh] justify-center overflow-hidden">
+          <div className="relative flex max-h-[80vh] justify-center overflow-hidden">
             <video
               ref={localVideoRef}
               className="w-[50vw] object-cover"
@@ -566,7 +566,7 @@ const MatchPage = () => {
               ref={remoteVideoRef}
               className={classNames(
                 dolo ? "hidden" : "",
-                "max-h-min w-[80vw] object-cover",
+                "max-h-min w-[50vw] object-cover",
                 countdown > 90
                   ? "blur-[7px]"
                   : countdown > 85
