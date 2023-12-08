@@ -54,7 +54,6 @@ const MyParticle: React.FC<ProgressCanvasButtonProps> = ({
       )}
       onMouseOver={() => setHoverState(true)}
       onMouseOut={() => setHoverState(false)}
-      //   onClick={addParticle}
     >
       <canvas ref={canvasRef} className="h-full w-full" />
       <span className="absolute inset-0 flex flex-col items-center justify-center">

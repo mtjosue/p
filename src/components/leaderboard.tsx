@@ -29,7 +29,6 @@ const Leaderboard = ({
     return [
       { moji: "👍", color: "#147bd1" },
       { moji: "heart", color: "#d1156b" },
-      //   { moji: "🤣", color: "#f7ea48" },
       { moji: "🤣", color: "#c5bd50" },
       { moji: "😯", color: "#ff7f41" },
       { moji: "🔥", color: "#e03c31" },

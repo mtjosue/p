@@ -81,7 +81,39 @@ const MatchPage = () => {
   const setBanned = useSetBanned();
   const setLastReport = useSetLastReport();
 
+  //EMP = Element Manipulation Prevention.
+  // useEffect(() => {
+  //   const checkWindowSize = () => {
+  //     // You can perform additional actions here based on the window dimensions
+  //     // For example, redirecting the user or logging the event
+  //     if (
+  //       window.outerHeight - window.innerHeight > 100 ||
+  //       window.outerWidth - window.innerWidth > 10
+  //     ) {
+  //       console.log("DEVELOPER TOOLS OPEN");
+  //       // Execute your code here, e.g., redirect to the home screen
+  //       router.push("/").catch(() => console.log("failed to push to home"));
+  //     } else {
+  //       console.log("DEVELOPER TOOLS CLOSED");
+  //       // Developer tools are closed, you can decide what action to take
+  //     }
+  //   };
+
+  //   // Attach the event listener to the resize event
+  //   window.addEventListener("resize", checkWindowSize);
+
+  //   // Execute the check once on component mount
+  //   checkWindowSize();
+
+  //   // Clean up the event listener when the component unmounts
+  //   return () => {
+  //     window.removeEventListener("resize", checkWindowSize);
+  //     resetReactions();
+  //   };
+  // }, [resetReactions, router]);
+
   //Reports? Banned.
+
   useEffect(() => {
     if (reports >= 7) {
       setBanned(true);
@@ -131,37 +163,6 @@ const MatchPage = () => {
     }
   }, [remoteUserId, data, userId, setRemoteUserId]);
 
-  //EMP = Element Manipulation Prevention.
-  useEffect(() => {
-    const checkWindowSize = () => {
-      // You can perform additional actions here based on the window dimensions
-      // For example, redirecting the user or logging the event
-      if (
-        window.outerHeight - window.innerHeight > 100 ||
-        window.outerWidth - window.innerWidth > 10
-      ) {
-        console.log("DEVELOPER TOOLS OPEN");
-        // Execute your code here, e.g., redirect to the home screen
-        router.push("/").catch(() => console.log("failed to push to home"));
-      } else {
-        console.log("DEVELOPER TOOLS CLOSED");
-        // Developer tools are closed, you can decide what action to take
-      }
-    };
-
-    // Attach the event listener to the resize event
-    window.addEventListener("resize", checkWindowSize);
-
-    // Execute the check once on component mount
-    checkWindowSize();
-
-    // Clean up the event listener when the component unmounts
-    return () => {
-      window.removeEventListener("resize", checkWindowSize);
-      resetReactions();
-    };
-  }, [resetReactions, router]);
-
   //If refreshed there wont be a userId, push to home / setRefreshed(true).
   useEffect(() => {
     if (!userId) {
@@ -192,24 +193,6 @@ const MatchPage = () => {
 
   //When local video play does not work the first time
   const [repeat, setRepeat] = useState(true);
-
-  //If localMediaStream ? set and play video stream
-  useEffect(() => {
-    if (!localMediaStream) return;
-
-    if (repeat) {
-      setRepeat(false);
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = localMediaStream;
-        localVideoRef.current.play().catch((e: Error) => {
-          console.log("Error in local playAHHHH", e);
-          setTimeout(() => {
-            setRepeat(true);
-          }, 100);
-        });
-      }
-    }
-  }, [localMediaStream, repeat]);
 
   //Defining the ANSWERING if peer
   useEffect(() => {
@@ -434,7 +417,7 @@ const MatchPage = () => {
   //Check window size
   useEffect(() => {
     const checkWindowSize = () => {
-      if (window.innerWidth <= 425) {
+      if (window.innerWidth <= 435) {
         setPhone(true);
       } else {
         setPhone(false);
@@ -453,7 +436,27 @@ const MatchPage = () => {
     };
   }, [setPhone]);
 
-  const makeDataObject = (skipa?: boolean | null, stats?: boolean) => {
+  //If localMediaStream ? set and play video stream
+  useEffect(() => {
+    if (!localMediaStream) return;
+
+    if (repeat) {
+      setRepeat(false);
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localMediaStream;
+        localVideoRef.current.play().catch((e: Error) => {
+          console.log("Error in local playAHHHH", e);
+          if (phone) {
+            setTimeout(() => {
+              setRepeat(true);
+            }, 1);
+          }
+        });
+      }
+    }
+  }, [localMediaStream, phone, repeat]);
+
+  const makeDataObject = (skipa?: boolean | null, stats?: boolean | null) => {
     return {
       userId: userId ?? null,
       skips: skipa ?? null,
@@ -679,24 +682,35 @@ const MatchPage = () => {
               <div
                 className="flex w-full flex-grow sm:w-1/3"
                 onClick={() => {
-                  resetReactions();
-
-                  if (remoteStream?.active && countdown < 1) {
-                    statusUpdate.mutate(makeDataObject());
+                  if (
+                    !remoteStream?.active ||
+                    (remoteStream.active && countdown < 1)
+                  ) {
+                    statusUpdate.mutate(makeDataObject(null, null));
+                    cleanup();
+                    resetReactions();
+                    router
+                      .push("/")
+                      .catch(() => console.log("ERROR in GO HOME button"));
                   }
+
                   if (remoteStream?.active && countdown > 0) {
                     if (skips < 2) {
+                      statusUpdate.mutate(makeDataObject(null, null));
                       setNoSkips(true);
-                    } else if (skips > 1) {
-                      statusUpdate.mutate(makeDataObject(true));
+                      cleanup();
+                      resetReactions();
+                    }
+                    if (skips >= 2) {
+                      statusUpdate.mutate(makeDataObject(true, null));
                       setSkips(skips - 1);
+                      cleanup();
+                      resetReactions();
                     }
                   }
                   router
                     .push("/")
-                    .catch(() =>
-                      console.log("ERROR IN GOING BACK HOME BUTTON"),
-                    );
+                    .catch(() => console.log("ERROR in GO HOME button"));
                 }}
               >
                 <button className="flex flex-grow items-center justify-center rounded-xl bg-[#1d1d1d] p-5 text-5xl text-[#e1e1e1] shadow-md">
@@ -720,28 +734,32 @@ const MatchPage = () => {
                 <button
                   className="flex-grow rounded-xl bg-[#1d1d1d] p-3 font-mono text-5xl text-[#e1e1e1] shadow-md"
                   onClick={() => {
-                    cleanup();
-
-                    resetReactions();
-
                     if (
                       !remoteStream?.active ||
                       (remoteStream?.active && countdown < 1)
                     ) {
                       statusUpdate.mutate(makeDataObject(null, true));
+                      cleanup();
+                      resetReactions();
                     }
 
                     if (remoteStream?.active && countdown > 0) {
                       if (skips < 2) {
+                        statusUpdate.mutate(makeDataObject(null, null));
                         setNoSkips(true);
+                        cleanup();
+                        resetReactions();
                         router
                           .push("/")
                           .catch(() =>
                             console.log("ERROR in router.puush of SKIP"),
                           );
-                      } else if (skips > 1) {
+                      }
+                      if (skips >= 2) {
                         statusUpdate.mutate(makeDataObject(true, true));
                         setSkips(skips - 1);
+                        cleanup();
+                        resetReactions();
                       }
                     }
 
@@ -868,42 +886,40 @@ const MatchPage = () => {
                 <button
                   className="flex flex-col items-center rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-3 font-mono text-3xl font-semibold text-white/30"
                   onClick={() => {
-                    cleanup();
+                    if (
+                      !remoteStream?.active ||
+                      (remoteStream?.active && countdown < 1)
+                    ) {
+                      statusUpdate.mutate(makeDataObject(null, true));
+                      cleanup();
+                      resetReactions();
+                    }
 
-                    if (!remoteStream?.active) {
-                      statusUpdate.mutate(makeDataObject(null, true));
-                      router
-                        .push("/waiting")
-                        .catch(() =>
-                          console.log("ERROR in router.puush of SKIP"),
-                        );
-                    }
-                    if (remoteStream?.active && countdown < 1) {
-                      statusUpdate.mutate(makeDataObject(null, true));
-                      router
-                        .push("/waiting")
-                        .catch(() =>
-                          console.log("ERROR in router.puush of SKIP"),
-                        );
-                    }
                     if (remoteStream?.active && countdown > 0) {
                       if (skips < 2) {
+                        statusUpdate.mutate(makeDataObject(null, true));
                         setNoSkips(true);
+                        cleanup();
+                        resetReactions();
                         router
                           .push("/")
                           .catch(() =>
                             console.log("ERROR in router.puush of SKIP"),
                           );
-                      } else if (skips > 1) {
+                      }
+                      if (skips >= 2) {
                         statusUpdate.mutate(makeDataObject(true, true));
                         setSkips(skips - 1);
-                        router
-                          .push("/waiting")
-                          .catch(() =>
-                            console.log("ERROR in router.puush of SKIP"),
-                          );
+                        cleanup();
+                        resetReactions();
                       }
                     }
+
+                    router
+                      .push("/waiting")
+                      .catch(() =>
+                        console.log("ERROR in router.puush of SKIP"),
+                      );
                   }}
                 >
                   <span>S</span>
@@ -914,6 +930,32 @@ const MatchPage = () => {
                 <button
                   className="rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-[9px] font-semibold text-white/30"
                   onClick={() => {
+                    if (
+                      !remoteStream?.active ||
+                      (remoteStream.active && countdown < 1)
+                    ) {
+                      statusUpdate.mutate(makeDataObject(null, null));
+                      cleanup();
+                      resetReactions();
+                      router
+                        .push("/")
+                        .catch(() => console.log("ERROR in GO HOME button"));
+                    }
+
+                    if (remoteStream?.active && countdown > 0) {
+                      if (skips < 2) {
+                        statusUpdate.mutate(makeDataObject(null, null));
+                        setNoSkips(true);
+                        cleanup();
+                        resetReactions();
+                      }
+                      if (skips >= 2) {
+                        statusUpdate.mutate(makeDataObject(true, null));
+                        setSkips(skips - 1);
+                        cleanup();
+                        resetReactions();
+                      }
+                    }
                     router
                       .push("/")
                       .catch(() => console.log("ERROR in GO HOME button"));

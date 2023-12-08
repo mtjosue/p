@@ -34,9 +34,6 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // simulate a slow db call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       return ctx.db.user.create({
         data: {
           name: input.name,
@@ -94,8 +91,6 @@ export const userRouter = createTRPCRouter({
           }),
         ]);
       } catch (error) {
-        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         console.log("ERROR IN TRYING TO UPDATE BOTH AT THE SAME TIME");
         return null;
@@ -172,11 +167,14 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       if (!input.matchid) return;
-      return await ctx.db.match.update({
+      // return await ctx.db.match.update({
+      //   where: { id: input.matchid },
+      //   data: {
+      //     status: "ended",
+      //   },
+      // });
+      return await ctx.db.match.delete({
         where: { id: input.matchid },
-        data: {
-          status: "ended",
-        },
       });
     }),
   statusUpdate: publicProcedure
@@ -228,8 +226,9 @@ export const userRouter = createTRPCRouter({
 
         if (input[hypeKey as keyof typeof hypeReactionMapping] !== null) {
           // Update hype reaction with the provided value
-          updateData[hypeKey] =
-            input[hypeKey as keyof typeof hypeReactionMapping];
+          updateData[hypeKey] = {
+            increment: input[hypeKey as keyof typeof hypeReactionMapping],
+          };
 
           // Increment regular reaction field by 1
           updateData[regularKey] = { increment: 1 };
