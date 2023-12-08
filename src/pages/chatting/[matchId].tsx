@@ -69,7 +69,7 @@ const MatchPage = () => {
   const setSkips = useSetSkips();
   const setNoSkips = useSetNoSkips();
   const [countdown, setCountdown] = useState(90);
-  const [countdown2, setCountdown2] = useState(8);
+  const [countdown2, setCountdown2] = useState(7);
   const setRefreshed = useSetRefreshed();
   const setSolo = useSetSolo();
   const solo = useSolo();
@@ -81,39 +81,7 @@ const MatchPage = () => {
   const setBanned = useSetBanned();
   const setLastReport = useSetLastReport();
 
-  //EMP = Element Manipulation Prevention.
-  // useEffect(() => {
-  //   const checkWindowSize = () => {
-  //     // You can perform additional actions here based on the window dimensions
-  //     // For example, redirecting the user or logging the event
-  //     if (
-  //       window.outerHeight - window.innerHeight > 100 ||
-  //       window.outerWidth - window.innerWidth > 10
-  //     ) {
-  //       console.log("DEVELOPER TOOLS OPEN");
-  //       // Execute your code here, e.g., redirect to the home screen
-  //       router.push("/").catch(() => console.log("failed to push to home"));
-  //     } else {
-  //       console.log("DEVELOPER TOOLS CLOSED");
-  //       // Developer tools are closed, you can decide what action to take
-  //     }
-  //   };
-
-  //   // Attach the event listener to the resize event
-  //   window.addEventListener("resize", checkWindowSize);
-
-  //   // Execute the check once on component mount
-  //   checkWindowSize();
-
-  //   // Clean up the event listener when the component unmounts
-  //   return () => {
-  //     window.removeEventListener("resize", checkWindowSize);
-  //     resetReactions();
-  //   };
-  // }, [resetReactions, router]);
-
   //Reports? Banned.
-
   useEffect(() => {
     if (reports >= 7) {
       setBanned(true);
@@ -131,6 +99,7 @@ const MatchPage = () => {
     if (remoteUserId) {
       setRemoteUserId(null);
     }
+    resetReactions();
   };
 
   //Match data which decides who calls and who answers
@@ -148,16 +117,19 @@ const MatchPage = () => {
   //Mutation to update status and everything else
   const statusUpdate = api.user.statusUpdate.useMutation();
 
+  const [end, setEnd] = useState(false);
+  const [ended, setEnded] = useState(false);
+  //Mutation to end match
+  const endMatch = api.user.endMatch.useMutation();
+
   //Saving remoteUserId in case we need to report
   useEffect(() => {
     if (remoteUserId) return;
     if (data) {
       if (data.localUserId === userId && !remoteUserId) {
-        console.log("DATALOCAL AND LOCAL ARE THE SAME");
         setRemoteUserId(data.remoteUserId);
       }
       if (data.remoteUserId === userId && !remoteUserId) {
-        console.log("DATA REMOTE AND LOCAL ARE THE SAME");
         setRemoteUserId(data.localUserId);
       }
     }
@@ -173,7 +145,7 @@ const MatchPage = () => {
     }
   }, [router, setRefreshed, userId]);
 
-  //If remote user never joins after 7 seconds turn solo on.
+  //If remote user never joins after 6 seconds turn solo on.
   useEffect(() => {
     if (countdown2 === 1 && !remoteStream?.active) {
       setSolo(true);
@@ -185,14 +157,13 @@ const MatchPage = () => {
     if (solo) {
       setSolo(false);
       setDolo(true);
-      cleanup();
+      setEnd(true);
     }
-    //cleanup trigger rerenders endlessly
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchId, router, solo, userId, statusUpdate]);
+  }, [setSolo, solo]);
 
   //When local video play does not work the first time
-  const [repeat, setRepeat] = useState(true);
+  const [repeatLocal, setRepeatLocal] = useState(true);
+  const [repeatRemote, setRepeatRemote] = useState(false);
 
   //Defining the ANSWERING if peer
   useEffect(() => {
@@ -212,6 +183,7 @@ const MatchPage = () => {
             remoteVideo
               ?.play()
               .catch(() => console.log("Error in remote play"));
+            setRepeatRemote(true);
           }
         });
       });
@@ -226,7 +198,7 @@ const MatchPage = () => {
     if (!data || !peer) return;
     if (data.tempPeerId && data.localUserId !== userId) {
       console.log("about to call");
-
+      setEnd(true);
       // Call with local stream
       if (!localMediaStream) return;
       const call = peer.call(data.tempPeerId, localMediaStream);
@@ -368,6 +340,9 @@ const MatchPage = () => {
             addReport(3);
             setLastReport(new Date());
           }
+          if (data2.type === 4) {
+            setEnded(true);
+          }
         }
       });
     }
@@ -383,6 +358,31 @@ const MatchPage = () => {
     peerConnection,
     setLastReport,
   ]);
+
+  //if end is true
+  useEffect(() => {
+    if (end && !ended) {
+      setEnd(false);
+      setEnded(true);
+      endMatch.mutate({
+        matchId: matchId,
+      });
+    }
+  }, [end, endMatch, ended, matchId]);
+
+  useEffect(() => {
+    if (end) {
+      if (peerConnection) {
+        const a = async () => {
+          await peerConnection.send({
+            cat: false,
+            type: 4,
+          });
+        };
+        a().catch(() => console.log("Error in ending match"));
+      }
+    }
+  }, [end, peerConnection]);
 
   useEffect(() => {
     if (emojiArr.length > 1) {
@@ -440,21 +440,37 @@ const MatchPage = () => {
   useEffect(() => {
     if (!localMediaStream) return;
 
-    if (repeat) {
-      setRepeat(false);
+    if (repeatLocal) {
+      setRepeatLocal(false);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = localMediaStream;
         localVideoRef.current.play().catch((e: Error) => {
           console.log("Error in local playAHHHH", e);
-          if (phone) {
-            setTimeout(() => {
-              setRepeat(true);
-            }, 1);
-          }
+          setTimeout(() => {
+            setRepeatLocal(true);
+          }, 1);
         });
       }
     }
-  }, [localMediaStream, phone, repeat]);
+  }, [localMediaStream, phone, repeatLocal]);
+
+  //If remoteStream ? set and play video stream
+  useEffect(() => {
+    if (!remoteStream) return;
+
+    if (repeatRemote && !remoteStream.active) {
+      setRepeatRemote(false);
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
+        remoteVideoRef.current.play().catch((e: Error) => {
+          console.log("Error in local playAHHHH", e);
+          setTimeout(() => {
+            setRepeatRemote(true);
+          }, 1);
+        });
+      }
+    }
+  }, [remoteStream, repeatRemote]);
 
   const makeDataObject = (skipa?: boolean | null, stats?: boolean | null) => {
     return {
@@ -470,8 +486,33 @@ const MatchPage = () => {
     };
   };
 
+  const [height, setHeight] = useState<number>(1);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setHeight(window.innerHeight);
+      console.log("window.innerHeight", window.innerHeight);
+    };
+
+    // Initial adjustment
+    handleResize();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", handleResize);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
-    <div className="h-[100vh] w-full overflow-hidden bg-[#121212]">
+    <div
+      className="w-full overflow-hidden bg-[#121212]"
+      style={{
+        minHeight: `${height}px`,
+      }}
+    >
       {reportModal && (
         <ReportModal
           toggle={reportModal}
@@ -481,7 +522,12 @@ const MatchPage = () => {
         />
       )}
       {!phone ? (
-        <div className="relative flex h-full w-auto flex-col">
+        <div
+          className="relative flex w-auto flex-col"
+          style={{
+            minHeight: `${height}px`,
+          }}
+        >
           <button
             onClick={() => {
               console.log("hello");
@@ -511,7 +557,7 @@ const MatchPage = () => {
               muted={true}
             />
             {dolo && (
-              <div className="flex w-full items-center justify-center text-white">
+              <div className="flex w-full items-center justify-center font-mono text-white">
                 Your Pixelmate was lost to the wind...
               </div>
             )}
@@ -677,11 +723,17 @@ const MatchPage = () => {
             </div>
             <div
               id="homeAndSkip"
-              className="flex h-full flex-grow flex-col gap-x-3 gap-y-3 sm:w-1/2 sm:flex-row"
+              className="flex flex-grow flex-col gap-x-3 gap-y-3 sm:w-1/2 sm:flex-row"
             >
               <div
                 className="flex w-full flex-grow sm:w-1/3"
                 onClick={() => {
+                  if (!ended) {
+                    endMatch.mutate({
+                      matchId: matchId,
+                    });
+                    setEnded(true);
+                  }
                   if (
                     !remoteStream?.active ||
                     (remoteStream.active && countdown < 1)
@@ -734,6 +786,12 @@ const MatchPage = () => {
                 <button
                   className="flex-grow rounded-xl bg-[#1d1d1d] p-3 font-mono text-5xl text-[#e1e1e1] shadow-md"
                   onClick={() => {
+                    if (!ended) {
+                      endMatch.mutate({
+                        matchId: matchId,
+                      });
+                      setEnded(true);
+                    }
                     if (
                       !remoteStream?.active ||
                       (remoteStream?.active && countdown < 1)
@@ -780,11 +838,14 @@ const MatchPage = () => {
         ""
       )}
       {phone ? (
-        <div className="h-auto w-auto">
+        <div className="w-auto">
           <video
             ref={remoteVideoRef}
+            style={{
+              minHeight: `${height}px`,
+            }}
             className={classNames(
-              "h-[100vh] w-[100vw] object-cover",
+              "w-[100vw] object-cover",
               countdown > 90
                 ? "blur-[7px]"
                 : countdown > 85
@@ -886,6 +947,12 @@ const MatchPage = () => {
                 <button
                   className="flex flex-col items-center rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-3 font-mono text-3xl font-semibold text-white/30"
                   onClick={() => {
+                    if (!ended) {
+                      endMatch.mutate({
+                        matchId: matchId,
+                      });
+                      setEnded(true);
+                    }
                     if (
                       !remoteStream?.active ||
                       (remoteStream?.active && countdown < 1)
@@ -930,6 +997,12 @@ const MatchPage = () => {
                 <button
                   className="rounded-bl-xl rounded-tl-xl border-b-2 border-l-2 border-t-2 border-white/20 bg-[#1d1d1d]/40 p-[9px] font-semibold text-white/30"
                   onClick={() => {
+                    if (!ended) {
+                      endMatch.mutate({
+                        matchId: matchId,
+                      });
+                      setEnded(true);
+                    }
                     if (
                       !remoteStream?.active ||
                       (remoteStream.active && countdown < 1)
@@ -977,10 +1050,10 @@ const MatchPage = () => {
                   </svg>
                 </button>
               </div>
-              <div className="flex justify-end rounded-xl">
+              <div className="mt-1 flex justify-end rounded-xl">
                 <video
                   ref={localVideoRef}
-                  className="h-[100px] w-[100px] rounded-xl"
+                  className="w-[100px] rounded-xl"
                   autoPlay={true}
                   playsInline={true}
                   muted={true}

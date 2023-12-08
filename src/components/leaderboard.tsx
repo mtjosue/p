@@ -145,14 +145,14 @@ const Leaderboard = ({
     userArr: (UserWithReactions | undefined)[] | undefined;
   }) => {
     return (
-      <div className="board flex max-h-[15rem] w-full flex-col overflow-auto px-4">
+      <div className="board flex max-h-[15rem] w-full flex-col overflow-auto md:px-1.5">
         {userArr?.map((user, idx) => {
           if (idx < 3) {
             return (
               <div
                 key={`user-${idx}`}
                 className={classNames(
-                  "flex w-full items-center gap-x-3 rounded-xl",
+                  "flex w-full items-center gap-x-1 rounded-xl",
                 )}
               >
                 <Image
@@ -160,7 +160,7 @@ const Leaderboard = ({
                   alt=""
                   width={50}
                   height={50}
-                  className="relative z-20"
+                  className="relative z-20 -ml-1"
                 />
                 <span
                   className={classNames(
@@ -218,7 +218,7 @@ const Leaderboard = ({
                   "my-1 flex w-full items-center gap-x-3 rounded-xl",
                 )}
               >
-                <div className="z-20 ml-[0.45rem] flex h-[35px] min-w-fit items-center justify-center rounded-lg border-2 border-zinc-600 bg-zinc-700 px-2 font-mono lg:ml-2.5">
+                <div className="z-20 ml-[0.1rem] flex h-[35px] min-w-fit items-center justify-center rounded-lg border-2 border-zinc-600 bg-zinc-700 px-2 font-mono md:ml-[0.2rem]">
                   {idx + 1}
                 </div>
                 <span
@@ -276,8 +276,8 @@ const Leaderboard = ({
   };
 
   return (
-    <div className="min-h-[5rem] min-w-[75%] space-y-3 rounded-xl bg-[#1d1d1d] py-3 text-white lg:min-w-[35%]">
-      <div id="leaderNav" className="flex justify-evenly text-3xl">
+    <div className="min-h-[3.6rem] min-w-[92%] space-y-3 rounded-xl bg-[#1d1d1d] py-3 pl-1 pr-2 text-white md:px-1 lg:min-w-[35%]">
+      <div id="leaderNav" className="flex justify-between">
         {emojis.map((moji) => {
           return (
             <div
@@ -286,7 +286,7 @@ const Leaderboard = ({
                 select(moji.moji);
               }}
               className={classNames(
-                "rounded-xl p-2",
+                "rounded-lg p-2 text-2xl md:text-4xl",
                 moji.moji === "👍"
                   ? selected === "👍"
                     ? "ring-2 ring-[#147bd1]"
