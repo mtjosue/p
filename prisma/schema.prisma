@@ -35,6 +35,7 @@ model User {
   hypeClaps     Int      @default(0)
   reports       Int      @default(0)
   lastReport    DateTime @default(now())
+  lastReplenish DateTime @default(now())
 
   @@index([id])
 }
