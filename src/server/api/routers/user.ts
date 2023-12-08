@@ -106,8 +106,12 @@ export const userRouter = createTRPCRouter({
 
       setTimeout(() => {
         const endFunc = async () => {
-          await ctx.db.match.delete({
+          // await ctx.db.match.delete({
+          //   where: { id: match.id },
+          // });
+          await ctx.db.match.update({
             where: { id: match.id },
+            data: { status: "ended" },
           });
         };
         endFunc().catch(() => console.log("Error in Ending match in sync"));
