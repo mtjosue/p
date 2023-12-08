@@ -522,6 +522,322 @@ const MatchPage = () => {
         />
       )}
 
+      {!phone ? (
+        <div
+          className="relative flex w-auto flex-col"
+          style={{
+            minHeight: `${height}px`,
+          }}
+        >
+          <button
+            onClick={() => {
+              console.log("hello");
+              toggleReport(true);
+            }}
+            className="absolute right-0 top-0 z-10 m-1 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600"
+          >
+            !
+          </button>
+          {emojiArr?.map((emoji, idx) => {
+            return (
+              <span
+                key={idx}
+                className={`animate-floatDown lg:animate-floatDown2 absolute left-0 top-0 z-20 text-6xl`}
+              >
+                {emoji === "heart" ? "\u2764\uFE0F" : emoji}
+              </span>
+            );
+          })}
+
+          <div className="relative flex max-h-[50vh] justify-center overflow-hidden">
+            <video
+              ref={localVideoRef}
+              className="w-[50vw] object-cover"
+              autoPlay={true}
+              playsInline={true}
+              muted={true}
+            />
+            {dolo && (
+              <div className="flex w-full items-center justify-center font-mono text-white">
+                Your Pixelmate was lost to the wind...
+              </div>
+            )}
+            <video
+              ref={remoteVideoRef}
+              className={classNames(
+                dolo ? "hidden" : "",
+                "max-h-min w-[50vw] object-cover",
+                countdown > 90
+                  ? "blur-[7px]"
+                  : countdown > 85
+                  ? "blur-[6.8px]"
+                  : countdown > 80
+                  ? "blur-[6.6px]"
+                  : countdown > 75
+                  ? "blur-[6.4px]"
+                  : countdown > 70
+                  ? "blur-[6.2px]"
+                  : countdown > 65
+                  ? "blur-[6px]"
+                  : countdown > 60
+                  ? "blur-[5.8px]"
+                  : countdown > 55
+                  ? "blur-[5.6px]"
+                  : countdown > 50
+                  ? "blur-[5.4px]"
+                  : countdown > 45
+                  ? "blur-[5.2px]"
+                  : countdown > 40
+                  ? "blur-[5px]"
+                  : countdown > 38
+                  ? "blur-[4.8px]"
+                  : countdown > 36
+                  ? "blur-[4.6px]"
+                  : countdown > 34
+                  ? "blur-[4.4px]"
+                  : countdown > 32
+                  ? "blur-[4.2px]"
+                  : countdown > 30
+                  ? "blur-[4px]"
+                  : countdown > 28
+                  ? "blur-[3.8px]"
+                  : countdown > 26
+                  ? "blur-[3.6px]"
+                  : countdown > 24
+                  ? "blur-[3.4px]"
+                  : countdown > 22
+                  ? "blur-[3.2px]"
+                  : countdown > 20
+                  ? "blur-[3px]"
+                  : countdown > 18
+                  ? "blur-[2.6px]"
+                  : countdown > 16
+                  ? "blur-[2.2px]"
+                  : countdown > 14
+                  ? "blur-[1.8px]"
+                  : countdown > 12
+                  ? "blur-[1.4px]"
+                  : countdown > 10
+                  ? "blur-[1px]"
+                  : countdown > 8
+                  ? "blur-[0.6px]"
+                  : countdown > 0
+                  ? "blur-[0.3px]"
+                  : "blur-none",
+              )}
+              autoPlay={true}
+              playsInline={true}
+              muted={true}
+            />
+            {sentEmojiArr?.map((emoji, idx) => {
+              return (
+                <span
+                  key={idx}
+                  className={`animate-floatUp lg:animate-floatUp absolute bottom-0 left-[50vw] z-20 text-6xl`}
+                >
+                  {emoji === "heart" ? "\u2764\uFE0F" : emoji}
+                </span>
+              );
+            })}
+          </div>
+          <div className="flex w-full flex-grow gap-x-3 bg-[#121212] p-3">
+            <div
+              id="reactions"
+              className="flex w-1/2 flex-grow flex-col gap-y-3 rounded-xl bg-[#1d1d1d] p-3 lg:flex-row"
+            >
+              <div
+                id="topRow"
+                className="flex w-full flex-grow justify-around gap-x-1 gap-y-3"
+              >
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="👍"
+                    color="147bd1"
+                    curCount={sentLike}
+                    addToCurCount={addSentLike}
+                    sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
+                  />
+                  <MyParticle color="147bd1" curCount={resLike} />
+                </div>
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="heart"
+                    color="d1156b"
+                    curCount={sentHeart}
+                    addToCurCount={addSentHeart}
+                    sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
+                  />
+                  <MyParticle color="d1156b" curCount={resHeart} />
+                </div>
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="🤣"
+                    color="f7ea48"
+                    curCount={sentLaugh}
+                    addToCurCount={addSentLaugh}
+                    sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
+                  />
+                  <MyParticle color="f7ea48" curCount={resLaugh} />
+                </div>
+              </div>
+              <div
+                id="botRow"
+                className="flex w-full flex-grow justify-around gap-x-1 gap-y-3"
+              >
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="😯"
+                    color="ff7f41"
+                    curCount={sentWoah}
+                    addToCurCount={addSentWoah}
+                    sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
+                  />
+                  <MyParticle color="ff7f41" curCount={resWoah} />
+                </div>
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="🔥"
+                    color="e03c31"
+                    curCount={sentFire}
+                    addToCurCount={addSentFire}
+                    sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
+                  />
+                  <MyParticle color="e03c31" curCount={resFire} />
+                </div>
+                <div className="grid grid-cols-1 gap-y-2">
+                  <ParticleCanvas
+                    emote="👏"
+                    color="753bbd"
+                    curCount={sentClap}
+                    addToCurCount={addSentClap}
+                    sendEmoji={sendEmoji}
+                    sentEmojiArr={sentEmojiArr}
+                  />
+                  <MyParticle color="753bbd" curCount={resClap} />
+                </div>
+              </div>
+            </div>
+            <div
+              id="homeAndSkip"
+              className="flex flex-grow flex-col gap-x-3 gap-y-3 sm:w-1/2 sm:flex-row"
+            >
+              <div
+                className="flex w-full flex-grow sm:w-1/3"
+                onClick={() => {
+                  if (!ended) {
+                    endMatch.mutate({
+                      matchId: matchId,
+                    });
+                    setEnded(true);
+                  }
+                  if (
+                    !remoteStream?.active ||
+                    (remoteStream.active && countdown < 1)
+                  ) {
+                    statusUpdate.mutate(makeDataObject(null, null));
+                    cleanup();
+                    resetReactions();
+                    router
+                      .push("/")
+                      .catch(() => console.log("ERROR in GO HOME button"));
+                  }
+
+                  if (remoteStream?.active && countdown > 0) {
+                    if (skips < 2) {
+                      statusUpdate.mutate(makeDataObject(null, null));
+                      setNoSkips(true);
+                      cleanup();
+                      resetReactions();
+                    }
+                    if (skips >= 2) {
+                      statusUpdate.mutate(makeDataObject(true, null));
+                      setSkips(skips - 1);
+                      cleanup();
+                      resetReactions();
+                    }
+                  }
+                  router
+                    .push("/")
+                    .catch(() => console.log("ERROR in GO HOME button"));
+                }}
+              >
+                <button className="flex flex-grow items-center justify-center rounded-xl bg-[#1d1d1d] p-5 text-5xl text-[#e1e1e1] shadow-md">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="h-12 w-12"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex w-full flex-grow sm:w-2/3">
+                <button
+                  className="flex-grow rounded-xl bg-[#1d1d1d] p-3 font-mono text-5xl text-[#e1e1e1] shadow-md"
+                  onClick={() => {
+                    if (!ended) {
+                      endMatch.mutate({
+                        matchId: matchId,
+                      });
+                      setEnded(true);
+                    }
+                    if (
+                      !remoteStream?.active ||
+                      (remoteStream?.active && countdown < 1)
+                    ) {
+                      statusUpdate.mutate(makeDataObject(null, true));
+                      cleanup();
+                      resetReactions();
+                    }
+
+                    if (remoteStream?.active && countdown > 0) {
+                      if (skips < 2) {
+                        statusUpdate.mutate(makeDataObject(null, null));
+                        setNoSkips(true);
+                        cleanup();
+                        resetReactions();
+                        router
+                          .push("/")
+                          .catch(() =>
+                            console.log("ERROR in router.puush of SKIP"),
+                          );
+                      }
+                      if (skips >= 2) {
+                        statusUpdate.mutate(makeDataObject(true, true));
+                        setSkips(skips - 1);
+                        cleanup();
+                        resetReactions();
+                      }
+                    }
+
+                    router
+                      .push("/waiting")
+                      .catch(() =>
+                        console.log("ERROR in router.puush of SKIP"),
+                      );
+                  }}
+                >
+                  Skip
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
       {phone ? (
         <div className="w-auto">
           <video
@@ -811,322 +1127,6 @@ const MatchPage = () => {
                   sendEmoji={sendEmoji}
                   sentEmojiArr={sentEmojiArr}
                 />
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        ""
-      )}
-      {!phone ? (
-        <div
-          className="relative flex w-auto flex-col"
-          style={{
-            minHeight: `${height}px`,
-          }}
-        >
-          <button
-            onClick={() => {
-              console.log("hello");
-              toggleReport(true);
-            }}
-            className="absolute right-0 top-0 z-10 m-1 rounded-full border-4 border-red-600/30 bg-[#1d1d1d]/40 px-[1.15rem] py-1.5 text-2xl font-bold text-red-600"
-          >
-            !
-          </button>
-          {emojiArr?.map((emoji, idx) => {
-            return (
-              <span
-                key={idx}
-                className={`animate-floatDown lg:animate-floatDown2 absolute left-0 top-0 z-20 text-6xl`}
-              >
-                {emoji === "heart" ? "\u2764\uFE0F" : emoji}
-              </span>
-            );
-          })}
-
-          <div className="relative flex justify-center overflow-hidden">
-            <video
-              ref={localVideoRef}
-              className="w-[50vw] object-cover"
-              autoPlay={true}
-              playsInline={true}
-              muted={true}
-            />
-            {dolo && (
-              <div className="flex w-full items-center justify-center font-mono text-white">
-                Your Pixelmate was lost to the wind...
-              </div>
-            )}
-            <video
-              ref={remoteVideoRef}
-              className={classNames(
-                dolo ? "hidden" : "",
-                "max-h-min w-[50vw] object-cover",
-                countdown > 90
-                  ? "blur-[7px]"
-                  : countdown > 85
-                  ? "blur-[6.8px]"
-                  : countdown > 80
-                  ? "blur-[6.6px]"
-                  : countdown > 75
-                  ? "blur-[6.4px]"
-                  : countdown > 70
-                  ? "blur-[6.2px]"
-                  : countdown > 65
-                  ? "blur-[6px]"
-                  : countdown > 60
-                  ? "blur-[5.8px]"
-                  : countdown > 55
-                  ? "blur-[5.6px]"
-                  : countdown > 50
-                  ? "blur-[5.4px]"
-                  : countdown > 45
-                  ? "blur-[5.2px]"
-                  : countdown > 40
-                  ? "blur-[5px]"
-                  : countdown > 38
-                  ? "blur-[4.8px]"
-                  : countdown > 36
-                  ? "blur-[4.6px]"
-                  : countdown > 34
-                  ? "blur-[4.4px]"
-                  : countdown > 32
-                  ? "blur-[4.2px]"
-                  : countdown > 30
-                  ? "blur-[4px]"
-                  : countdown > 28
-                  ? "blur-[3.8px]"
-                  : countdown > 26
-                  ? "blur-[3.6px]"
-                  : countdown > 24
-                  ? "blur-[3.4px]"
-                  : countdown > 22
-                  ? "blur-[3.2px]"
-                  : countdown > 20
-                  ? "blur-[3px]"
-                  : countdown > 18
-                  ? "blur-[2.6px]"
-                  : countdown > 16
-                  ? "blur-[2.2px]"
-                  : countdown > 14
-                  ? "blur-[1.8px]"
-                  : countdown > 12
-                  ? "blur-[1.4px]"
-                  : countdown > 10
-                  ? "blur-[1px]"
-                  : countdown > 8
-                  ? "blur-[0.6px]"
-                  : countdown > 0
-                  ? "blur-[0.3px]"
-                  : "blur-none",
-              )}
-              autoPlay={true}
-              playsInline={true}
-              muted={true}
-            />
-            {sentEmojiArr?.map((emoji, idx) => {
-              return (
-                <span
-                  key={idx}
-                  className={`animate-floatUp lg:animate-floatUp absolute bottom-0 left-[50vw] z-20 text-6xl`}
-                >
-                  {emoji === "heart" ? "\u2764\uFE0F" : emoji}
-                </span>
-              );
-            })}
-          </div>
-          <div className="flex w-full flex-grow gap-x-3 bg-[#121212] p-3">
-            <div
-              id="reactions"
-              className="flex w-1/2 flex-grow flex-col gap-y-3 rounded-xl bg-[#1d1d1d] p-3 lg:flex-row"
-            >
-              <div
-                id="topRow"
-                className="flex w-full flex-grow justify-around gap-x-1 gap-y-3"
-              >
-                <div className="grid grid-cols-1 gap-y-2">
-                  <ParticleCanvas
-                    emote="👍"
-                    color="147bd1"
-                    curCount={sentLike}
-                    addToCurCount={addSentLike}
-                    sendEmoji={sendEmoji}
-                    sentEmojiArr={sentEmojiArr}
-                  />
-                  <MyParticle color="147bd1" curCount={resLike} />
-                </div>
-                <div className="grid grid-cols-1 gap-y-2">
-                  <ParticleCanvas
-                    emote="heart"
-                    color="d1156b"
-                    curCount={sentHeart}
-                    addToCurCount={addSentHeart}
-                    sendEmoji={sendEmoji}
-                    sentEmojiArr={sentEmojiArr}
-                  />
-                  <MyParticle color="d1156b" curCount={resHeart} />
-                </div>
-                <div className="grid grid-cols-1 gap-y-2">
-                  <ParticleCanvas
-                    emote="🤣"
-                    color="f7ea48"
-                    curCount={sentLaugh}
-                    addToCurCount={addSentLaugh}
-                    sendEmoji={sendEmoji}
-                    sentEmojiArr={sentEmojiArr}
-                  />
-                  <MyParticle color="f7ea48" curCount={resLaugh} />
-                </div>
-              </div>
-              <div
-                id="botRow"
-                className="flex w-full flex-grow justify-around gap-x-1 gap-y-3"
-              >
-                <div className="grid grid-cols-1 gap-y-2">
-                  <ParticleCanvas
-                    emote="😯"
-                    color="ff7f41"
-                    curCount={sentWoah}
-                    addToCurCount={addSentWoah}
-                    sendEmoji={sendEmoji}
-                    sentEmojiArr={sentEmojiArr}
-                  />
-                  <MyParticle color="ff7f41" curCount={resWoah} />
-                </div>
-                <div className="grid grid-cols-1 gap-y-2">
-                  <ParticleCanvas
-                    emote="🔥"
-                    color="e03c31"
-                    curCount={sentFire}
-                    addToCurCount={addSentFire}
-                    sendEmoji={sendEmoji}
-                    sentEmojiArr={sentEmojiArr}
-                  />
-                  <MyParticle color="e03c31" curCount={resFire} />
-                </div>
-                <div className="grid grid-cols-1 gap-y-2">
-                  <ParticleCanvas
-                    emote="👏"
-                    color="753bbd"
-                    curCount={sentClap}
-                    addToCurCount={addSentClap}
-                    sendEmoji={sendEmoji}
-                    sentEmojiArr={sentEmojiArr}
-                  />
-                  <MyParticle color="753bbd" curCount={resClap} />
-                </div>
-              </div>
-            </div>
-            <div
-              id="homeAndSkip"
-              className="flex flex-grow flex-col gap-x-3 gap-y-3 sm:w-1/2 sm:flex-row"
-            >
-              <div
-                className="flex w-full flex-grow sm:w-1/3"
-                onClick={() => {
-                  if (!ended) {
-                    endMatch.mutate({
-                      matchId: matchId,
-                    });
-                    setEnded(true);
-                  }
-                  if (
-                    !remoteStream?.active ||
-                    (remoteStream.active && countdown < 1)
-                  ) {
-                    statusUpdate.mutate(makeDataObject(null, null));
-                    cleanup();
-                    resetReactions();
-                    router
-                      .push("/")
-                      .catch(() => console.log("ERROR in GO HOME button"));
-                  }
-
-                  if (remoteStream?.active && countdown > 0) {
-                    if (skips < 2) {
-                      statusUpdate.mutate(makeDataObject(null, null));
-                      setNoSkips(true);
-                      cleanup();
-                      resetReactions();
-                    }
-                    if (skips >= 2) {
-                      statusUpdate.mutate(makeDataObject(true, null));
-                      setSkips(skips - 1);
-                      cleanup();
-                      resetReactions();
-                    }
-                  }
-                  router
-                    .push("/")
-                    .catch(() => console.log("ERROR in GO HOME button"));
-                }}
-              >
-                <button className="flex flex-grow items-center justify-center rounded-xl bg-[#1d1d1d] p-5 text-5xl text-[#e1e1e1] shadow-md">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                    className="h-12 w-12"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex w-full flex-grow sm:w-2/3">
-                <button
-                  className="flex-grow rounded-xl bg-[#1d1d1d] p-3 font-mono text-5xl text-[#e1e1e1] shadow-md"
-                  onClick={() => {
-                    if (!ended) {
-                      endMatch.mutate({
-                        matchId: matchId,
-                      });
-                      setEnded(true);
-                    }
-                    if (
-                      !remoteStream?.active ||
-                      (remoteStream?.active && countdown < 1)
-                    ) {
-                      statusUpdate.mutate(makeDataObject(null, true));
-                      cleanup();
-                      resetReactions();
-                    }
-
-                    if (remoteStream?.active && countdown > 0) {
-                      if (skips < 2) {
-                        statusUpdate.mutate(makeDataObject(null, null));
-                        setNoSkips(true);
-                        cleanup();
-                        resetReactions();
-                        router
-                          .push("/")
-                          .catch(() =>
-                            console.log("ERROR in router.puush of SKIP"),
-                          );
-                      }
-                      if (skips >= 2) {
-                        statusUpdate.mutate(makeDataObject(true, true));
-                        setSkips(skips - 1);
-                        cleanup();
-                        resetReactions();
-                      }
-                    }
-
-                    router
-                      .push("/waiting")
-                      .catch(() =>
-                        console.log("ERROR in router.puush of SKIP"),
-                      );
-                  }}
-                >
-                  Skip
-                </button>
               </div>
             </div>
           </div>
