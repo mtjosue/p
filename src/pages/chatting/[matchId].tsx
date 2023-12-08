@@ -521,6 +521,7 @@ const MatchPage = () => {
           sendReport={sendReport}
         />
       )}
+
       {!phone ? (
         <div
           className="relative flex w-auto flex-col"
@@ -548,7 +549,7 @@ const MatchPage = () => {
             );
           })}
 
-          <div className="relative flex justify-center overflow-hidden">
+          <div className="relative flex max-h-[70vh] justify-center overflow-hidden">
             <video
               ref={localVideoRef}
               className="w-[50vw] object-cover"
@@ -565,7 +566,7 @@ const MatchPage = () => {
               ref={remoteVideoRef}
               className={classNames(
                 dolo ? "hidden" : "",
-                "w-[50vw] object-cover",
+                "max-h-min w-[50vw] object-cover",
                 countdown > 90
                   ? "blur-[7px]"
                   : countdown > 85
