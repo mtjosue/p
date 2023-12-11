@@ -513,6 +513,24 @@ const MatchPage = () => {
     };
   }, []);
 
+  const goOffline = api.user.goOffline.useMutation();
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      goOffline.mutate({
+        userId: userId,
+      });
+    };
+
+    // Attach the event listener when the component mounts
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Detach the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [goOffline, userId]); // Empty dependency array to run the effect only once when the component mounts
+
   return (
     <div
       id="parent"

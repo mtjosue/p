@@ -108,9 +108,14 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localMediaStream]);
 
+  const goOnline = api.user.goOnline.useMutation();
+
   //Searchfor yourself as User and set User properties locally
   useEffect(() => {
     if (searchUser.data) {
+      goOnline.mutate({
+        userId: searchUser.data.userId,
+      });
       setUserId(searchUser.data.userId);
       if (searchUser.data.skips < 2) {
         setNoSkips(true);
@@ -130,6 +135,7 @@ export default function Home() {
     }
   }, [
     addReport,
+    goOnline,
     searchUser.data,
     setFirstLoad,
     setLastReport,
@@ -222,6 +228,34 @@ export default function Home() {
     };
   }, []);
 
+  const { data } = api.user.usersTotal.useQuery(undefined, {
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: true,
+    // enabled: false,
+    refetchInterval: 10000,
+    cacheTime: 0,
+    staleTime: 10000,
+  });
+
+  const goOffline = api.user.goOffline.useMutation();
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      goOffline.mutate({
+        userId: userId,
+      });
+    };
+
+    // Attach the event listener when the component mounts
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Detach the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [goOffline, userId]); // Empty dependency array to run the effect only once when the component mounts
+
   return (
     <>
       <Head>
@@ -237,6 +271,23 @@ export default function Home() {
           minHeight: `${height}px`,
         }}
       >
+        <div className="flex min-w-[92%] items-end justify-end gap-x-1 rounded-xl font-mono text-sm text-[#147bd1] lg:min-w-[35%]">
+          <span className="">{data}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="h-5 w-5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+            />
+          </svg>
+        </div>
         <div className="flex min-w-[92%] justify-between rounded-xl bg-[#1d1d1d] py-3 pl-3 font-mono text-xl text-white md:text-2xl lg:min-w-[35%]">
           Leaderboards :
         </div>
