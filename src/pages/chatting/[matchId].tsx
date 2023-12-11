@@ -63,6 +63,7 @@ const MatchPage = () => {
   const localVideoRef = useRef<null | HTMLVideoElement>(null);
   const remoteVideoRef = useRef<null | HTMLVideoElement>(null);
   const localMediaStream = useLocalMediaStream();
+  const remoteAudioRef = useRef<null | HTMLAudioElement>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const peer = usePeer();
   const skips = useSkips();
@@ -467,6 +468,12 @@ const MatchPage = () => {
           setTimeout(() => {
             setRepeatRemote(true);
           }, 1);
+          if (remoteAudioRef.current) {
+            remoteAudioRef.current.srcObject = remoteStream;
+            remoteAudioRef.current
+              .play()
+              .catch(() => console.log("HELLO from AUDIO PLAYBACK"));
+          }
         });
       }
     }
@@ -508,6 +515,7 @@ const MatchPage = () => {
 
   return (
     <div
+      id="parent"
       className="w-full overflow-hidden bg-[#121212]"
       style={{
         minHeight: `${height}px`,
@@ -627,8 +635,9 @@ const MatchPage = () => {
               )}
               autoPlay={true}
               playsInline={true}
-              muted={true}
-            />
+            >
+              <audio ref={remoteAudioRef} autoPlay playsInline />
+            </video>
             {sentEmojiArr?.map((emoji, idx) => {
               return (
                 <span
@@ -907,8 +916,9 @@ const MatchPage = () => {
             )}
             autoPlay={true}
             playsInline={true}
-            muted={true}
-          />
+          >
+            <audio ref={remoteAudioRef} autoPlay playsInline />
+          </video>
 
           {emojiArr?.map((emoji, idx) => {
             return (

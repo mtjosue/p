@@ -90,6 +90,7 @@ export default function Home() {
   const getLocalMediaStream = async () => {
     const mediaStream = await navigator.mediaDevices.getUserMedia({
       video: true,
+      audio: true,
     });
     setLocalMediaStream(mediaStream);
   };
