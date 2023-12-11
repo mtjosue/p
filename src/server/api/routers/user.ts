@@ -2,6 +2,45 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const userRouter = createTRPCRouter({
+  goOnline: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.user.update({
+        where: {
+          userId: input.userId,
+        },
+        data: {
+          online: true,
+        },
+      });
+    }),
+  goOffline: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.user.update({
+        where: {
+          userId: input.userId,
+        },
+        data: {
+          online: false,
+        },
+      });
+    }),
+  usersTotal: publicProcedure.query(async ({ ctx }) => {
+    const onlineUsersCount = await ctx.db.user.count({
+      where: { online: true },
+    });
+
+    return onlineUsersCount;
+  }),
   userCheck: publicProcedure
     .input(
       z.object({
