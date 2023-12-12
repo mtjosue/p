@@ -15,7 +15,7 @@ model User {
   id            String   @id @default(cuid())
   name          String
   termsAgreed   Boolean  @default(false)
-  online        Boolean  @default(false)
+  online        Boolean  @default(true)
   userId        String   @unique
   createdAt     DateTime @default(now())
   status        String   @default("waiting")

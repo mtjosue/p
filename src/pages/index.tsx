@@ -229,13 +229,12 @@ export default function Home() {
   }, []);
 
   const { data } = api.user.usersTotal.useQuery(undefined, {
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMount: true,
-    // enabled: false,
-    refetchInterval: 10000,
+    // refetchOnWindowFocus: true,
+    // refetchOnReconnect: true,
+    // refetchOnMount: true,
+    // refetchInterval: 1000,
     cacheTime: 0,
-    staleTime: 10000,
+    staleTime: 0,
   });
 
   const goOffline = api.user.goOffline.useMutation();
@@ -249,10 +248,12 @@ export default function Home() {
 
     // Attach the event listener when the component mounts
     window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("close", handleBeforeUnload);
 
     // Detach the event listener when the component unmounts
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("close", handleBeforeUnload);
     };
   }, [goOffline, userId]); // Empty dependency array to run the effect only once when the component mounts
 
@@ -272,14 +273,14 @@ export default function Home() {
         }}
       >
         <div className="flex min-w-[92%] items-end justify-end gap-x-1 rounded-xl font-mono text-sm text-[#147bd1] lg:min-w-[35%]">
-          <span className="">{data}</span>
+          <span className="text-base font-semibold">{data}</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
-            strokeWidth="1.5"
+            strokeWidth="2.5"
             stroke="currentColor"
-            className="h-5 w-5"
+            className="mb-0.5 h-5 w-5"
           >
             <path
               strokeLinecap="round"

@@ -524,10 +524,12 @@ const MatchPage = () => {
 
     // Attach the event listener when the component mounts
     window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("close", handleBeforeUnload);
 
     // Detach the event listener when the component unmounts
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("close", handleBeforeUnload);
     };
   }, [goOffline, userId]); // Empty dependency array to run the effect only once when the component mounts
 
